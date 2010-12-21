@@ -281,8 +281,12 @@ int main(int argc,char **argv)
     if (include_default) {
 	FILE *file;
 
-	file = find_file("default.m8csim",
-	  INSTALL_PREFIX "/share/m8cutils/include",include_dir,NULL);
+	if (include_dir)
+	    file = find_file("default.m8csim",include_dir,
+	      INSTALL_PREFIX "/share/m8cutils/include",NULL);
+	else
+	    file = find_file("default.m8csim",
+	      INSTALL_PREFIX "/share/m8cutils/include",NULL);
 	saved_stdin = dup(0);
 	if (saved_stdin < 0) {
 	    perror("dup");
@@ -294,6 +298,12 @@ int main(int argc,char **argv)
 	}
 	add_cpp_arg("-D");
 	add_cpp_arg(chip->name);
+#if 0 /* we don't need this yet */
+	if (include_dir) {
+	    add_cpp_arg("-I");
+	    add_cpp_arg(include_dir);
+	}
+#endif
 	run_cpp_on_file(NULL);
 	next_file = find_file(script,".",NULL);
     }

@@ -7,7 +7,7 @@
 #
 
 
-M8CSIM_CHIP=cy8c21123
+M8CSIM_CHIP=CY8C21123
 export M8CSIM_CHIP
 
 
@@ -15,7 +15,8 @@ asm()
 {
     echo -n "$1: " 1>&2
     shift
-    ../../as/m8cas -e -m _map -I../../shared "$@" >_rom || {
+    ../../as/m8cas -e -m _map \
+      -D$M8CSIM_CHIP -I../../shared -I../../regs "$@" >_rom || {
 	echo FAILED "($SCRIPT)" 1>&2
 	rm -f _rom _map
 	exit 1

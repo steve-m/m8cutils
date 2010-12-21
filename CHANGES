@@ -1,4 +1,20 @@
-Version 17 (x-SEP-2006)
+Version 18 (9-OCT-2006)
+----------
+
+- sim/sim.c:main: when looking for default.m8csim, searched install directory
+  before directory specified with -I
+- sim/tests/Common: added ../regs to include path for m8cas
+- sim/tests/Common: pass chip name to m8cas, capitalized chip name
+- sim/lang.y: removed duplicate definition of TOK_REG
+- sim/lang.y: didn't check if there is an ICE when using the "ice" prefix
+  (tests/noice)
+- prog/drv/watpp.c:watpp_open: COMMIT was done after waiting, not before it,
+  thereby violating timings
+- as/Makefile: LIBDEP was mis-spelled as LIBDEPS
+- shared/file.c:write_hex_record: record length field was always 0x40
+- prog/pp.c:pp_close: do PPRELEASE, to avoid complaints from the kernel
+
+Version 17 (7-SEP-2006)
 ----------
 
 - shared/error.[ch]: moved general portion of as/error.[ch] and as/m8c.l here 
@@ -18,6 +34,7 @@ Version 17 (x-SEP-2006)
   logic
 - shared/{m8c-registers,reg2hdrs.pl,regdf.h}: moved to new directory regs/
 - regs/reg2hdr.pl: added support for chip-specific register definitions
+- regs/reg2hdr.pl: allow more whitespace, for compatibility with old CPPs
 - regs/m8c-registers: added all missing registers and classified unclassified
   ones
 - regs/m8c-register,regs/capabilities: added chip-specific attributes and

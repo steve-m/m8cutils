@@ -37,7 +37,7 @@ LDLIBS += -lfl
 
 all:		m8cas
 
-m8cas:		$(OBJS) $(LIBDEPS)
+m8cas:		$(OBJS) $(LIBDEP)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 lex.yy.c:	m8c.l y.tab.h

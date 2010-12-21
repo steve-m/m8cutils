@@ -22,7 +22,8 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       gpioint gpiointcfg \
       addrop printf sleep break unbreak \
       bugs7 bugs8 \
-      symbols symexpr symquot regreg ppreg
+      symbols symexpr symquot regreg ppreg \
+      noice
 FILES=README Makefile \
       lang.l lang.y lang.h id.h id.c \
       reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
@@ -52,7 +53,7 @@ lex.yy.o:	lex.yy.c y.tab.h
 		$(CC) -c $(CFLAGS_LEX) lex.yy.c
 
 y.tab.c y.tab.h: lang.y
-		$(YACC) $(YYFLAGS) -d lang.y
+		$(YACC) $(YYFLAGS) -d -t lang.y
 
 y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c

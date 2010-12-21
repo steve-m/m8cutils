@@ -258,6 +258,10 @@ int pp_poll_interrupt(void)
 
 void pp_close(void)
 {
+    if (ioctl(fd,PPRELEASE,0) < 0) {
+	perror("ioctl(PPRELEASE)");
+	exit(1);
+    }
     if (close(fd) < 0) {
 	perror("close");
 	exit(1);

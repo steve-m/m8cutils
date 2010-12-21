@@ -179,7 +179,7 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 };
 
 
-%token		TOK_A TOK_F TOK_SP TOK_X TOK_REG TOK_REG TOK_RAM TOK_ROM
+%token		TOK_A TOK_F TOK_SP TOK_X TOK_REG TOK_RAM TOK_ROM
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
@@ -543,6 +543,8 @@ lvalue:
 	    if ($$.type != lt_reg)
 		yyerror(
 		  "\"ice\" prefix is only allowed for register accesses");
+	    if (!ice)
+		yyerror("there is no ICE");
 	    $$.type = lt_ice;
 	}
     ;

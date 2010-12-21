@@ -75,7 +75,7 @@ sub process_one
     # register definition
     die "syntax error "
       unless $line =~
-	/^([01xX]),([0-9a-fA-F]{2})[Hh]\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
+       /^([01xX])\s*,\s*([0-9a-fA-F]{2})[Hh]\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
     $name = $3;
     if ($1 eq "x" || $1 eq "X") {
 	if ($mode eq "c") {
@@ -166,7 +166,7 @@ sub process
     local $left;
 
     while ($line =~
-      /^(..*?)\b(chip|[01xX],[0-9a-fA-F][0-9a-fA-F][hH]|if|endif|[_A-Za-z][_A-Za-z0-9]*\s*=)/) {
+      /^(..*?)\s*\b(chip|[01xX]\s*,\s*[0-9a-fA-F][0-9a-fA-F][hH]|if|endif|[_A-Za-z][_A-Za-z0-9]*\s*=)/) {
 	$left = $2.$';
 	$line = $1;
 	&process_one;

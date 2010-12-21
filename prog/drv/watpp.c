@@ -62,6 +62,7 @@ static int watpp_open(const char *dev,int voltage,int power_on)
     Z();
     if (power_on) {
 	XRES(0);
+	COMMIT();
 	/*
 	 * With the power off, we now wait for capacitors on the board to
 	 * discharge. Using v(t) = v(0)*exp(-t/RC) and
@@ -72,9 +73,9 @@ static int watpp_open(const char *dev,int voltage,int power_on)
     }
     else {
 	XRES(1);
+	COMMIT();
 	usleep(T_XRES);
     }
-    COMMIT();
     return voltage;
 }
 

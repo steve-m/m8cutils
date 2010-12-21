@@ -1,0 +1,20 @@
+#!/bin/sh
+. Common
+
+asm "Try to read from non-existing ICE" <<EOF
+EOF
+sim_fail <<EOF
+ice reg[0]
+EOF
+expect <<EOF
+2: there is no ICE
+EOF
+
+asm "Try to write to non-existing ICE" <<EOF
+EOF
+sim_fail <<EOF
+ice reg[0] = 1
+EOF
+expect <<EOF
+1: there is no ICE
+EOF

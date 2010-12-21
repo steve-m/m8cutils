@@ -316,7 +316,7 @@ static void write_hex_record(FILE *file,uint16_t addr,const uint8_t *data,
     int sum;
 
     sum = size+(addr >> 8)+addr;
-    if (fprintf(file,":40%04X00",addr) < 0)
+    if (fprintf(file,":%02X%04X00",size,addr) < 0)
 	goto error;
     while (data != end) {
 	if (fprintf(file,"%02X",*data) < 0)
