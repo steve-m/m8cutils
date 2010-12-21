@@ -30,13 +30,14 @@ option -f. Normally, register definitions are automatically included from the
 file default.mc8sim. This can be turned off with the option -n. The search path
 for default.mc8sim can be extended with the option "-I directory".
 
-The name of the chip is a mandatory command-line argument. The list of
-supported chips can be obtained with the option -l.
+The name of the chip can be specified on the command-line. The chip name is
+mandatory if not using an ICE. The list of supported chips can be obtained with
+the option -l.
 
 The program file can be in ROM format, Intel Hex, or it can a raw binary.
 Binary mode can be forced with the option -b. If the program file name argument
-is omitted, the program is read from standard input. Note that standard input
-can only provide either the script or the program, but not both.
+is omitted, no program is loaded. Note that standard input can only provide
+either the script or the program, but not both.
 
 The use of a DIY ICE is discussed below.
 
@@ -111,11 +112,22 @@ language are the usual forms known from C, and the semicolon from m8cas.
 - Drive GPIO pins with an external signal (in the simulation). All the bits
   covered by the mask are affected
 
-  P0 = 8		; drives P0[7:3] and P0[1:0] with "L", P0[2] with "H"
-  P0[1] = 1 r		; drives P0[1] with a resistive low
-  p0[1] = z		; doesn't drive P0[1]
+  drive P0 = 8		; drive P0[7:3] and P0[1:0] with "L", P0[2] with "H"
+  drive P0[1] = 1 r	; drive P0[1] with a resistive low
+  drive p0[1] = z	; don't drive P0[1]
 
-  The status of this port can be queried with
+  Note that driving a pin while it is connected to the ICE has no effect.
+
+- Set GPIO pins to specific values. Drive mode bits are changed according to
+  the transition that is being effected. If a change can be done either in slow
+  or in fast mode, the mode currently set for the respective pins is used.
+
+  set p0 = 0		; set P0[7:0] to a strong low
+  set p0[1] = 0 r	; set P0[1] to pull down (resistive low)
+  set p1[2] = z		; make P1[2] a digital input
+  set p1[2] = analog	; make P1[2] an analog input
+
+- The status of a port can be queried with
 
   p0
   p0[6:2]
@@ -157,8 +169,8 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
   Disconnected pins are turned into the Z state.
 
-- Definitions of registers and fields of CY8C2xxxx chips are available as
-  case-sensitive #defines.
+- Symbolic names for registers and fields of CY8C2xxxx chips are available as
+  case-sensitive definitions.
 
   Register and field names follow the names in the TRM. Field names are
   constructed by appending the field name to the register name. Spaces in names
@@ -172,6 +184,35 @@ language are the usual forms known from C, and the semicolon from m8cas.
   fields are defined using the [...] operator, e.g. CPU_F_PgMode is CPU_F[7:6].
 
   To obtain the address of a register, use the unary & operator.
+
+- A message can be displayed with "printf":
+
+  printf "hello\n"		; prints "hello", followed by a newline
+  printf "X=%d Y=%d\n",2,3	; prints "X=2 Y=3", followed by a newline
+
+  The following conversion specifiers are supported:
+
+    c  print a character
+    d  print a decimal number
+    o  print an octal number
+    u  like "d", all numbers are unsigned
+    x  print a hexadecimal number, in lower case
+    X  print a hexadecimal number, in upper case
+    %  print a percent sign
+
+  The flag "0" is used to zero-pad the output.
+
+  Furthermore, the field width can be specified.
+
+- Execution of the script can be paused with "sleep":
+
+  sleep			; wait until the user presses [Return]
+  sleep 10		; wait ten seconds
+
+  "sleep" can be combined with "printf", e.g.
+
+  printf "Press [Enter] to continue "	; no \n, so we stay on the same line
+  sleep
 
 - In interactive use, leave the simulator with ^D or "quit"
 
@@ -232,10 +273,6 @@ There are certainly many more.
 - simulated "drive" is not seen by target:
   So we can't just feed synthetic data to a digital block.
 
-- setting I/O lines through the ICE is awkward:
-  Should there be something like "ice P0[3] = 1r" to drive "unconnected"
-  lines ?
-
 - cannot detach ICE under software control:
   It may be nice to be able to temporarily detach the ICE and let the program
   on the target just run, e.g., with "disconnect" and "connect". "connect"
@@ -243,7 +280,7 @@ There are certainly many more.
 
 - is it really a good idea to make FOO do the access ?
   If it's reg[FOO] in the assembler, it should also be reg[FOO] and not just
-  FOO in the simulator, no ?
+  FOO in the simulator, no ? Makes for awkward typing, though.
 
 - consider supporting read-modify-write operators:
   "PRT0DR ^= 0xff", anyone ?
@@ -253,3 +290,5 @@ There are certainly many more.
 - something's still screwy with I/O bit calculation:
   example/switch.asm sort of works in the simulator with ICE connected even if
   we don't do the "and a,3", which is clearly wrong.
+
+- it should be possible to "connect" any registers to the ICE, not only GPIO

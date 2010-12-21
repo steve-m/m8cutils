@@ -1,0 +1,99 @@
+#!/bin/sh
+. Common
+
+asm "printf string" </dev/null
+sim <<EOF
+printf "hello\n"
+EOF
+expect <<EOF
+hello
+EOF
+
+asm "printf %c" </dev/null
+sim <<EOF
+printf "%c\n",65
+EOF
+expect <<EOF
+A
+EOF
+
+asm "printf %d" </dev/null
+sim <<EOF
+printf "%d\n",10
+EOF
+expect <<EOF
+10
+EOF
+
+asm "printf %u" </dev/null
+sim <<EOF
+printf "%u\n",20
+EOF
+expect <<EOF
+20
+EOF
+
+asm "printf %o" </dev/null
+sim <<EOF
+printf "%o\n",10
+EOF
+expect <<EOF
+12
+EOF
+
+asm "printf %x" </dev/null
+sim <<EOF
+printf "%x\n",10
+EOF
+expect <<EOF
+a
+EOF
+
+asm "printf %z" </dev/null
+sim_fail <<EOF
+printf "%z\n",10
+EOF
+expect <<EOF
+2: unknown format character "z"
+EOF
+
+asm "printf %5d" </dev/null
+sim <<EOF
+printf "|%5d|\n",10
+EOF
+expect <<EOF
+|   10|
+EOF
+
+asm "printf %05d" </dev/null
+sim <<EOF
+printf "|%05d|\n",10
+EOF
+expect <<EOF
+|00010|
+EOF
+
+asm "printf: multiple arguments" </dev/null
+sim <<EOF
+printf "%d %d %d\n",1,2,3
+EOF
+expect <<EOF
+1 2 3
+EOF
+
+asm "printf: too few arguments" </dev/null
+sim_fail <<EOF
+printf "%d %d %d\n"
+EOF
+expect <<EOF
+2: not enough printf arguments
+EOF
+
+asm "printf: too many arguments" </dev/null
+sim_fail <<EOF
+printf "%d %d %d\n",1,2,3,4
+EOF
+expect <<EOF
+2: extra printf arguments
+1 2 3
+EOF

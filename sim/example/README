@@ -129,11 +129,11 @@ m8csim> PRT0DR[2]
 Of course it's always zero. We can now pretend that something drives
 the line "high", with
 
-m8csim> P0[2] = 1
+m8csim> drive P0[2] = 1
 
 or low again with
 
-m8csim> P0[2] = 0 
+m8csim> drive P0[2] = 0 
 
 By the way, "P0[2]" is case-insentitive, while "PRT0DM1" and such are
 case-sensitive. The drive status in the simulation can also be queried:
@@ -203,7 +203,7 @@ allowed.
 We can now press our virtual button by driving the simulated P0[2]
 high. Then we resume the simulation:
 
-m8csim> p0[2] = 1
+m8csim> drive p0[2] = 1
 m8csim> run
 HALT
 001d: A=01 F=00 (PgMode=0 XIO=0 Carry=0 Zero=0 GIE=0) X=00 SP=03

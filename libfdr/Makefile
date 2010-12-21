@@ -44,7 +44,7 @@ tests:
 
 # ----- Installation ----------------------------------------------------------
 
-install:
+install:	all
 
 uninstall:
 

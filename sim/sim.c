@@ -135,7 +135,7 @@ static void usage(const char *name)
 {
     fprintf(stderr,
 "usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-e interval]\n"
-"              [-I directory] [-f script] chip [program]\n"
+"              [-I directory] [-f script] [chip] [program]\n"
 "       %s -l\n"
 "       %s -V\n\n"
 "  -b                program is a binary (overrides auto-detection)\n"
@@ -153,9 +153,10 @@ static void usage(const char *name)
   ,name,name,name);
     prog_usage();
     fprintf(stderr,
-"  chip              chip name, e.g., CY8C21323\n"
+"  chip              chip name, e.g., CY8C21323. If using an ICE, the chip\n"
+"                    is auto-detected, and the name can be omitted\n"
 "  program           binary or hex file containing ROM data, \"-\" for stdin\n"
-"                    (default: stdin)\n");
+"                    (default: don't load a program)\n");
     exit(1);
 }
 
@@ -219,19 +220,31 @@ int main(int argc,char **argv)
 	    chip = chip_by_name(argv[optind]);
 	    if (chip)
 		break;
+	    if (ice && argc == optind+1) {
+		program_file = argv[optind];
+		break;
+	    }
 	    fprintf(stderr,"chip \"%s\" is not known\n",argv[optind]);
 	    return 1;
+	case 0:
+	    if (!ice) {
+		fprintf(stderr,"please specify the chip name\n");
+		return 1;
+	    }
+	    break;
 	default:
 	    usage(*argv);
     }
     if ((!script || !strcmp(script,"-")) &&
-      (!program_file || !strcmp(program_file,"-"))) {
-	fprintf(stderr,"script and program cannot be both read from stdin\n");
-	return 1;
+      program_file && !strcmp(program_file,"-")) {
+        fprintf(stderr,"script and program cannot be both read from stdin\n");
+        return 1;
     }
 
-    read_file(program_file ? program_file : "-",binary);
-    set_program(program,program_size);
+    if (program_file) {
+	read_file(program_file ? program_file : "-",binary);
+	set_program(program,program_size);
+    }
 
     if (ice) {
 	voltage = prog_open_cli();

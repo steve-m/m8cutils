@@ -1,0 +1,42 @@
+#!/bin/sh
+. Common
+
+asm "&reg[10]" </dev/null
+sim <<EOF
+&reg[10]
+EOF
+expect <<EOF
+0xa 10
+EOF
+
+asm "&ram[20]" </dev/null
+sim <<EOF
+&ram[20]
+EOF
+expect <<EOF
+0x14 20
+EOF
+
+asm "&rom[30]" </dev/null
+sim <<EOF
+&rom[30]
+EOF
+expect <<EOF
+0x1e 30
+EOF
+
+asm "&CPU_F" </dev/null
+sim <<EOF
+&CPU_F
+EOF
+expect <<EOF
+0xf7 247
+EOF
+
+asm "&CPU_F_XIO" </dev/null
+sim_fail <<EOF
+&CPU_F_XIO
+EOF
+expect <<EOF
+1: cannot obtain the address of a field
+EOF

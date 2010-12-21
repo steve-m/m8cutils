@@ -1,0 +1,26 @@
+#!/bin/sh
+. Common
+
+asm "sleep" </dev/null
+sim <<EOF
+printf "one\n"
+sleep
+
+printf "two\n"
+EOF
+expect <<EOF
+one
+two
+EOF
+
+asm "sleep 0" </dev/null
+sim <<EOF
+printf "one\n"
+sleep
+printf "two\n"
+EOF
+expect <<EOF
+one
+two
+EOF
+

@@ -6,7 +6,7 @@ asm "TST reg[0],expr (all bits zero)" <<EOF
 	halt
 EOF
 sim <<EOF
-p0 = ~6
+drive p0 = ~6
 run
 CPU_F_Zero
 .
@@ -25,7 +25,7 @@ asm "TST reg[X+expr],expr (some bits zero)" <<EOF
 EOF
 sim <<EOF
 x = 3
-p1 = ~4
+drive p1 = ~4
 run
 CPU_F_Zero
 .
@@ -43,7 +43,7 @@ asm "TST [expr],expr (no bits zero)" <<EOF
 	halt
 EOF
 sim <<EOF
-p1 = 0xff
+drive p1 = 0xff
 ram[4] = 0xff
 run
 CPU_F_Zero

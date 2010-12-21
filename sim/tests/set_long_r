@@ -1,0 +1,29 @@
+#!/bin/sh
+. Common
+
+asm "Set 0R, difficult transition" </dev/null
+sim -v -v <<EOF
+PRT0DM0 = 3
+PRT0DM1 = 3
+PRT0DM2 = 2
+PRT0DR = 2
+P0[1:0]
+set P0[1:0] = 0 R
+EOF
+edit sort -s -k 1,1
+expect <<EOF
+P0[0] DM=011 DR=0  0
+P0[0] DM=011 DR=0  0
+P0[0] DM=001 DR=0  0
+P0[0] DM=001 DR=0  0
+P0[0] DM=001 DR=0  0
+P0[0] DM=000 DR=0  0R
+P0[0] DM=000 DR=0  0R
+P0[1] DM=111 DR=1  Z
+P0[1] DM=110 DR=1  analog
+P0[1] DM=110 DR=1  analog
+P0[1] DM=010 DR=1  Z
+P0[1] DM=010 DR=0  Z
+P0[1] DM=010 DR=0  Z
+P0[1] DM=000 DR=0  0R
+EOF

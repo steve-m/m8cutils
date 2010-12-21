@@ -30,6 +30,7 @@
 #include "lang.h"
 #include "sim.h"
 #include "id.h"
+#include "printf.h"
 #include "y.tab.h"
 
 
@@ -164,13 +165,18 @@ run				return TOK_RUN;
 step				return TOK_STEP;
 connect				return TOK_CONNECT;
 disconnect			return TOK_DISCONNECT;
+drive				return TOK_DRIVE;
+set				return TOK_SET;
 define				return TOK_DEFINE;
 quit				return TOK_QUIT;
+printf				return TOK_PRINTF;
+sleep				return TOK_SLEEP;
 
 [pP][012345678]			{ yylval.num = yytext[1]-'0';
 				  return PORT; }
 [Rr]				return TOK_R;
 [Zz]				return TOK_Z;
+analog				return TOK_ANALOG;
 
 0[Xx][0-9A-Fa-f]+|[0-9]+	{ char *end;
 				  yylval.num = strtoul(yytext,&end,0);
@@ -200,6 +206,13 @@ $[0-9A-Fa-f]+			{ char *end;
 				    return yylval.id->new ? NEW_ID : OLD_ID;
 				  yylval.id = id_new(yytext);
 				  return NEW_ID; }
+
+\"(\\[^\n\t]|[^\\"\n\t])*\"     { char *s;
+				  *strrchr(yytext,'"') = 0;
+				  s = stralloc(yytext+1);
+				  backslash(s);
+				  yylval.str = s;
+				  return STRING; }
 
 "||"				return TOK_LOGICAL_OR;
 &&				return TOK_LOGICAL_AND;

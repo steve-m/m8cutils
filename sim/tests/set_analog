@@ -1,0 +1,92 @@
+#!/bin/sh
+. Common
+
+asm "Set analog, DR = 0" </dev/null
+sim -v -v <<EOF
+PRT0DM0 = 0xaa
+PRT0DM1 = 0xcc
+PRT0DM2 = 0xf0
+PRT0DR = 0
+P0
+set P0 = analog
+EOF
+edit sort -s -k 1,1
+expect <<EOF
+P0[0] DM=000 DR=0  0R
+P0[0] DM=000 DR=0  0R
+P0[0] DM=010 DR=0  Z
+P0[0] DM=110 DR=0  analog
+P0[1] DM=001 DR=0  0
+P0[1] DM=000 DR=0  0R
+P0[1] DM=010 DR=0  Z
+P0[1] DM=110 DR=0  analog
+P0[2] DM=010 DR=0  Z
+P0[2] DM=010 DR=0  Z
+P0[2] DM=010 DR=0  Z
+P0[2] DM=110 DR=0  analog
+P0[3] DM=011 DR=0  0
+P0[3] DM=010 DR=0  Z
+P0[3] DM=010 DR=0  Z
+P0[3] DM=110 DR=0  analog
+P0[4] DM=100 DR=0  Z
+P0[4] DM=100 DR=0  Z
+P0[4] DM=110 DR=0  analog
+P0[4] DM=110 DR=0  analog
+P0[5] DM=101 DR=0  0(slow)
+P0[5] DM=100 DR=0  Z
+P0[5] DM=110 DR=0  analog
+P0[5] DM=110 DR=0  analog
+P0[6] DM=110 DR=0  analog
+P0[6] DM=110 DR=0  analog
+P0[6] DM=110 DR=0  analog
+P0[6] DM=110 DR=0  analog
+P0[7] DM=111 DR=0  0(slow)
+P0[7] DM=110 DR=0  analog
+P0[7] DM=110 DR=0  analog
+P0[7] DM=110 DR=0  analog
+EOF
+
+asm "Set analog, DR = 1" </dev/null
+sim -v -v <<EOF
+PRT0DM0 = 0xaa
+PRT0DM1 = 0xcc
+PRT0DM2 = 0xf0
+PRT0DR = 0xff
+P0
+set P0 = analog
+EOF
+edit sort -s -k 1,1
+expect <<EOF
+P0[0] DM=000 DR=1  1
+P0[0] DM=000 DR=1  1
+P0[0] DM=010 DR=1  Z
+P0[0] DM=110 DR=1  analog
+P0[1] DM=001 DR=1  1
+P0[1] DM=000 DR=1  1
+P0[1] DM=010 DR=1  Z
+P0[1] DM=110 DR=1  analog
+P0[2] DM=010 DR=1  Z
+P0[2] DM=010 DR=1  Z
+P0[2] DM=010 DR=1  Z
+P0[2] DM=110 DR=1  analog
+P0[3] DM=011 DR=1  1R
+P0[3] DM=010 DR=1  Z
+P0[3] DM=010 DR=1  Z
+P0[3] DM=110 DR=1  analog
+P0[4] DM=100 DR=1  1(slow)
+P0[4] DM=100 DR=1  1(slow)
+P0[4] DM=110 DR=1  analog
+P0[4] DM=110 DR=1  analog
+P0[5] DM=101 DR=1  1(slow)
+P0[5] DM=100 DR=1  1(slow)
+P0[5] DM=110 DR=1  analog
+P0[5] DM=110 DR=1  analog
+P0[6] DM=110 DR=1  analog
+P0[6] DM=110 DR=1  analog
+P0[6] DM=110 DR=1  analog
+P0[6] DM=110 DR=1  analog
+P0[7] DM=111 DR=1  Z
+P0[7] DM=110 DR=1  analog
+P0[7] DM=110 DR=1  analog
+P0[7] DM=110 DR=1  analog
+EOF

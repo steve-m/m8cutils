@@ -58,7 +58,7 @@ tests:
 
 # ----- Installation ----------------------------------------------------------
 
-install:	m8c.inc ssc.inc m8c.h ssc.h
+install:	all ssc.inc
 		$(INSTALL) m8c.inc \
 		  $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
 		$(INSTALL) ssc.inc \

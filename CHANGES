@@ -1,3 +1,36 @@
+Version 12 (9-JUN-2006)
+----------
+
+- prog/drv/ecb_at91.[ch]: added driver for an AT91RM9200-based programmer (by
+  Carlos Camargo)
+- prog/cli.h and prog/cli.c were missing in the m8cutils-11
+- sim/lang.y: to drive GPIO pins, the specifcation now has to be prefixed with
+  the keyword "drive" (updated sim/README, sim/example/README,
+  sim/tests/drive_0, sim/tests/drive_0r, sim/tests/drive_1, sim/tests/drive_1r,
+  sim/tests/drive_z, sim/tests/tst_reg, sim/tests/gpioint, sim/tests/bugs8)
+- sim/: GPIO pins can now be set with "set <spec> = <value>", similar to how
+  "drive" works (sim/tests/set_0, sim/tests/set_1, sim/tests/set_0r,
+  sim/tests/set_1r, sim/tests/set_long_r, sim/tests/set_z,
+  sim/tests/set_analog)
+- sim/: entering a GPIO pin range now also displays the current DMx and DR
+  settings, and the ICE status
+- sim/gpio.c: also check for interrupts when changing PRTxDR, PRTxDM0, and
+  PRTxDM1 (sim/tests/gpiointcfg)
+- sim/tests/gpioint: enabled mode 00 test case
+- sim/sim.c: if the program argument is omitted, no program is loaded
+- sim/sim.c: if using an ICE, the chip is auto-detected, and the name can be
+  omitted
+- sim/lang.y: new command "printf", to print a message (sim/tests/printf)
+- sim/lang.y: new command "sleep", to pause script execution (sim/tests/sleep)
+- sim/README: clarified that register and field names are not necessarily
+  implemented as #defines
+- sim/lang.y: the address operator "&" now also works with ram[...], rom[...],
+  and symbolic register names (sim/tests/addrop)
+- sim/lang.y: flush stdout after each command, to better synchronize with
+  stderr
+- {libfdr,shared}/Makefile: make "install" depend on "all", so that "make
+  clean" followed by "make install" works
+
 Version 11 (7-JUN-2006)
 ----------
 

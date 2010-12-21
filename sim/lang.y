@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "m8c.h"
 #include "interact.h"
@@ -21,6 +22,7 @@
 #include "sim.h"
 #include "reg.h"
 #include "core.h"
+#include "printf.h"
 #include "lang.h"
 
 
@@ -146,8 +148,10 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 
 %union {
     uint32_t num;
+    char *str;
     struct id *id;
     struct lvalue lval;
+    struct nlist *nlist;
 };
 
 
@@ -156,12 +160,13 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
 %token		TOK_RUN TOK_STEP
-%token		TOK_CONNECT TOK_DISCONNECT
+%token		TOK_CONNECT TOK_DISCONNECT TOK_DRIVE TOK_SET
 %token		TOK_DEFINE
-%token		TOK_QUIT TOK_NL
-%token		TOK_Z TOK_R
+%token		TOK_QUIT TOK_NL TOK_PRINTF TOK_SLEEP
+%token		TOK_Z TOK_R TOK_ANALOG
 
 %token	<num>	NUMBER PORT
+%token	<str>	STRING
 %token	<id>	NEW_ID OLD_ID
 
 %type	<lval>	lvalue
@@ -175,11 +180,16 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %type	<num>	additive_expression multiplicative_expression
 %type	<num>	unary_expression postfix_expression primary_expression
 
+%type	<nlist>	expression_list
+
 %%
 
 
 all:
-    | item all
+    | all item
+	{
+	    fflush(stdout);
+	}
     ;
 
 item:
@@ -212,9 +222,16 @@ command:
 	{
 	    run_one();
 	}
-    | drive_port
+    | TOK_DRIVE drive_port
+    | TOK_SET set_port
+    | PORT opt_byte_mask
+	{
+	    gpio_show(stdout,$1,$2);
+	}
     | ice
     | define
+    | printf
+    | sleep
     | TOK_QUIT
 	{
 	    exit(0);
@@ -233,9 +250,23 @@ drive_port:
 	{
 	    gpio_drive_z($1,$2);
 	}
-    | PORT opt_byte_mask
+    ;
+
+set_port:
+    PORT opt_byte_mask '=' expression opt_r
 	{
-	    gpio_show_drive(stdout,$1,$2);
+	    if ($5)
+		gpio_set_r($1,$2,($4 << ctz($2)) & $2);
+	    else
+		gpio_set($1,$2,($4 << ctz($2)) & $2);
+	}
+    | PORT opt_byte_mask '=' TOK_Z
+	{
+	    gpio_set_z($1,$2);
+	}
+    | PORT opt_byte_mask '=' TOK_ANALOG
+	{
+	    gpio_set_analog($1,$2);
 	}
     ;
 
@@ -311,6 +342,42 @@ define:
 	}
     ;
 
+printf:
+    TOK_PRINTF STRING expression_list
+	{
+	    do_printf(stdout,$2,$3);
+	    free($2);
+	    while ($3) {
+		struct nlist *next = $3->next;
+
+		free($3);
+		$3 = next;
+	    }
+	}
+    ;
+
+expression_list:
+	{
+	    $$ = NULL;
+	}
+    | ',' expression expression_list
+	{
+	    $$ = alloc_type(struct nlist);
+	    $$->n = $2;
+	    $$->next = $3;
+	}
+    ;
+
+sleep:
+    TOK_SLEEP
+	{
+	    getchar();
+	}
+    | TOK_SLEEP expression
+	{
+	    sleep($2);
+	}
+    ;
 register_or_id:
     register
 	{
@@ -342,15 +409,7 @@ assignment:
     ;
 
 lvalue:
-    '[' NUMBER ']' opt_byte_mask
-	{
-	    if ($2 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $2);
-	    $$.type = lt_ram;
-	    $$.n = $2;
-	    $$.mask = $4;
-	}
-    | TOK_RAM '[' NUMBER ']' opt_byte_mask
+    opt_ram '[' NUMBER ']' opt_byte_mask
 	{
 	    if ($3 > chip->pages*256)
 		yyerrorf("address %u is outside of RAM",(unsigned) $3);
@@ -413,6 +472,10 @@ lvalue:
 	    $$.n = $1->reg;
 	    $$.mask = $2;
 	}
+    ;
+
+opt_ram:
+    | TOK_RAM
     ;
 
 register:
@@ -626,14 +689,22 @@ unary_expression:
 	{
 	    $$ = ctz($2);
 	}
-    | '&' '[' expression ']'
-	{
-	    $$ = $3;
-	}
-    | '&' TOK_REG '[' expression ']'
+    | '&' opt_ram_rom_reg '[' expression ']'
 	{
 	    $$ = $4;
 	}
+    | '&' OLD_ID
+	{
+	    if ($2->field)
+		yyerror("cannot obtain the address of a field");
+	    $$ = $2->reg;
+	}
+    ;
+
+opt_ram_rom_reg:
+    | TOK_RAM
+    | TOK_ROM
+    | TOK_REG
     ;
 
 postfix_expression:

@@ -9,9 +9,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "m8c.h"
 #include "ice.h"
+#include "interact.h"
 
 #include "util.h"
 #include "reg.h"
@@ -117,6 +119,7 @@ static void gpio_write_dr(struct reg *reg,uint8_t value)
     if (gpio->ice)
 	ice_write(reg-regs,value & gpio->ice);
     gpio->dr = value;
+    gpio_maybe_interrupt(gpio);
 }
 
 
@@ -144,6 +147,7 @@ static void gpio_write_dm0(struct reg *reg,uint8_t value)
     if (gpio->ice)
 	ice_write(reg-regs,value & gpio->ice);
     gpio->dm0 = value;
+    gpio_maybe_interrupt(gpio);
 }
 
 
@@ -171,6 +175,7 @@ static void gpio_write_dm1(struct reg *reg,uint8_t value)
     if (gpio->ice)
 	ice_write(reg-regs,value | ~gpio->ice);
     gpio->dm1 = value;
+    gpio_maybe_interrupt(gpio);
 }
 
 
@@ -198,6 +203,13 @@ static void gpio_write_dm2(struct reg *reg,uint8_t value)
     if (gpio->ice)
 	ice_write(reg-regs,value | ~gpio->ice);
     gpio->dm2 = value;
+    /*
+     * We don't call gpio_maybe_interrupt here, because none of the PRTxDM2
+     * changes could cause a GPIO interrupt in the simulator. (They may on
+     * real hardware, e.g., if using an external pull-up or -down which is
+     * weaker than the internal one, so it can affect the pin while in Hi-Z,
+     * but not when resistive.)
+     */
 }
 
 
@@ -378,15 +390,6 @@ void gpio_drive(int port,uint8_t mask,uint8_t value)
 }
 
 
-void gpio_drive_z(int port,uint8_t mask)
-{
-    struct gpio *gpio = gpios+port;
-
-    gpio->drive_z |= mask;
-    gpio_maybe_interrupt(gpio);
-}
-
-
 void gpio_drive_r(int port,uint8_t mask,uint8_t value)
 {
     struct gpio *gpio = gpios+port;
@@ -398,23 +401,138 @@ void gpio_drive_r(int port,uint8_t mask,uint8_t value)
 }
 
 
-void gpio_show_drive(FILE *file,int port,uint8_t mask)
+void gpio_drive_z(int port,uint8_t mask)
 {
     struct gpio *gpio = gpios+port;
 
+    gpio->drive_z |= mask;
+    gpio_maybe_interrupt(gpio);
+}
+
+
+/* ----- Set drive mode and data ------------------------------------------- */
+
+
+static void gpio_may_change(int port,int reg,const uint8_t *curr,uint8_t mask,
+  uint8_t value)
+{
+    uint8_t new = (*curr & ~mask) | value;
+
+    assert(!(value & ~mask));
+    if (*curr == new)
+	return;
+    reg_write(regs+reg+4*port,new);
+    if (verbose > 1)
+	gpio_show(stderr,port,mask);
+}
+
+
+void gpio_set(int port,uint8_t mask,uint8_t value)
+{
+    struct gpio *gpio = gpios+port;
+
+    gpio_may_change(port,PRT0DR,&gpio->dr,mask,value);
+    gpio_may_change(port,PRT0DM0,&gpio->dm0,mask,mask);
+    gpio_may_change(port,PRT0DM1,&gpio->dm1,mask,0);
+}
+
+
+/*
+ * Setting resistive modes is tricky, because we have more forbidden states
+ * than in all the other cases. The algorithm below yields correct results,
+ * but it may be possible to optimize it by reducing the number of bits
+ * changed in the first two conditional transitions.
+ */
+
+void gpio_set_r(int port,uint8_t mask,uint8_t value)
+{
+    struct gpio *gpio = gpios+port;
+    uint8_t dm0,dm1,dm2,dr;
+
+    dm0 = (gpio->dm0 & ~mask) | value;
+    dm1 = (gpio->dm1 & ~mask) | value;
+    dm2 = gpio->dm2 & ~mask;
+    dr = (gpio->dr & ~mask) | value;
+
+    /* only change transitions out of DR = 1 */
+    gpio_may_change(port,PRT0DM0,&gpio->dm0,mask,
+      (gpio->dm0 & ~gpio->dr) | (dm0 & gpio->dr));
+
+    /* only change transitions out of DR = 0 */
+    gpio_may_change(port,PRT0DM1,&gpio->dm1,mask,
+      (gpio->dm1 & gpio->dr) | (dm1 & ~gpio->dr));
+
+    gpio_may_change(port,PRT0DM2,&gpio->dm2,mask,dm2);
+    gpio_may_change(port,PRT0DR,&gpio->dr,mask,dr);
+    gpio_may_change(port,PRT0DM0,&gpio->dm0,mask,dm0);
+    gpio_may_change(port,PRT0DM1,&gpio->dm1,mask,dm1);
+}
+
+
+void gpio_set_z(int port,uint8_t mask)
+{
+    struct gpio *gpio = gpios+port;
+
+    gpio_may_change(port,PRT0DM0,&gpio->dm0,mask,0);
+    gpio_may_change(port,PRT0DM1,&gpio->dm1,mask,mask);
+    gpio_may_change(port,PRT0DM2,&gpio->dm2,mask,0);
+}
+
+
+void gpio_set_analog(int port,uint8_t mask)
+{
+    struct gpio *gpio = gpios+port;
+
+    gpio_may_change(port,PRT0DM0,&gpio->dm0,mask,0);
+    gpio_may_change(port,PRT0DM1,&gpio->dm1,mask,mask);
+    gpio_may_change(port,PRT0DM2,&gpio->dm2,mask,mask);
+}
+
+
+/* ----- Port status ------------------------------------------------------- */
+
+
+static const char *gpio_state[] = {
+    "0R",	"0",		"Z",		"0",
+    "Z",	"0(slow)",	"analog",	"0(slow)",
+    "1",	"1",		"Z",		"1R",
+    "1(slow)",	"1(slow)",	"analog",	"Z"
+};
+
+
+static void gpio_show_pin(FILE *file,const struct gpio *gpio,int n)
+{
+    int dm,dr;
+
+    dm = ((gpio->dm2 >> n) & 1) << 2 |
+      ((gpio->dm1 >> n) & 1) << 1 |
+      ((gpio->dm0 >> n) & 1);
+    dr = (gpio->dr >> n) & 1;
+    fprintf(file,"P%d[%d] DM=%d%d%d DR=%d  %s",(int) (gpio-gpios),n,
+      dm >> 2,(dm >> 1) & 1,dm & 1,dr,
+      gpio_state[dm | dr << 3]);
+    if ((gpio->ice >> n) & 1)
+	fprintf(file,"  <-> ICE\n");
+    else if (gpio->drive_z & (1 << n))
+	fputc('\n',file);
+    else {
+	fprintf(file,"  <-- drive %d%s\n",
+	  (gpio->drive >> n) & 1,
+	  gpio->drive_r & (1 << n) ? " R" : "");
+    }
+}
+
+
+void gpio_show(FILE *file,int port,uint8_t mask)
+{
+    const struct gpio *gpio = gpios+port;
     int i;
 
-    for (i = 7; i >= 0; i--) {
-	if (gpio->drive_z & (1 << i))
-	    fputc('Z',file);
-	else {
-	    if (gpio->drive_r & (1 << i))
-		fputc(gpio->drive & (1 << i) ? 'R' : 'r',file);
-	    else
-		fputc(gpio->drive & (1 << i) ? 'H' : 'L',file);
-	}
+    for (i = 0; i != 8; i++) {
+	if (!((mask >> i) & 1))
+	    continue;
+	gpio_show_pin(file,gpio,i);
     }
-    fputc('\n',file);
 }
 
 

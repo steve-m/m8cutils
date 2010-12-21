@@ -1,0 +1,55 @@
+#!/bin/sh
+. Common
+
+asm "GPIO interrupt on DR change (simulation)" </dev/null
+sim <<EOF
+set P0[0] = 0
+PRT0IC0 = 0
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+set P0[0] = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x1 1
+EOF
+
+asm "GPIO interrupt on DM0 change (simulation)" </dev/null
+sim <<EOF
+drive P0[0] = 1
+PRT0DR = 0
+PRT0DM0 = 1
+PRT0DM1 = 1
+PRT0DM2 = 0
+PRT0IC0 = 0
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+PRT0DM0 = 0
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x1 1
+EOF
+
+asm "GPIO interrupt on DM1 change (simulation)" </dev/null
+sim <<EOF
+drive P0[0] = 0
+PRT0DR = 1
+PRT0DM0 = 0
+PRT0DM1 = 0
+PRT0DM2 = 0
+PRT0IC0 = 1
+PRT0IC1 = 0
+PRT0IE = 1
+INT_CLR0_GPIO
+PRT0DM1 = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x1 1
+EOF

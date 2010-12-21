@@ -45,6 +45,13 @@ sim_fail()
 }
 
 
+edit()
+{
+    "$@" <_out >_tmp || exit 1
+    mv _tmp _out
+}
+
+
 expect()
 {
     diff -u - _out >_diff || {

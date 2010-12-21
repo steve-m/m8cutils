@@ -8,15 +8,16 @@
 include ../Common.make
 
 
-DRIVERS=waspic watsp watpp
+DRIVERS=waspic watsp watpp ecb_at91
 FILES=README Makefile \
       m8cprog.c vectors.h \
       tty.h tty.c pp.h pp.c rt.h rt.c prog.h prog.c ops.h ops.c ice.h ice.c \
+      cli.h cli.c \
       torture.c \
       ref/README ref/Makefile ref/main.c \
       ref/vectorconv.pl ref/vdecode.pl ref/mapconv.pl \
       ref/an2026a.txt ref/an2026a.map ref/an2026b.txt ref/an2026b.map \
-      $(DRIVERS:%=drv/%.c)
+      $(DRIVERS:%=drv/%.c) drv/ecb_at91.h
 OBJS=m8cprog.o
 LIBPROG_OBJS=tty.o pp.o rt.o prog.o ops.o ice.o cli.o $(DRIVERS:%=drv/%.o)
 LIBDEP += libprog.a
