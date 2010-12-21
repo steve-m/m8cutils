@@ -15,6 +15,7 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       reuse_bf reuse_fb reuse_undef reuse_before reuse_after \
       reuse_global reuse_export \
       area asciz blk blkw db ds dw dwl equ export org \
+      assert cycles \
       comment \
       arith bit shift logical relop \
       char hex decimal octal binary \
@@ -22,8 +23,10 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       evalconst \
       sym_local sym_global sym_reuse redefine \
       sep_local sep_global sep_undef sep_mix sep_export \
+      sep_undef_re sep_cpp \
       dundef \
-      prot_all prot_hole prot_short prot_comment
+      prot_all prot_hole prot_short prot_comment \
+      redef_before redef_after redef_syntax redef_undef redef_mix redef_ext
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
       error-as.h error-as.c id.h id.c op.h op.c code.h code.c \
@@ -64,8 +67,8 @@ uninstall:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f y.tab.h y.tab.c lex.yy.c y.output
+		rm -f y.tab.h y.tab.c lex.yy.c
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8cas m8cas.exe
+		rm -f m8cas

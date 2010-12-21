@@ -20,7 +20,7 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       set_0 set_1 set_0r set_1r set_long_r set_z set_analog \
       intsw inttake intret \
       gpioint gpiointcfg \
-      addrop printf sleep break unbreak \
+      addrop printf sleep break unbreak breakint \
       bugs7 bugs8 \
       symbols symexpr symquot regreg ppreg \
       noice

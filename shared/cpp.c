@@ -21,7 +21,7 @@
 
 static pid_t cpp_pid;
 static int cpp_argc = 0;
-static const char **cpp_argv;
+static const char **cpp_argv = NULL;
 static int real_stdin = -1;
 
 
@@ -136,6 +136,8 @@ static void run_cpp(const char *name,int fd,int close_fd)
     for (arg = (char **) cpp_argv+1; *arg; arg++)
 	free(*arg);
     free(cpp_argv);
+    cpp_argv = NULL;
+    cpp_argc = 0;
 }
 
 

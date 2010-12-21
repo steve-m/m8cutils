@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "jrb.h"
@@ -60,53 +61,74 @@ struct id *make_id(char *name)
 
     id = alloc_type(struct id);
     id->name = stralloc(name);
-    id->defined = id->used = id->global = 0;
-    id->area = NULL;
-    id->loc = current_loc;
+    id->values = NULL;
+    id->prev_value = NULL;
+    id->next_value = &id->values;
+    id->global = id->used = 0;
     id->alias = old;
+    id->loc = current_loc;
     jrb_insert_str(tree,id->name,new_jval_v(id));
     return id;
 }
 
 
-static void scrap_reusable(void)
+static void scrap_reusable(int all)
 {
-    JRB entry;
     struct tree_list *tree;
 
-    jrb_traverse(entry,reusable) {
-	const struct id *id = jval_v(jrb_val(entry));
-
-	if (!id->defined && id->used)
-	    lerrorf(&id->loc,"undefined reusable label \"%s\"",id->name);
-    }
-
+    if (jrb_empty(reusable))
+	return;
     /*
      * We can't throw away the reusable labels now, because they may still be
      * referenced in an expression where they are mixed with non-reusable
      * labels which are not yet defined.
      */
     tree = alloc_type(struct tree_list);
-    tree->tree = reusable;
     tree->next = reused;
     reused = tree;
-    reusable = make_jrb();
+
+    if (all) {
+	tree->tree = reusable;
+	reusable = make_jrb();
+    }
+    else {
+	JRB entry,next;
+
+	tree->tree = make_jrb();
+	for (entry = jrb_first(reusable); entry != jrb_nil(reusable);
+	  entry = next) {
+	    struct id *id = jval_v(jrb_val(entry));
+
+	    next = jrb_next(entry);
+	    if (isdigit(id->name[1]))
+		continue;
+	    jrb_delete_node(entry);
+	    jrb_insert_str(tree->tree,id->name,new_jval_v(id));
+	}
+    }
 }
 
 
-void assign(struct id *id,struct op *value,const struct area *area)
+void assign(struct id *id,struct op *value,const struct area *area,
+  int redefine)
 {
+    struct value *val;
+
     if (*id->name != '.')
-	scrap_reusable();
+	scrap_reusable(0);
     if (id->alias && id->global)
 	id = id->alias;
-    if (id->defined)
+    if (id->values && !redefine)
 	lerrorf(&current_loc,"redefining \"%s\" (first definition at %s:%d)",
-	  id->name,get_file(&id->loc),get_line(&id->loc));
-    id->defined = 1;
-    id->value = value;
-    id->area = area;
-    id->loc = current_loc;
+	  id->name,get_file(&id->values->loc),get_line(&id->values->loc));
+    val= alloc_type(struct value);
+    val->value = value;
+    val->area = area;
+    val->loc = current_loc;
+    val->next = NULL;
+    *id->next_value = val;
+    id->prev_value = id->next_value;
+    id->next_value = &val->next;
 }
 
 
@@ -116,23 +138,33 @@ void export(struct id *id)
     if (!id->alias)
 	return;
     id->alias->used = id->used || id->alias->used;
-    if (id->alias->defined)
+    if (id->alias->values)
 	lerrorf(&current_loc,"re-exporting \"%s\" (first definition at %s:%d)",
-	  id->name,get_file(&id->alias->loc),get_line(&id->alias->loc));
-    if (id->defined && !id->alias->defined) {
-	id->alias->defined = 1;
-	id->alias->value = get_op(id->value);
-	id->alias->area = id->area;
-	id->alias->loc = id->loc;
+	  id->name,get_file(&id->alias->values->loc),
+	  get_line(&id->alias->values->loc));
+    if (id->values && !id->alias->values) {
+	id->alias->values = id->values;
+	id->values = NULL;
     }
 }
 
 
-struct op *id_resolve(const struct id *id)
+struct value **id_resolve(struct id *id,int direction)
 {
     if (id->alias && id->global)
 	id = id->alias;
-    return id->defined ? id->value : NULL;
+    switch (direction) {
+	case 0:
+	    return &id->values;
+	case -1:
+	    if (!id->prev_value)
+		yyerrorf("no previous definition of \"%s\"",id->name);
+	    return id->prev_value;
+	case 1:
+	    return id->next_value;
+	default:
+	    abort();
+    }
 }
 
 
@@ -158,19 +190,21 @@ void id_end_file(void)
 {
     JRB entry,next;
 
+    scrap_reusable(1);
     for (entry = jrb_first(non_reusable); entry != jrb_nil(non_reusable);
       entry = next) {
 	struct id *id = jval_v(jrb_val(entry));
 
-	if (id->global && !id->defined && !(id->alias && id->alias->defined))
+	if (id->global && !id->values && !(id->alias && id->alias->values))
 	    lerrorf(&id->loc,"undefined exported label \"%s\"",id->name);
 	next = jrb_next(entry);
 	jrb_delete_node(entry);
-	if (!id->global && id->defined)
+	if (!id->global && id->values)
 	    jrb_insert_str(file_scope->tree,id->name,new_jval_v(id));
 	else {
 	    id->global = 1;
-	    jrb_insert_str(global,id->name,new_jval_v(id));
+	    if (!id->alias)
+		jrb_insert_str(global,id->name,new_jval_v(id));
 	}
     }
     assert(jrb_empty(non_reusable));
@@ -179,25 +213,29 @@ void id_end_file(void)
 
 static void write_id(FILE *file,const struct id *id,int regular)
 {
-    unsigned long value;
-    int digits;
+    const struct value *val;
 
-    if (!id->defined || (id->alias && id->global))
+    if (!id->values || (id->alias && id->global))
 	return;
 
-    value = evaluate(id->value);
-    if (!id->area && value > 0xffff)
-	digits = 8;
-    else
-	digits = id->area && id->area->attributes & ATTR_RAM ? 3 : 4;
-    fprintf(file,"%s %*s%0*lX  %c  %-*s %-*s %s:%d\n",
-      id->area ? id->area->attributes & ATTR_RAM ?
-      "RAM" : "ROM" : "EQU",
-      8-digits,"",digits,value,
-      regular && id->global ? 'G' : 'L',
-      ID_PAD,id->name,
-      AREA_PAD,id->area ? id->area->name : "-",
-      get_file(&id->loc),get_line(&id->loc));
+    for (val = id->values; val; val = val->next) {
+	unsigned long value;
+	int digits;
+
+	value = evaluate(val->value);
+	if (!val->area && value > 0xffff)
+	    digits = 8;
+	else
+	    digits = val->area && val->area->attributes & ATTR_RAM ? 3 : 4;
+	fprintf(file,"%s %*s%0*lX  %c  %-*s %-*s %s:%d\n",
+	  val->area ? val->area->attributes & ATTR_RAM ?
+	  "RAM" : "ROM" : "EQU",
+	  8-digits,"",digits,value,
+	  regular && id->global ? 'G' : 'L',
+	  ID_PAD,id->name,
+	  AREA_PAD,val->area ? val->area->name : "-",
+	  get_file(&val->loc),get_line(&val->loc));
+    }
 }
 
 
@@ -253,8 +291,14 @@ static void free_tree(JRB tree)
 	struct id *id = jval_v(jrb_val(entry));
 
 	free(id->name);
-	if (id->defined)
-	    put_op(id->value);
+	while (id->values) {
+	    struct value *next;
+
+	    put_op(id->values->value);
+	    next = id->values->next;
+	    free(id->values);
+	    id->values = next;
+	}
 	free(id);
     }
     jrb_free_tree(tree);

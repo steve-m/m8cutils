@@ -327,3 +327,6 @@ forever and reports its findings to standard error. If the number
 of cycles per session is passed as an argument, "torture" will
 close the programmer session and re-open it again whenever the
 specified number of cycles has been reached in the a session.
+
+With the option -t, "torture" performs throughput measurements
+instead of a continuous torture test.

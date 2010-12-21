@@ -1,4 +1,4 @@
-Version 20 (xx-NOV-2006)
+Version 20 (5-DEC-2006)
 ----------
 
 - shared/file.c:read_binary: complained that files of exactly 32 kB were
@@ -26,10 +26,10 @@ Version 20 (xx-NOV-2006)
   operations by about 25%
 - prog/drv/waspic.c: increased the read timeout from 1 to 5 seconds to allow
   large host-side buffers to drain
-- prog/tty.[ch]:tty_discard_input: new function to flush queued-up input
 - prog/drv/wadsp.[ch]: added driver for the wadsp programmer
+- prog/tty.[ch]:tty_discard_input: new function to flush queued-up input
 - README: the license is plain GPLv2, no longer with an augmented version (that
-  was for the programmer hardware, that has since moved to m8cprogs)
+  was for the programmer hardware, which has since moved to m8cprogs)
 - shared/file.c:read_hex, shared/symmap.c:sym_read_file,
   as/code.c:store_offset, prog/prog_vector.c:prog_vector,
   prog/prog_vector.c:do_prog_acquire_reset, sim/lang.y:read_lvalue,
@@ -50,6 +50,27 @@ Version 20 (xx-NOV-2006)
   compatibility (by Mike Moreton)
 - sim/Makefile, sim/icestubs.c: added support for building m8csim without the
   DIY ICE (by Mike Moreton)
+- sim/code.c:m8c_run: breakpoint at interrupt table entry wasn't taken
+  (sim/tests/breakint, reported by Mike Moreton)
+- as/: added ASSERT directive (as/tests/assert)
+- as/: added re-definable local labels, defined e.g., with ".1:", and used
+  with ".1b", ".1f", etc. (as/tests/redef_before, as/tests/redef_after,
+  as/tests/redef_syntax, as/tests/redef_undef, as/tests/redef_mix,
+  as/tests/redef_ext; updated as/tests/reuse_after)
+- as/id.c: reusable symbols didn't get removed between files 
+  (as/tests/sep_undef_re)
+- as/id.c:scrap_reusable: don't make a backup entry if there are no reusable
+  labels
+- as/tests/sep_undef_re: tests for re-usable and re-definable labels crossing
+  file boundaries
+- shared/cpp.c:run_cpp: leave cpp_argv and cpp_argc in a state that allows
+  reuse
+- as/m8cas.c: if using -e with multiple files, set up CPP arguments for each 
+  file (as/tests/sep_cpp)
+- as/: added special variable "@"  containing the cumulative number of CPUCLK
+  cycles of the instructions since the beginning of the program
+  (as/tests/cycles)
+- Makefile: added target "valgrind" to run the regression tests under valgrind
 
 Version 19 (30-OCT-2006)
 ----------

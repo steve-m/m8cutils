@@ -10,6 +10,7 @@
 
 #include "jrb.h"
 #include "file.h"
+#include "disasm.h"
 
 #include "util.h"
 #include "error.h"
@@ -25,9 +26,16 @@ static struct patch {
     struct patch *next;   
 } *patches = NULL,**last_patch = &patches;
 
+static struct assertion {
+    struct loc loc;
+    struct op *op;
+    struct assertion *next;
+} *assertions = NULL,**next_assertion = &assertions;
+
 
 int *pc; /* must call set_area before doing anything else */
 int next_pc = 0;
+int cycles = 0;
 
 const struct area *text;
 struct area *current_area;
@@ -61,6 +69,7 @@ void store_op(uint8_t op)
 {
     check_store();
     program[*pc] = op & 0x80 ? (program[*pc] & 0xf) | op : op;
+    cycles += m8c_cycles[op];
 }
 
 
@@ -132,6 +141,19 @@ void store(void (*fn)(const struct loc *loc,int pos,uint32_t data),
 }
 
 
+void assertion(const struct loc *loc,struct op *op)
+{
+    struct assertion *assrt;
+
+    assrt = alloc_type(struct assertion);
+    assrt->loc = *loc;
+    assrt->op = op;
+    assrt->next = NULL;
+    *next_assertion = assrt;
+    next_assertion = &assrt->next;
+}
+
+
 void resolve(void)
 {
     while (patches) {
@@ -142,6 +164,15 @@ void resolve(void)
 	next = patches->next;
 	free(patches);
 	patches = next;
+    }
+    while (assertions) {
+	struct assertion *next;
+
+	if (!evaluate(assertions->op))
+	    lerrorf(&assertions->loc,"assertion failed");
+	next = assertions->next;
+	free(assertions);
+	assertions = next;
     }
 }
 

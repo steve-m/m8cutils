@@ -650,7 +650,7 @@ uint32_t m8c_run(uint32_t cycles)
 	    tmp = m8c_check_interrupt(cycles-done);
 	    if (tmp) {
 		done += tmp;
-		continue;
+		goto insn_done;
 	    }
 	}
 	tmp = m8c_prep(cycles-done);
@@ -659,6 +659,7 @@ uint32_t m8c_run(uint32_t cycles)
 	done += tmp;
 	if (m8c_one())
 	    break;
+insn_done:
 	if (breakpoint[pc]) {
 	    fflush(stdout);
 	    fprintf(stderr,"Breakpoint\n");

@@ -1,0 +1,48 @@
+#!/bin/sh
+. Common
+
+asm_fail "Re-definable label, backwards, not defined" -e <<EOF
+	db	.1b
+EOF
+expect <<EOF
+<stdin>:1: no previous definition of ".1"
+EOF
+
+asm_fail "Re-definable label, forwards, not defined" -e <<EOF
+	db	.1f
+EOF
+expect <<EOF
+<stdin>:1: undefined label ".1"
+EOF
+
+asm_fail "Re-definable label, backwards, defined only forwards" -e <<EOF
+	db	.1b
+.1:
+EOF
+expect <<EOF
+<stdin>:1: no previous definition of ".1"
+EOF
+
+asm_fail "Re-definable label, forwards, defined only backwards" -e <<EOF
+.1:
+	db	.1f
+EOF
+expect <<EOF
+<stdin>:2: undefined label ".1"
+EOF
+
+asm_fail "Re-definable label, defined forwards, no direction" -e <<EOF
+	db	.1
+.1:
+EOF
+expect <<EOF
+<stdin>:1: syntax error
+EOF
+
+asm_fail "Re-definable label, defined backwards, no direction" -e <<EOF
+.1:
+	db	.1
+EOF
+expect <<EOF
+<stdin>:2: syntax error
+EOF

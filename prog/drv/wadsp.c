@@ -22,7 +22,7 @@
  *              Voltage
  *              +        -
  * RTS  out     Reset    Active	   reset
- * DCD  in      !SDATA   SDATA     data
+ * DCD  in      SDATA    !SDATA    data
  * TD   out     SDATA    !SDATA/Z  data
  * DTR  out     SCLK     !SCLK     clock
  */
@@ -32,13 +32,9 @@ static int fd;
 static int reset,inverted,sdata;
 
 
-/*
- * Note: XRES and SDATA_IN are inverted by the circuit, hence the nots.
- */
-
 #define XRES(on)	tty_rts(on)
 #define SCLK(on)	tty_dtr(on)
-#define	SDATA_IN()	(!tty_dcd())
+#define	SDATA_IN()	tty_dcd()
 #define Z()		SDATA(0)
 
 

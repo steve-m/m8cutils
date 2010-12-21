@@ -1,0 +1,25 @@
+#!/bin/sh
+. Common
+
+asm "Breakpoint at interrupt table entry" <<EOF
+#include "m8c.inc"
+	or	f,CPU_F_GIE
+	halt
+
+	org	0x1c
+	halt
+EOF
+sim <<EOF
+INT_MSK3_ENSWINT = 1
+INT_CLR0_GPIO = 1
+INT_MSK0_GPIO = 1
+break 0x1c
+run
+.
+@
+EOF
+expect <<EOF
+Breakpoint
+0x1c 28
+0x11 17
+EOF

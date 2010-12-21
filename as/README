@@ -149,6 +149,19 @@ assembler:
   mask covering a field in a register or similar can be used to shift a value
   into position with the >> operator, e.g.:
   mov reg[CPU_F],2 << >>CPU_F_PgMode
+- there is an ASSERT directive that causes an assemble-time error if the
+  expression evaluates to zero
+- re-definable local labels similar to the ones of the GNU assembler: any label
+  whose name begins with a dot and a digit is not removed by other labels, is
+  accessed by appending the direction of the definition ("b" for backwards, "f"
+  for forwards) to the name, and can be redefined
+- the special variable @ contains the cumulative number of CPU cycles since the
+  beginning of the program. Note that this information is static and does not
+  take into account loops, branches, or code that is not produced by a mnemonic
+  (e.g., "db 40" would not change the cycle count)
+
+Most of these extensions are only available when the option -e is set.
+Otherwise, attempting to use them yields an error.
 
 
 Errata
@@ -168,3 +181,6 @@ Known problems
 - there is no provision for detecting exceeding the available ROM or RAM
   space (this is of course something the linker should do, not the assembler)
 - the behaviour of AREA is still unsatisfactory
+- far too many wildly distinct types of problems are reported simply as "syntax
+  error"
+- the line number in most error messages is off by at least one line

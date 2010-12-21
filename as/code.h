@@ -32,6 +32,7 @@ struct area {
 
 extern int *pc;
 extern int next_pc;
+extern int cycles; /* cumulative CPUCLK cycles since beginning of program */
 extern const struct area *text;
 extern struct area *current_area;
 
@@ -56,6 +57,8 @@ void set_base(int offset);
 
 void store(void (*fn)(const struct loc *loc,int pos,uint32_t data),
   int offset,struct op *op);
+
+void assertion(const struct loc *loc,struct op *op);
 
 void resolve(void);
 

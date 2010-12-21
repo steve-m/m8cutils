@@ -187,6 +187,7 @@ static struct op *new_op(uint32_t (*fn)(uint32_t a,uint32_t b))
     op = alloc_type(struct op);
     op->fn = fn;
     op->ref = 1;
+    op->loc = current_loc;
     return op;
 }
 
@@ -195,8 +196,8 @@ void free_op(struct op *op)
 {
     if (op->fn != op_number && op->fn != op_id) {
 	put_op(op->u.a);
-	if (op->b)
-	    put_op(op->b);
+	if (op->u2.b)
+	    put_op(op->u2.b);
     }
     free(op);
 }
@@ -212,15 +213,17 @@ struct op *number_op(uint32_t value)
 }
 
 
-struct op *id_op(const struct id *id)
+struct op *id_op(struct id *id,int direction)
 {
+    struct value **val;
     struct op *op;
 
-    op = id_resolve(id);
-    if (op)
-	return get_op(op);
+    val = id_resolve(id,direction);
+    if (*val)
+	return get_op((*val)->value);
     op = new_op(op_id);
     op->u.id = id;
+    op->u2.value = val;
     return op;
 }
 
@@ -239,7 +242,7 @@ struct op *make_op(uint32_t (*fn)(uint32_t a,uint32_t b),
     }
     op = new_op(fn);
     op->u.a = a;
-    op->b = b;
+    op->u2.b = b;
     return op;
 }
 
@@ -249,12 +252,15 @@ uint32_t evaluate(const struct op *op)
     if (op->fn == op_number)
 	return op->u.value;
     if (op->fn == op_id) {
-	struct op *v;
+	struct value **value;
 
-	v = id_resolve(op->u.id);
-	if (v)
-	    return evaluate(v);
-	lerrorf(&op->u.id->loc,"undefined label \"%s\"",op->u.id->name);
+	if (op->u.id->alias && op->u.id->global)
+	    value = &op->u.id->alias->values;
+	else
+	    value = op->u2.value;
+	if (*value)
+	    return evaluate((*value)->value);
+	lerrorf(&op->loc,"undefined label \"%s\"",op->u.id->name);
     }
-    return op->fn(evaluate(op->u.a),op->b ? evaluate(op->b) : 0);
+    return op->fn(evaluate(op->u.a),op->u2.b ? evaluate(op->u2.b) : 0);
 }

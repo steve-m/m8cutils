@@ -1,0 +1,48 @@
+#!/bin/sh
+. Common
+
+asm_fail "Cycle conting is an extension (definition)" <<EOF
+	db	@
+EOF
+expect <<EOF
+<stdin>:1: cycle counting is a non-standard extension
+EOF
+
+asm "Cycle count after the code" -e <<EOF
+start:	equ	@
+	mov	a,42
+	ret
+	db	@-start
+EOF
+expect <<EOF
+50 2A 7F 0C
+EOF
+
+asm "Cycle count before the code" -e <<EOF
+	db	end-start
+start:	equ	@
+	mov	a,42
+	ret
+end:	equ	@
+EOF
+expect <<EOF
+0C 50 2A 7F
+EOF
+
+asm_fail "Assert minimum duration" -e <<EOF
+/* This is in fact a usage example.
+   Just thought it would be nice to have one :-) */
+
+#define	START_CYCLES	.0cycles: equ @
+#define MIN_CYCLES(n)	assert @-.0cyclesB >= (n) \
+			.0cycles: equ @
+
+	START_CYCLES
+	swap	a,sp
+	MIN_CYCLES(5)
+	inc	a
+	MIN_CYCLES(5)
+EOF
+expect <<EOF
+<stdin>:11: assertion failed
+EOF

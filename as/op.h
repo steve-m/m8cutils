@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "error.h"
 #include "id.h"
 
 
@@ -22,7 +23,11 @@ struct op {
 	uint32_t value;
 	const struct id *id;
     } u;
-    struct op *b;
+    union {
+	struct op *b;
+	struct value **value;
+    } u2;
+    struct loc loc;
     int ref;
 };
 
@@ -75,7 +80,16 @@ static inline void put_op(struct op *op)
 
 
 struct op *number_op(uint32_t value);
-struct op *id_op(const struct id *id);
+
+
+/*
+ * "direction":
+ * -1  previous, e.g., ".10b"
+ *  0  current, e.g. "foo"
+ *  1  next, e.g., ".2f"
+ */
+
+struct op *id_op(struct id *id,int direction);
 struct op *make_op(uint32_t (*fn)(uint32_t a,uint32_t b),
   struct op *a,struct op *b);
 uint32_t evaluate(const struct op *op);

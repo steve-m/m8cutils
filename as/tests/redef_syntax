@@ -1,0 +1,40 @@
+#!/bin/sh
+. Common
+
+asm "Re-definable label, backwards, numeric, lower case direction" -e <<EOF
+	nop
+.1:
+	db	.1b
+EOF
+expect <<EOF
+40 01
+EOF
+
+asm "Re-definable label, forwards, numeric, upper case direction" -e <<EOF
+	db	.1F
+	nop
+.1:
+EOF
+expect <<EOF
+02 40
+EOF
+
+asm "Re-definable label, backwards, alpha-numeric, upper case direction" -e \
+  <<EOF
+	nop
+.1foo:
+	db	.1fooB
+EOF
+expect <<EOF
+40 01
+EOF
+
+asm "Re-definable label, forwards, alpha-numeric, lower case direction" -e \
+  <<EOF
+	db	.1foof
+	nop
+.1foo:
+EOF
+expect <<EOF
+02 40
+EOF

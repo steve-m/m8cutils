@@ -1,0 +1,43 @@
+#!/bin/sh
+. Common
+
+asm "Re-definable label, definition is after use (once), code" -e <<EOF
+	jmp	.2f
+	nop
+.2:
+EOF
+expect <<EOF
+80 02 40
+EOF
+
+sym "Re-definable label, definition is after use (once), map" -e <<EOF
+	jmp	.2f
+	nop
+.2:
+EOF
+expect -w <<EOF
+ROM  0003  L  .2  text  <stdin>:4
+EOF
+
+asm "Re-definable label, definition is after use (twice), code" -e <<EOF
+	jmp	.2f
+	nop
+.2:
+	nop
+.2:
+EOF
+expect <<EOF
+80 02 40 40
+EOF
+
+sym "Re-definable label, definition is after use (twice), map" -e <<EOF
+	jmp	.2f
+	nop
+.2:
+	nop
+.2:
+EOF
+expect -w <<EOF
+ROM  0003  L  .2  text  <stdin>:4
+ROM  0004  L  .2  text  <stdin>:6
+EOF

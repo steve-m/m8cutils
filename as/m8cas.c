@@ -13,6 +13,7 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include "util.h"
 #include "file.h"
 #include "security.h"
 #include "cpp.h"
@@ -28,6 +29,8 @@ int yyparse(void);
 
 
 static int fd0;
+static char **cpp_option;
+static int cpp_options = 0;
 
 
 static void write_symbols(const char *symbols)
@@ -81,6 +84,10 @@ static void do_file(char *name)
 	    exit(1);
 	}
     if (allow_extensions) {
+	int i;
+
+	for (i = 0; i != cpp_options*2; i++)
+	    add_cpp_arg(cpp_option[i]);
 	add_cpp_arg("-I");
 	add_cpp_arg(INSTALL_PREFIX "/share/m8cutils/include");
 	run_cpp_on_file(name);
@@ -131,7 +138,7 @@ static void usage(const char *name)
 
 int main(int argc,char **argv)
 {
-    int cpp_options = 0,binary = 0,hex = 0;
+    int binary = 0,hex = 0;
     const char *output = NULL;
     const char *symbols = NULL;
     const char *flash_security = NULL;
@@ -140,6 +147,7 @@ int main(int argc,char **argv)
     error_init();
     id_init();
     code_init();
+    cpp_option = alloc_type_n(char *,argc*2);
     while ((c = getopt(argc,argv,"bef:hD:I:m:o:U:V")) != EOF) {
 	char opt[] = "-?";
 
@@ -171,9 +179,9 @@ int main(int argc,char **argv)
 	    case 'I':
 	    case 'U':
 		opt[1] = c;
-		add_cpp_arg(opt);
-		add_cpp_arg(optarg);
-		cpp_options = 1;
+		cpp_option[cpp_options*2] = stralloc(opt);
+		cpp_option[cpp_options*2+1] = stralloc(optarg);
+		cpp_options++;
 		break;
 	    case 'V':
 		printf("m8cas from m8cutils version %d\n",VERSION);

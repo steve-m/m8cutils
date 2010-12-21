@@ -38,7 +38,8 @@ TESTS=\
   $(shell for n in $(DIRS); do $(MAKE) -s -C $$n testlist | \
     sed '/^$$/d;s/^\| / '$$n'\/tests\//g'; done)
 
-.PHONY:	all clean spotless dep depend tests install uninstall dist upload
+.PHONY:	all clean spotless dep depend tests valgrind
+.PHONY:	install uninstall dist upload
 
 
 all:
@@ -58,6 +59,9 @@ tests:		all
 		  old_dir=`pwd` && cd `dirname $$n` && \
 		  SCRIPT=$$n . ./`basename $$n` && cd $$old_dir; done; \
 		  echo "Passed all $$passed tests" 2>&1
+
+valgrind:
+		VALGRIND="valgrind -q --leak-check=no" $(MAKE) tests
 
 install:
 		for n in $(ALL_DIRS); do $(MAKE) -C $$n install || exit 1; done

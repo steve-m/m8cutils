@@ -6,7 +6,7 @@ m8cprog
 
 - generalize interface device support to USB, etc.
 - check that the Intel hex format is properly implemented
-- add regression tests
+- add more regression tests
 - fix matching algorithm in ref/main.c:lookup
 
 share/file

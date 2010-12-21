@@ -71,6 +71,7 @@
 
 [Aa][Rr][Ee][Aa]		return TOK_AREA;
 [Aa][Ss][Cc][Ii][Zz]		return TOK_ASCIZ;
+[Aa][Ss][Ss][Ee][Rr][Tt]	return TOK_ASSERT;
 [Bb][Ll][Kk]			return TOK_BLK;
 [Bb][Ll][Kk][Ww]		return TOK_BLKW;
 [Dd][Bb]			return TOK_DB;
@@ -124,6 +125,15 @@ $[0-9A-Fa-f]+			{ char *end;
 [a-zA-Z_][a-zA-Z_0-9]*::	{ *strchr(yytext,':') = 0;
 				  yylval.id = make_id(yytext);
 				  return GLOBAL; }
+\.[0-9][a-zA-Z_0-9]*[bB]	{ yytext[strlen(yytext)-1] = 0;
+				  yylval.id = make_id(yytext);
+				  return BACKWARDS; }
+\.[0-9][a-zA-Z_0-9]*[fF]	{ yytext[strlen(yytext)-1] = 0;
+				  yylval.id = make_id(yytext);
+				  return FORWARDS; }
+\.[0-9][a-zA-Z_0-9]*:		{ *strrchr(yytext,':') = 0;
+				  yylval.id = make_id(yytext);
+				  return REDEFINABLE; }
 
 "||"				return TOK_LOGICAL_OR;
 &&				return TOK_LOGICAL_AND;

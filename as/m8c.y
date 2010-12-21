@@ -22,6 +22,9 @@
 
 int yyparse(void);
 
+
+static struct loc start_loc;
+
 %}
 
 
@@ -41,7 +44,7 @@ int yyparse(void);
 %token		TOK_POP TOK_PUSH TOK_RET TOK_RETI TOK_RLC TOK_ROMX TOK_RRC
 %token		TOK_SBB TOK_SUB TOK_SWAP TOK_SSC TOK_TST TOK_XOR
 
-%token		TOK_AREA TOK_ASCIZ TOK_BLK TOK_BLKW
+%token		TOK_AREA TOK_ASCIZ TOK_ASSERT TOK_BLK TOK_BLKW
 %token		TOK_DB TOK_DS TOK_DSU TOK_DW TOK_DWL
 %token		TOK_ELSE TOK_ENDIF TOK_ENDM TOK_EQU TOK_EXPORT
 %token		TOK_IF TOK_INCLUDE TOK_LITERAL TOK_ENDLITERAL
@@ -53,7 +56,7 @@ int yyparse(void);
 
 %token	<num>	NUMBER
 %token	<str>	STRING
-%token	<id>	LABEL LOCAL GLOBAL
+%token	<id>	LABEL LOCAL GLOBAL REDEFINABLE BACKWARDS FORWARDS
 
 %type	<num>	arithmetic logic shift increment push
 %type	<num>	area_attributes area_attribute
@@ -70,42 +73,56 @@ int yyparse(void);
 %%
 
 all:
-    | label
+    |
+	{
+	    start_loc = current_loc;
+	}
+      item all
+    ;
+
+item:
+    label
 	{
 	    next_statement();
 	}
-       all
     | statement
 	{
 	    next_statement();
 	}
-       all
     | directive
 	{
 	    next_statement();
 	}
-      all
     ;
 
 /* @@@ change with adding relocation */
 label:
     GLOBAL
 	{
-	    assign($1,number_op(*pc),current_area);
+	    assign($1,number_op(*pc),current_area,0);
 	    export($1);
 	}
     | LOCAL
 	{
-	    assign($1,number_op(*pc),current_area);
+	    assign($1,number_op(*pc),current_area,0);
+	}
+    | REDEFINABLE
+	{
+	    extensions("re-definable labels");
+	    assign($1,number_op(*pc),current_area,1);
 	}
     | GLOBAL label_directive
 	{
-	    assign($1,$2,NULL);
+	    assign($1,$2,NULL,0);
 	    export($1);
 	}
     | LOCAL label_directive
 	{
-	    assign($1,$2,NULL);
+	    assign($1,$2,NULL,0);
+	}
+    | REDEFINABLE label_directive
+	{
+	    assign($1,$2,NULL,1);
 	}
     ;
 
@@ -697,6 +714,11 @@ directive:
 	    while (*s++);
 	    free((char *) $2);
 	}
+    | TOK_ASSERT expression
+	{
+	    extension("ASSERT");
+	    assertion(&start_loc,$2);
+	}
     | TOK_BLK expression
 	{
 	    advance_pc(evaluate($2));
@@ -1057,13 +1079,30 @@ primary_expression:
 	}
     | LABEL
 	{
-	    $$ = id_op($1);
+	    $$ = id_op($1,0);
+	    $1->used = 1;
+	}
+    | FORWARDS
+	{
+	    extensions("re-definable labels");
+	    $$ = id_op($1,1);
+	    $1->used = 1;
+	}
+    | BACKWARDS
+	{
+	    extensions("re-definable labels");
+	    $$ = id_op($1,-1);
 	    $1->used = 1;
 	}
     | '.'
 	{
 	    /* @@@ this changes when we add relocation */
 	    $$ = number_op(*pc);
+	}
+    | '@'
+	{
+	    extension("cycle counting");
+	    $$ = number_op(cycles);
 	}
     | '(' expression ')'
 	{

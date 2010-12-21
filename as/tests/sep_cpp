@@ -1,0 +1,24 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, can use CPP" <<EOF
+	ONE
+EOF
+asm -e -DONE=nop -DTWO=halt <<EOF
+	TWO
+EOF
+expect <<EOF
+40 30
+EOF
+
+file "Separate assembly, CPP does not cross files" <<EOF
+#define ONE nop
+#define TWO halt
+	ONE
+EOF
+asm_fail -e <<EOF
+	TWO
+EOF
+expect <<EOF
+<stdin>:1: syntax error
+EOF

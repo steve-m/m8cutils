@@ -1,0 +1,56 @@
+#!/bin/sh
+. Common
+
+asm "Re-definable labels are unaffected by global labels, backwards" -e <<EOF
+.1:
+foo::
+	db	.1b
+EOF
+expect <<EOF
+00
+EOF
+
+asm "Re-definable labels are unaffected by global labels, forwards" -e <<EOF
+	db	.1f
+foo::
+.1:
+EOF
+expect <<EOF
+01
+EOF
+
+asm "Re-definable labels are unaffected by local labels, backwards" -e <<EOF
+.1:
+foo:
+	db	.1b
+EOF
+expect <<EOF
+00
+EOF
+
+asm "Re-definable labels are unaffected by local labels, forwards" -e <<EOF
+	db	.1f
+foo::
+.1:
+EOF
+expect <<EOF
+01
+EOF
+
+asm "Re-definable labels are unaffected by re-usable labels, backwards" -e <<EOF
+.1:
+.foo:
+	db	.1b
+EOF
+expect <<EOF
+00
+EOF
+
+asm "Re-definable labels are unaffected by re-usable labels, forwards" -e <<EOF
+	db	.1f
+.foo:
+.1:
+EOF
+expect <<EOF
+01
+EOF

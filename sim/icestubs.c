@@ -1,8 +1,10 @@
 /*
- * (c) ZinWave 2006
+ * icestubs.c - Replacements for functions provided by libprog
  *
- * Free software - no restrictions on use (and no warranty either).
+ * Written 2006 by Mike Moreton
+ * Copyright 2006 ZinWave
  */
+
 
 #include <stdio.h>
 #include <stdlib.h>

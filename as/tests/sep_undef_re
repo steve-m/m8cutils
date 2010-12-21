@@ -1,0 +1,46 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, undefined symbol, re-usable in first file" <<EOF
+	ljmp	.here
+.here:
+EOF
+asm_fail <<EOF
+	ljmp	.here
+EOF
+expect <<EOF
+<stdin>:1: undefined label ".here"
+EOF
+
+file "Separate assembly, undefined symbol, re-usable in second file" <<EOF
+	ljmp	.here
+EOF
+asm_fail <<EOF
+	ljmp	.here
+.here:
+EOF
+expect <<EOF
+_file_0:1: undefined label ".here"
+EOF
+
+file "Separate assembly, undefined symbol, re-definable in first file" <<EOF
+	ljmp	.1f
+.1:
+EOF
+asm_fail -e <<EOF
+	ljmp	.1b
+EOF
+expect <<EOF
+<stdin>:1: no previous definition of ".1"
+EOF
+
+file "Separate assembly, undefined symbol, re-definable in second file" <<EOF
+	ljmp	.2f
+EOF
+asm_fail -e <<EOF
+	ljmp	.2f
+.2:
+EOF
+expect <<EOF
+_file_0:1: undefined label ".2"
+EOF

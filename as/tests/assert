@@ -1,0 +1,37 @@
+#!/bin/sh
+. Common
+
+asm_fail "ASSERT: requires -e" <<EOF
+	assert	1
+EOF
+expect <<EOF
+<stdin>:2: ASSERT is a non-standard extension
+EOF
+
+asm "ASSERT: pass, constant" -e <<EOF
+	assert	1
+EOF
+expect <<EOF
+EOF
+
+asm_fail "ASSERT: fail, constant" -e <<EOF
+	assert	0
+EOF
+expect <<EOF
+<stdin>:1: assertion failed
+EOF
+
+asm "ASSERT: pass, forward-reference" -e <<EOF
+	assert	okay
+okay:	equ	1
+EOF
+expect <<EOF
+EOF
+
+asm_fail "ASSERT: fail, forward-reference" -e <<EOF
+	assert	okay
+okay:	equ	0
+EOF
+expect <<EOF
+<stdin>:1: assertion failed
+EOF
