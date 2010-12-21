@@ -17,6 +17,8 @@
 
 
 extern const char m8c_cycles[256];
+extern const char m8c_bytes[256];
+
 
 int m8c_disassemble(uint16_t pc,const uint8_t *c,char *buf,size_t buf_size);
 

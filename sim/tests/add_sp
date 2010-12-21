@@ -1,0 +1,23 @@
+. Common
+
+asm "ADD SP,expr (zero and overflow)" <<EOF
+	add	sp,0x80
+	halt
+EOF
+sim <<EOF
+sp = 0x80
+run
+sp
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x0 0
+0x0 0
+0x3 3
+0xe 14
+EOF

@@ -1,0 +1,23 @@
+. Common
+
+asm "ADC [expr],expr (no carry, zero)" <<EOF
+	adc	[0xff],0
+	halt
+EOF
+sim <<EOF
+ram[255] = 0
+run
+ram[255]
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x0 0
+0x4 4
+0x12 18
+EOF

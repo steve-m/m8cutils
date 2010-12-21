@@ -37,14 +37,15 @@ extern union f_union f_union;
 
 #define f       f_union.f
 
-uint8_t ram[0][256];
 
-uint8_t rom[0x10000+2]; /* +2 for instruction length */
+extern uint8_t ram[2048];
+extern uint8_t *stack;
+extern uint8_t rom[0x10000];
 
-extern const uint8_t *pc;
+extern uint16_t pc;
+extern uint8_t x;
+extern uint8_t sp;
 
-uint8_t x;
-uint8_t sp;
 
 uint32_t m8c_run(uint32_t cycles);
 void m8c_init(void);

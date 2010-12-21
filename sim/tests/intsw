@@ -1,0 +1,57 @@
+#!/bin/sh
+. Common
+
+asm "Assert GPIO interrupt by software (simulator only, not handled)" </dev/null
+sim <<EOF
+INT_MSK3_ENSWINT = 1
+INT_CLR0
+INT_VC
+INT_CLR0_GPIO = 1
+INT_CLR0
+INT_VC
+INT_MSK0_GPIO = 1
+INT_VC
+EOF
+expect <<EOF
+0x0 0
+0x0 0
+0x20 32
+0x0 0
+0x1c 28
+EOF
+
+asm "Assert GPIO interrupt by software (by CPU, not handled)" <<EOF
+#include "../registers.h"
+	or	reg[INT_MSK3],INT_MSK3_ENSWINT
+	mov	a,reg[INT_CLR0]
+	mov	[0],a
+	mov	a,reg[INT_VC]
+	mov	[1],a
+	mov	reg[INT_CLR0],INT_CLR0_GPIO
+	mov	a,reg[INT_CLR0]
+	mov	[2],a
+	mov	a,reg[INT_VC]
+	mov	[3],a
+	or	reg[INT_MSK0],INT_MSK0_GPIO
+	mov	a,reg[INT_VC]
+	mov	[4],a
+	halt
+EOF
+sim <<EOF
+run
+.
+[0]
+[1]
+[2]
+[3]
+[4]
+EOF
+expect <<EOF
+HALT
+0x1e 30
+0x0 0
+0x0 0
+0x20 32
+0x0 0
+0x1c 28
+EOF

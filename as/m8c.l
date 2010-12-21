@@ -232,7 +232,7 @@ void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
 {
     va_list ap;
 
-    va_start(fmt,ap);
+    va_start(ap,fmt);
     vlerrorf(&current_loc,fmt,ap);
     va_end(ap);
 }

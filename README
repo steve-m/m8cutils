@@ -35,9 +35,9 @@ holders. Please refer directly to the respective file for details.
 Overview
 --------
 
-This is a collection of utilities for programming the Cypress M8C
-family of microcontrollers, and in particular the CY8C2xxxx series,
-see http://www.cypress.com/psoc
+This is a collection of utilities for programming the Cypress(r) M8C
+family of microcontrollers, and in particular the PSoC(tm) (CY8C2xxxx)
+series, see http://www.cypress.com/psoc
 
 
 This collection consists of the following parts:
@@ -86,6 +86,9 @@ done, but now showing how. You can enable full output, e.g., to
 debug build problems, by putting V=1 on the command line when
 invoking "make", e.g.,
 % make V=1 all
+
+There are also schematics and PCB layouts for programmer hardware
+in waspic/ and watsp/.
 
 
 Testing

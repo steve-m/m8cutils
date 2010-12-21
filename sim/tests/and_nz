@@ -1,0 +1,26 @@
+. Common
+
+asm "AND reg[X+expr],expr (zero is not set)" <<EOF
+	and	reg[X+0],0x52
+	halt
+EOF
+sim <<EOF
+reg[0x102] = 0x3f
+CPU_F_Carry = 0
+CPU_F_XIO = 1
+x = 2
+run
+reg[0x102]
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x12 18
+0x0 0
+0x0 0
+0x4 4
+0x13 19
+EOF

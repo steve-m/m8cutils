@@ -1,0 +1,21 @@
+. Common
+
+asm "ADD A,expr (carry in set, out not set)" <<EOF
+	add	a,20
+	halt
+EOF
+sim <<EOF
+CPU_F_Carry = 1
+run
+a
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x14 20
+0x0 0
+0x3 3
+0xd 13
+EOF

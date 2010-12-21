@@ -1,5 +1,34 @@
+Version 7 (28-FEB-2006)
+---------
+
+- prog/: voltage now only needs to be known if programming or erasing the
+  target
+- sim/lang.u: simulation script can now also write to ROM
+- sim/lang.y: reg[REGISTER] can now be used as a short-cut for reg[&REGISTER]
+- sim/gpio.c: verified that the PRTxDMx change sequence does not cause
+  undesirable transitions
+- shared/disasm.[ch]:m8c_bytes: array of instruction lengths
+- sim/m8c.c: "pc" is now a uint16_t variable and not a pointer, simplifying all
+  sorts of calculations, at the price of slightly more complex accesses
+- sim/m8c.c: inside the simulator, "ram" is no longer banked
+- sim/m8c.c: "cycles" are now real clock cycles, not instructions
+- sim/m8c.c: ADD SP,expr affected the flags
+- sim/lang.y: the bit field operator can now also be applied to lvalues, but is
+  no longer a general operator
+- sim/lang.y: value for gpio_drive was incorrectly shifted
+- sim/gpio.[ch]: port bits can now be driven resistive and Hi-Z
+- sim/gpio.[ch]:gpio_drive_z: removed left-over "bit" argument
+- sim/reg2simhdr.pl: now allows duplicate definitions (e.g., INT_CLR2)
+- sim/{gpio,int}.[ch]: added interrupt support
+- sim/m8c.c: MOV_REG_TO_A didn't "break"
+- as/lang.l:yyerrorf: va_start had its arguments in the wrong order
+- sim/lang.l: removed unused STRING token
+- sim/: no longer uses CPP and is therefore suitable for interactive use
+- sim/: register and field definitions now use a new sytax omitting the "#" in
+  "#define"
+
 Version 6 (23-FEB-2006)
---------
+---------
 
 - as/: added unary >> operator that returns the number of trailing clear bits
 - as/lang.l:yyerrorf: didn't initialize "ap", oops
@@ -15,7 +44,7 @@ Version 6 (23-FEB-2006)
 - prog/drv/watsp.c: reset target and disable output when closing
 
 Version 5 (22-FEB-2006)
---------
+---------
 
 - m8cprog: verified that READ_REG(REG_CPU_X) indeed reads CPU register X
 - "make" now prints terse message (to obtain the full command text, set V=1)
@@ -29,7 +58,7 @@ Version 5 (22-FEB-2006)
 - das/tests/input: a reference to m8cdasm escaped the great renaming
 
 Version 4 (20-FEB-2006)
---------
+---------
 
 - renamed CY8C2 to M8C (package name, cy8c2prog, etc.)
 - renamed m8cdasm to m8cdas
@@ -49,7 +78,7 @@ Version 4 (20-FEB-2006)
 - as/tests/{blk,blkw}: updated to use the "text" area
 
 Version 3 (18-FEB-2006)
---------
+---------
 
 - prog/tty.[ch]: added functions to access individual lines of the serial port
 - prog/: moved drivers to subdirectory prog/drv/
@@ -63,7 +92,7 @@ Version 3 (18-FEB-2006)
 - m8cas: hexadecimal numbers in the XXh format were not handled properly
 
 Version 2 (17-FEB-2006)
---------
+---------
 
 - prog/cy8c2prog.c: programmer can now also be invoked without any operation,
   in which case it will only establish communication and retrieve the IDs

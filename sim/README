@@ -26,10 +26,9 @@ Usage
 -----
 
 The script is by default read from standard input. This can be changed with the
-option -f. The script is passed through the C preprocessor. The usual CPP
-options -I, -D, and -U are recognized and passed on. Normally, register
-definitions are automatically included from the file default.mc8sim. This can
-be turned off with the option -n. To disable CPP entirely, put -n twice.
+option -f. Normally, register definitions are automatically included from the
+file default.mc8sim. This can be turned off with the option -n. The search path
+for default.mc8sim can be extended with the option "-I directory".
 
 The name of the chip is a mandatory command-line argument. The list of
 supported chips can be obtained with the option -l.
@@ -90,12 +89,16 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
 - Expressions from constants and read accesses can be formed using all
   operators recognized by m8cas. Additionally, the following operators are
-  available:
+  available for lvalues (register, ROM, RAM, etc.):
 
-  &ram[expression]	yields  expression
-  expression[n]		yields the n-th bit of "expression", i.e., 0 or 1
-  expression[l:r]	yields bits l through r of "expression", e.g.,
+  lvalue[n]		accesses the n-th bit of "expression", i.e., 0 or 1
+  lvalue[l:r]		accesses bits l through r of "expression", e.g.,
 			0xd6[4:2] yields 5
+
+  The unary ampersand ("&") can be used as an address operator, to extract
+  the register address from a macro:
+
+  &reg[expression]	yields " expression"
 
   The precedence of & and [...] is like in C. Expressions are always calculated
   as unsigned 32 bit integers.
@@ -105,17 +108,14 @@ language are the usual forms known from C, and the semicolon from m8cas.
   A = 0
   [0x100] = 1
 
-- Run the program until an exception occurs or until a number of cycles has
-  passed:
+- Run the program until an exception occurs or until a number of (CPUCLK)
+  cycles has passed:
 
   run
   run CYCLES
 
   The current time in cycles can be obtained through the read-only variable @.
   To run the program for a N cycles, use "run @+N"
-
-  Note: currently, one instruction is one cycle. This will change in the
-  future.
 
 - Connect I/O pins to an ICE, by port, pin, or pin range, e.g.,
 
@@ -163,9 +163,6 @@ Known limitations
 This is a list of some known limitations and missing "must have" features.
 There are certainly many more.
 
-- "cycles" are one per instruction, not one per CPU cycle:
-  Use shared/disasm.c:m8c_cycles
-
 - simulation time is not synchronized with real time:
   Every X cycles (configurable), check against lower/upper bound (configurable)
   of deviation from real time. If running too fast, wait. If running too slow,
@@ -191,23 +188,14 @@ There are certainly many more.
   Script should be able to post an interrupt, etc. To do: think one example
   through from A to Z, e.g., operation of shift registers in a serial link.
 
-- implementation of "PC" should be nice and fast, but it's not really
-  convenient for checks against boundaries:
-  We don't catch wrap-arounds at 0xffff, at ROM end, or the extra cycle when
-  crossing an 8 bit boundary.
-
-- scripting language doesn't really know whether it wants to be interactive or
-  non-interactive:
-  Yeah, those decisions ... Note that CPP isn't suitable for interactive use.
-
 - should the name of the PC be "PC" (it's a register) or "." (like in the
   assembler) ?
-  Or both ?
+  Or both ? For now it's ".".
 
 - no access to symbols:
   Of course, since our assembler doesn't output them, we can't use them.
 
-- no way to interactively halt the problem:
+- no way to interactively halt the simulation:
   Should catch SIGINT, and do something like a HALT.
 
 - no breakpoints:
@@ -223,29 +211,28 @@ There are certainly many more.
   should support graphical (Postscript/XFig or interactive) view of
   configuration status of interconnect
 
-- GPIO isn't just binary:
-  We should be able to drive a pin with a pull up/down, which doesn't override
-  a strong output. We should be able to drive a pin with Z. The simulator
-  should (optionally) detect conflicts, i.e., Z vs. Z on input, strong H vs.
-  strong L, and resistive H vs. resisitive L.
+- We don't detect GPIO lines in conflicting configurations.
+  Should we ? (E.g., ties or any strong-strong conflict.)
+
+- Analog Hi-Z works just like digital Hi-Z.
+  Need to check what the real hardware would do.
 
 - drive vs. ICE priority is wrong:
   It should be possible to override input from the ICE, and just use the ICE
   for output.
 
-- simulated drive is not seen by target:
+- simulated "drive" is not seen by target:
   So we can't just feed synthetic data to a digital block.
 
 - register definitions should be shared with assembler:
   Move them to shared/ or similar. Also consider giving them a more specific
   name, and to hide registers missing in specific chips.
 
-- is it really a good idea to make FOO to the access ?
+- is it really a good idea to make FOO do the access ?
   If it's reg[FOO] in the assembler, it should also be reg[FOO] and not just
   FOO in the simulator, no ?
 
-- assignments should also allow bit fields:
-  "PRT0DM2[0] = 1" just makes so much sense ...
-
 - consider supporting read-modify-write operators:
   "PRT0DR ^= 0xff", anyone ?
+
+- input error recovery is only partial

@@ -1,0 +1,130 @@
+#!/bin/sh
+. Common
+
+if false; then
+asm "GPIO interrupt mode 00 (simulation)" </dev/null
+sim <<EOF
+PRT0IC0 = 0
+PRT0IC1 = 0
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x0 0
+0x0 0
+EOF
+fi
+
+asm "GPIO interrupt mode 01, positive pulse (simulation)" </dev/null
+sim <<EOF
+PRT0IC0 = 1
+PRT0IC1 = 0
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x1 1
+0x1 1
+0x1 1
+EOF
+
+asm "GPIO interrupt mode 01, negative pulse (simulation)" </dev/null
+sim <<EOF
+P0 = 1
+PRT0IC0 = 1
+PRT0IC1 = 0
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x1 1
+0x1 1
+EOF
+
+asm "GPIO interrupt mode 10, positive pulse (simulation)" </dev/null
+sim <<EOF
+PRT0IC0 = 0
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x1 1
+0x1 1
+EOF
+
+asm "GPIO interrupt mode 10, negative pulse (simulation)" </dev/null
+sim <<EOF
+P0 = 1
+PRT0IC0 = 0
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x1 1
+0x1 1
+0x1 1
+EOF
+
+asm "GPIO interrupt mode 11, positive pulse (simulation)" </dev/null
+sim <<EOF
+PRT0DR
+PRT0IC0 = 1
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x0 0
+0x0 0
+0x1 1
+0x1 1
+EOF
+
+asm "GPIO interrupt mode 11, negative pulse (simulation)" </dev/null
+sim <<EOF
+P0 = 1
+PRT0DR
+PRT0IC0 = 1
+PRT0IC1 = 1
+PRT0IE = 1
+INT_CLR0_GPIO
+P0 = 0
+INT_CLR0_GPIO
+P0 = 1
+INT_CLR0_GPIO
+EOF
+expect <<EOF
+0x1 1
+0x0 0
+0x1 1
+0x1 1
+EOF

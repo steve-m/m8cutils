@@ -1,0 +1,23 @@
+. Common
+
+asm "AND A,expr (zero, carry remains unset)" <<EOF
+	and	a,0xf0
+	halt
+EOF
+sim <<EOF
+a = 0xf
+run
+a
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x0 0
+0x3 3
+0xd 13
+EOF

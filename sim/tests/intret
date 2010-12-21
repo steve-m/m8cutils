@@ -1,0 +1,32 @@
+#!/bin/sh
+. Common
+
+asm "Assert GPIO interrupt by software (taken and returned)" <<EOF
+#include "../registers.h"
+	or	f,CPU_F_GIE
+	halt
+
+	org	0x1c
+	inc	[0]
+	reti
+EOF
+sim <<EOF
+SP = 0x10
+INT_MSK3_ENSWINT = 1
+INT_CLR0_GPIO = 1
+INT_MSK0_GPIO = 1
+run
+.
+INT_VC
+f
+[0]
+@
+EOF
+expect <<EOF
+HALT
+0x3 3
+0x0 0
+0x1 1
+0x1 1
+0x2b 43
+EOF

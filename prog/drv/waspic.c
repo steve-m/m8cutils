@@ -31,8 +31,6 @@ static int fd;
 
 static int waspic_open(const char *dev,int voltage)
 {
-    if (!voltage)
-	return 0;
     fd = tty_open_raw(dev,B19200);
     tty_write(HELLO_STRING,5);
     while (tty_read_byte(1) != '+');

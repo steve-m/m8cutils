@@ -8,13 +8,18 @@
 include ../Common.make
 
 
-TESTS=
+TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
+      add_c_nc add_sp and_c and_z and_nc and_nz \
+      drive_0 drive_1 drive_0r drive_1r drive_z \
+      intsw inttake intret \
+      gpioint
 FILES=README Makefile \
       registers reg2simhdr.pl \
-      lang.l lang.y \
+      lang.l lang.y lang.h id.h id.c \
       util.h reg.h reg.c m8c.h m8c.c sim.h sim.c gpio.h gpio.c \
+      int.h int.c \
       tests/Common $(TESTS:%=tests/%)
-OBJS=lex.yy.o y.tab.o reg.o sim.o m8c.o gpio.o
+OBJS=lex.yy.o y.tab.o id.o reg.o sim.o m8c.o gpio.o int.o
 
 CFLAGS += -I../prog
 # don't use += because libprog may need symbols from libm8cutils

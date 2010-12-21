@@ -106,11 +106,6 @@ int prog_open(const char *dev,const char *programmer,int voltage)
 	}
     }
     voltage = prog->open(dev,voltage);
-    if (!voltage) {
-	fprintf(stderr,
-	  "must specify voltage (-3 or -5) with this programmer\n");
-	exit(1);
-    }
     initial = 1;
     return voltage;
 }

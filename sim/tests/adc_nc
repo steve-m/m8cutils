@@ -1,0 +1,20 @@
+. Common
+
+asm "ADC A,expr (carry not set)" <<EOF
+	adc	a,0		; clear carry
+	mov	a,123
+	adc	a,50
+	halt
+EOF
+sim <<EOF
+run
+a
+.
+@
+EOF
+expect <<EOF
+HALT
+0xad 173
+0x7 7
+0x15 21
+EOF

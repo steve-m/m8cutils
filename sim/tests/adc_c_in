@@ -1,0 +1,23 @@
+. Common
+
+asm "ADC A,[expr] (incoming carry is set)" <<EOF
+	adc	a,[10]
+	halt
+EOF
+sim <<EOF
+ram[10] = 20
+CPU_F_Carry = 1
+a = 50
+run
+a
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x47 71
+0x0 0
+0x3 3
+0xf 15
+EOF

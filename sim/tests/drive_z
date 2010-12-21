@@ -1,0 +1,28 @@
+#!/bin/sh
+. Common
+
+asm "Drive Z, DR = 0" </dev/null
+sim <<EOF
+PRT0DM0 = 0xaa
+PRT0DM1 = 0xcc
+PRT0DM2 = 0xf0
+PRT0DR = 0
+P0 = z
+PRT0DR
+EOF
+expect <<EOF
+0x0 0
+EOF
+
+asm "Drive Z, DR = 1" </dev/null
+sim <<EOF
+PRT0DM0 = 0xaa
+PRT0DM1 = 0xcc
+PRT0DM2 = 0xf0
+PRT0DR = 0xff
+P0 = Z
+PRT0DR
+EOF
+expect <<EOF
+0x3b 59
+EOF

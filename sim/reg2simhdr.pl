@@ -26,7 +26,8 @@ while (<>) {
     die "syntax error "
       unless /^0x([0-9a-fA-F]+)\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
     $name = $2;
-    die "duplicate definition of $name" if defined $reg{$name};
+    die "duplicate definition of $name"
+      if defined $reg{$name} && $reg{$name} != hex $1;
     $reg{$name} = hex $1;
     next unless length $';
     $bits = 8;
@@ -39,7 +40,7 @@ while (<>) {
 	$bits -= $size;
 	next if $1 eq "_";
 	if ($sim) {
-	    unshift(@f,"#define\t".&pad("  ".$name."_".$1,3).
+	    unshift(@f,"define\t".&pad("  ".$name."_".$1,3).
 	      sprintf("%s[%d:%d]\n",$name,$bits+$size-1,$bits));
 	}
 	else {
@@ -48,15 +49,20 @@ while (<>) {
 	}
     }
     die "$name: $bits bits left in byte" if $bits;
-    $fields{$name} = join("",@f);
+    $fields{$name} .= join("",@f);
 }
 
 $name = $sim ? "DEFAULT_M8CSIM" : "REGISTERS_H";
-print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
-print "#ifndef $name\n#define $name\n\n" || die "print: $!";
+if ($sim) {
+    print "// MACHINE-GENERATED. DO NOT EDIT !\n\n" || die "print: $!";
+}
+else {
+    print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
+    print "#ifndef $name\n#define $name\n\n" || die "print: $!";
+}
 for (sort keys %reg) {
     if ($sim) {
-	print "#define\t".&pad($_,3).sprintf("reg[0x%03x]\n",$reg{$_}) ||
+	print "define\t".&pad($_,3).sprintf("reg[0x%03x]\n",$reg{$_}) ||
 	  die "print: $!";
     }
     else {
@@ -71,5 +77,5 @@ if (!$sim) {
 	print sprintf("    [0x%03x] = \"$_\", \\\n",$reg{$_}) ||
 	  die "print: $!";
     }
+    print "\n#endif /* !$name*/\n" || die "print: $!";
 }
-print "\n#endif /* !$name*/\n" || die "print: $!";

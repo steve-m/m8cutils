@@ -19,22 +19,27 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <setjmp.h>
 
 #include "util.h"
+#include "lang.h"
+#include "sim.h"
+#include "id.h"
 #include "y.tab.h"
 
 
-static char *file = NULL;
+extern FILE *next_file = NULL;
+
+int new_line = 1;
+
 static int lineno = 1;
 
 
-static void set_file(const char *name)
-{
-    free(file);
-    file = stralloc(name);
-}
+#undef YY_INPUT
+#define YY_INPUT(b,r,ms) (r = my_yyinput(b,ms))
 
 
 static void backslash(char *s)
@@ -91,19 +96,23 @@ static void backslash(char *s)
     *t = 0;
 }
 
+
+int my_yyinput(char *buffer,int max_size)
+{
+    if (new_line && isatty(fileno(yyin))) {
+	fflush(stdout);
+	fflush(stderr);
+	fprintf(stderr,"m8csim> ");
+	fflush(stderr);
+	new_line = 0;
+    }
+    return read(fileno(yyin),buffer,max_size);
+}
+
+
 %}
 
-%s WORD
-
 %%
-
-<WORD>([^\t\n ]|\\\ )+		{ yylval.str = yytext;
-				  return STRING; }
-		
-\"([^"]|\\\")*\"		{ *strrchr(yytext,'"') = 0;
-				  yylval.str = yytext+1;
-				  backslash(yytext+1);
-				  return STRING; }
 
 [Aa]				return TOK_A;
 [Ff]				return TOK_F;
@@ -117,9 +126,13 @@ static void backslash(char *s)
 run				return TOK_RUN;
 connect				return TOK_CONNECT;
 disconnect			return TOK_DISCONNECT;
+define				return TOK_DEFINE;
 
 [pP][012345678]			{ yylval.num = yytext[1]-'0';
 				  return PORT; }
+[Rr]				return TOK_R;
+[Zz]				return TOK_Z;
+
 0[Xx][0-9A-Fa-f]+|[0-9]+	{ char *end;
 				  yylval.num = strtoul(yytext,&end,0);
 				  if (*end)
@@ -143,6 +156,12 @@ $[0-9A-Fa-f]+			{ char *end;
 				    yyerror("invalid digit in number");
 				  return NUMBER; }
 
+[A-Za-z_][0-9A-Za-z_]*		{ yylval.id = id_lookup(yytext);
+				  if (yylval.id)
+				    return yylval.id->new ? NEW_ID : OLD_ID;
+				  yylval.id = id_new(yytext);
+				  return NEW_ID; }
+
 "||"				return TOK_LOGICAL_OR;
 &&				return TOK_LOGICAL_AND;
 "<<"				return TOK_SHL;
@@ -162,15 +181,9 @@ $[0-9A-Fa-f]+			{ char *end;
 				  return NUMBER; }
 
 [\t ]*               
-((;|"//")[^\n]*)?\n		{ BEGIN(INITIAL);
+((;|"//")[^\n]*)?\n		{ new_line = 1;
 				  lineno++;
 				  return TOK_NL; }
-
-^#\ [0-9]+\ \"[^"]*\"(\ [0-9]+)*\n {
-				  char *start = strchr(yytext,'"')+1;
-				  *strchr(start,'"') = 0;
-				  set_file(start);
-                                  lineno = strtol(yytext+2,NULL,0); }
 
 .				return *yytext;
 
@@ -181,15 +194,26 @@ void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
 {
     va_list ap;
 
-    fprintf(stderr,"%s:%d: ",file ? file : "<stdin>",lineno);
+    fprintf(stderr,"%d: ",lineno);
     va_start(ap,fmt);
     vfprintf(stderr,fmt,ap);
     fputc('\n',stderr);
-    exit(1);
+    longjmp(error_env,0);
 }
 
 
 void __attribute__((noreturn)) yyerror(const char *s)
 {
     yyerrorf("%s",s);
+}
+
+
+int yywrap(void)
+{
+    if (!next_file)
+	return 1;
+    yyin = next_file;
+    next_file = NULL;
+    lineno = 1;
+    return 0;
 }

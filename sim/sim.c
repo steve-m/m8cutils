@@ -13,10 +13,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <setjmp.h>
 #include <sys/types.h>
 
 #include "interact.h"
-#include "cpp.h"
 #include "file.h"
 #include "chips.h"
 
@@ -25,15 +25,23 @@
 
 #include "reg.h"
 #include "m8c.h"
+#include "int.h"
 #include "gpio.h"
+#include "id.h"
 #include "sim.h"
 
 
+extern FILE *yyin;
+extern FILE *next_file;
+extern int new_line;
+
 int yyparse(void);
+void yyrestart(FILE *file);
 
 
 const struct chip *chip;
 int ice = 0;
+jmp_buf error_env;
 
 
 void exception(const char *msg,...)
@@ -45,7 +53,7 @@ void exception(const char *msg,...)
     vfprintf(stderr,msg,ap);
     va_end(ap);
     fputc('\n',stderr);
-    exit(1);
+    // exit(1);
 }
 
 
@@ -67,10 +75,41 @@ static void set_program(uint8_t *pgm,size_t size)
 }
 
 
+static FILE *find_file(const char *name,...)
+{
+    va_list ap;
+
+    if (!name || !strcmp(name,"-"))
+	return stdin;
+    va_start(ap,name);
+    while (1) {
+	FILE *file;
+	const char *dir;
+	char *buf;
+
+	dir = va_arg(ap,const char *);
+	buf = malloc(strlen(name)+strlen(dir)+2);
+	if (!buf) {
+	    perror("malloc");
+	    exit(1);
+	}
+	sprintf(buf,"%s/%s",dir,name);
+	file = fopen(buf,"r");
+	free(buf);
+	if (file) {
+	    return file;
+	}
+    }
+    va_end(ap);
+    fprintf(stderr,"%s: not found\n",name);
+    exit(1);
+}
+
+
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-b] [-n [-n]] [-q] [-i [programmer_option ...]] [cpp_option ...]\n"
+"usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-I directory]\n"
 "          [-f script] chip [program]\n"
 "       %s -l\n\n"
 "  -b                program is a binary (overrides auto-detection)\n"
@@ -79,14 +118,13 @@ static void usage(const char *name)
 "  -i                use a DIY ICE\n"
 "  -l                list supported chips\n"
 "  -n                do not include default.m8csim\n"
-"  -n -n             do not use CPP at all\n"
 "  -q                quiet operation, only output the bare minimum\n"
 "  programmer_option optional settings for the programmer used as ICE:\n"
 "    -p port         port to programmer, overrides M8CPROG_PORT\n"
 "    -d driver       name of programmer driver, overrides M8CPROG_DRIVER\n"
 "    -3              if the programmer powers the board, supply 3V\n"
 "    -5              if the programmer powers the board, supply 5V\n"
-"  cpp_option        -Idir, -Dname[=value], or -Uname\n"
+"  -I directory      look for input files also in the specified directory\n"
 "  chip              chip name, e.g., CY8C21323\n"
 "  program           binary or hex file containing ROM data, \"-\" for stdin\n"
 "                    (default: stdin)\n"
@@ -101,12 +139,11 @@ int main(int argc,char **argv)
     const char *program_file = NULL;
     const char *driver = NULL;
     const char *port = NULL;
-    int binary = 0,include_default = 1,voltage = 0,cpp = 1;
+    const char *include_dir = NULL;
+    int binary = 0,include_default = 1,voltage = 0;
     int c;
 
-    while ((c = getopt(argc,argv,"35bd:f:ilnp:qD:I:U:")) != EOF) {
-        char opt[] = "-?";
-
+    while ((c = getopt(argc,argv,"35bd:f:ilnp:qD:I:U:")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
@@ -134,10 +171,7 @@ int main(int argc,char **argv)
 		chip_list(stdout,79);
 		return 0;
 	    case 'n':
-		if (include_default)
-		    include_default = 0;
-		else
-		    cpp = 0;
+		include_default = 0;
 		break;
 	    case 'p':
 		port = optarg;
@@ -145,18 +179,13 @@ int main(int argc,char **argv)
 	    case 'q':
 		quiet = 1;
 		break;
-	    case 'D':
 	    case 'I':
-	    case 'U':
-		opt[1] = c;
-		add_cpp_arg(opt);
-		add_cpp_arg(optarg);
+		include_dir = optarg;
 		break;
 	    default:
 		usage(*argv);
 
 	}
-    }
 
     switch (argc-optind) {
 	case 2:
@@ -187,35 +216,33 @@ int main(int argc,char **argv)
     }
 
     m8c_init();
+    int_init();
     gpio_init();
     init_regs();
+    id_init();
 
-    if (cpp) {
-	if (include_default) {
-	    add_cpp_arg("-include");
-	    add_cpp_arg("default.m8csim");
-	}
-	run_cpp_on_file(script);
+    if (include_default) {
+	yyin = find_file("default.m8csim",".",include_dir,NULL);
+	next_file = find_file(script,".",NULL);
     }
     else {
-	int fd;
-
-	if (script && strcmp(script,"-")) {
-	    fd = open(script,O_RDONLY);
-	    if (fd < 0) {
-		perror(script);
+	yyin = find_file(script,".",NULL);
+	next_file = NULL;
+    }
+    while (1) {
+	if (setjmp(error_env)) {
+	    if (!isatty(fileno(yyin)))
 		exit(1);
-	    }
-	    if (dup2(fd,0) < 0) {
-		perror("dup2");
-		exit(1);
-	    }
+	    new_line = 1;
+	    yyrestart(yyin);
+	}
+	else {
+	    (void) yyparse();
+	    break;
 	}
     }
-    (void) yyparse();
+
     if (ice)
 	prog_close();
-    if (cpp)
-	reap_cpp();
     return 0;
 }

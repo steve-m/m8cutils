@@ -1,0 +1,24 @@
+. Common
+
+asm "ADC [expr],A (non-zero)" <<EOF
+	mov	a,90
+	adc	[2],a
+	halt
+EOF
+sim <<EOF
+ram[2] = 80
+run
+a
+ram[2]
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x5a 90
+0xaa 170
+0x0 0
+0x5 5
+0x14 20
+EOF

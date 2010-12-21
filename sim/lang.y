@@ -15,10 +15,12 @@
 #include "file.h"
 
 #include "util.h"
+#include "id.h"
 #include "sim.h"
 #include "reg.h"
 #include "m8c.h"
 #include "registers.h"
+#include "lang.h"
 
 
 static uint32_t now = 0;
@@ -35,21 +37,107 @@ static void run_cycles(uint32_t cycles)
     if (!quiet)
 	printf("%04x: A=%02x F=%02x (PgMode=%d XIO=%d Carry=%d "
 	  "Zero=%d GIE=%d) X=%02x SP=%02x\n",
-	  (pc-rom) & 0xffff,a,f,pgmode,xio,cf,zf,gie,x,sp);
+	  pc,a,f,pgmode,xio,cf,zf,gie,x,sp);
 }
 
-static void byte_check(const char *dst,uint32_t value)
+
+static uint32_t read_lvalue(const struct lvalue *lv)
 {
-    if (value > 255 && value < ~(uint32_t) 0x7f)
-	yyerrorf("value %d too large for %s byte",value,dst);
+    uint8_t (*fn)(struct regs *reg);
+    uint8_t v;
+
+    switch (lv->type) {
+	case lt_ram:
+	    v = ram[lv->n];
+	    break;
+	case lt_rom:
+	    v = rom[lv->n];
+	    break;
+	case lt_reg:
+	    fn = regs[lv->n].ops->sim_read;
+	    if (!fn)
+		fn = regs[lv->n].ops->cpu_read;
+	    if (!fn)
+		yyerrorf("register 0x%03x (%s) is not readable",lv->n,
+		  regs[lv->n].name ? regs[lv->n].name : "unknown");
+	    v = fn(regs+lv->n);
+	    break;
+	case lt_a:
+	    v = a;
+	    break;
+	case lt_f:
+	    v = f;
+	    break;
+	case lt_sp:
+	    v = sp;
+	    break;
+	case lt_x:
+	    v = x;
+	    break;
+	default:
+	    abort();
+    }
+    return (v & lv->mask) >> ctz(lv->mask);
 }
+
+
+static void write_lvalue(const struct lvalue *lv,uint8_t rvalue)
+{
+    void (*fn)(struct regs *reg,uint8_t value);
+
+    if (lv->mask == 0xff) {
+	if (rvalue > 255 && rvalue < ~(uint32_t) 0x7f)
+	    yyerrorf("value %d too large for byte",rvalue);
+    }
+    else {
+	if (rvalue > lv->mask)
+	    yyerrorf("value %d too large for mask 0x%x",rvalue,lv->mask);
+    }
+    rvalue <<= ctz(lv->mask);
+    switch (lv->type) {
+	case lt_ram:
+	    ram[lv->n] = (ram[lv->n] & ~lv->mask) | rvalue;
+	    break;
+	case lt_rom:
+	    rom[lv->n] = (rom[lv->n] & ~lv->mask) | rvalue;
+	    break;
+	case lt_reg:
+	    fn = regs[lv->n].ops->sim_write;
+	    if (!fn)
+		fn = regs[lv->n].ops->cpu_write;
+	    if (!fn)
+		yyerrorf("register 0x%03x (%s) is not writeable",lv->n,
+		  regs[lv->n].name ? regs[lv->n].name : "unknown");
+	    if (lv->mask == 0xff)
+		fn(regs+lv->n,rvalue);
+	    else
+		fn(regs+lv->n,(read_lvalue(lv) & ~lv->mask) | rvalue);
+	    break;
+	case lt_a:
+	    a = (a & ~lv->mask) | rvalue;
+	    break;
+	case lt_f:
+	    regs[CPU_F].ops->sim_write(regs+CPU_F,(f & ~lv->mask) | rvalue);
+	    break;
+	case lt_sp:
+	    sp = (sp & ~lv->mask) | rvalue;
+	    break;
+	case lt_x:
+	    x = (x & ~lv->mask) | rvalue;
+	    break;
+	default:
+	    abort();
+    }
+}
+
 
 %}
 
 
 %union {
     uint32_t num;
-    const char *str;
+    struct id *id;
+    struct lvalue lval;
 };
 
 
@@ -57,12 +145,15 @@ static void byte_check(const char *dst,uint32_t value)
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
-%token		TOK_RUN TOK_CONNECT TOK_DISCONNECT TOK_NL
+%token		TOK_RUN TOK_CONNECT TOK_DISCONNECT TOK_DEFINE TOK_NL
+%token		TOK_Z TOK_R
 
 %token	<num>	NUMBER PORT
-%token	<str>	STRING
+%token	<id>	NEW_ID OLD_ID
 
-%type	<num>	byte_mask
+%type	<lval>	lvalue
+
+%type	<num>	opt_byte_mask byte_mask register register_or_id opt_r
 %type	<num>	expression logical_or_expression logical_and_expression
 %type	<num>	low_expression high_expression
 %type	<num>	inclusive_or_expression exclusive_or_expression and_expression
@@ -106,24 +197,42 @@ command:
 	}
     | drive_port
     | ice
+    | define
     ;
 
-
 drive_port:
-    PORT byte_mask '=' expression
+    PORT opt_byte_mask '=' expression opt_r
 	{
 	    uint8_t max;
 
 	    max = $2 >> ctz($2);
 	    if ($4 > max)
 		yyerrorf("value %d too large for field (max. %d)",$4,$2);
-	    gpio_drive($1,$2,$4 >> ctz(2));
+	    if ($5)
+		gpio_drive_r($1,$2,$2);
+	    gpio_drive($1,$2,$4 << ctz($2));
+	    if (!$5)
+		gpio_drive_r($1,$2,0);
+	    gpio_drive_z($1,$2,0);
+	}
+    | PORT opt_byte_mask '=' TOK_Z
+	{
+	    gpio_drive_z($1,$2,$2);
 	}
     ;
 
+opt_r:
+	{
+	    $$ = 0;
+	}
+    | TOK_R
+	{
+	    $$ = 1;
+	}
+    ;
 
 ice:
-    TOK_CONNECT PORT byte_mask
+    TOK_CONNECT PORT opt_byte_mask
 	{
 	    if (!ice)
 		yyerror("there is no ICE");
@@ -138,7 +247,7 @@ ice:
 	    for (i = 0; i != 8; i++)
 		gpio_ice_disconnect(i,0xff);
 	}
-    | TOK_DISCONNECT PORT byte_mask
+    | TOK_DISCONNECT PORT opt_byte_mask
 	{
 	    if (!ice)
 		yyerror("there is no ICE");
@@ -146,12 +255,18 @@ ice:
 	}
     ;
 
-
-byte_mask:
+opt_byte_mask:
 	{
 	    $$ = 0xff;
 	}
-    | '[' expression ']'
+    | byte_mask
+	{
+	    $$ = $1;
+	}
+    ;
+
+byte_mask:
+    '[' expression ']'
 	{
 	    if ($2 > 7)
 		yyerrorf("bit %d out of range",$2);
@@ -167,65 +282,133 @@ byte_mask:
 	}
     ;
 
+define:
+    TOK_DEFINE NEW_ID register_or_id
+	{
+	    id_reg($2,$3);
+	}
+    | TOK_DEFINE NEW_ID register_or_id byte_mask
+	{
+	    id_field($2,$3,$4);
+	}
+    ;
+
+register_or_id:
+    register
+	{
+	    $$ = $1;
+	}
+    | OLD_ID
+	{
+            if ($1->field)
+		yyerror("must be a register, not a field");
+	    $$ = $1->reg;
+	}
+    ;
+
 
 /* ----- Assignment -------------------------------------------------------- */
 
 
 assignment:
-    '[' NUMBER ']' '=' expression
+    lvalue '=' expression
 	{
-	    if ($2 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $2);
-	    byte_check("RAM",$5);
-	    ram[$2 >> 8][$2 & 255] = $5;
-	}
-    | TOK_RAM '[' NUMBER ']' '=' expression
-	{
-	    if ($3 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $3);
-	    byte_check("RAM",$6);
-	    ram[$3 >> 8][$3 & 255] = $6;
-	}
-    | TOK_REG '[' NUMBER ']' '=' expression
-	{
-	    void (*fn)(struct reg *reg,uint8_t value);
-
-	    if ($3 > NUM_REGS)
-		yyerrorf("address %u is outside of REG",(unsigned) $3);
-	    byte_check("register",$6);
-	    fn = regs[$3].ops->sim_write;
-	    if (!fn)
-		fn = regs[$3].ops->cpu_write;
-	    if (!fn)
-		yyerrorf("register 0x%03x (%s) is not writeable",$3,
-		  regs[$3].name ? regs[$3].name : "unknown");
-	    fn(regs+$3,$6);
-	}
-    | TOK_A '=' expression
-	{
-	    byte_check("A",$3);
-	    a = $3;
-	}
-    | TOK_F '=' expression
-	{
-	    byte_check("F",$3);
-	    regs[CPU_F].ops->sim_write(regs+CPU_F,$3);
-	}
-    | TOK_SP '=' expression
-	{
-	    byte_check("SP",$3);
-	    sp = $3;
-	}
-    | TOK_X '=' expression
-	{
-	    byte_check("X",$3);
-	    x = $3;
+	    write_lvalue(&$1,$3);
 	}
     | '.' '=' expression
 	{
 	    if ($3 > 0xffff)
 		yyerrorf("value 0x%x too large for PC",$3);
-	    pc = rom+$3;
+	    pc = $3;
+	}
+    ;
+
+lvalue:
+    '[' NUMBER ']' opt_byte_mask
+	{
+	    if ($2 > chip->pages*256)
+		yyerrorf("address %u is outside of RAM",(unsigned) $2);
+	    $$.type = lt_ram;
+	    $$.n = $2;
+	    $$.mask = $4;
+	}
+    | TOK_RAM '[' NUMBER ']' opt_byte_mask
+	{
+	    if ($3 > chip->pages*256)
+		yyerrorf("address %u is outside of RAM",(unsigned) $3);
+	    $$.type = lt_ram;
+	    $$.n = $3;
+	    $$.mask = $5;
+	}
+    | TOK_ROM '[' NUMBER ']' opt_byte_mask
+	{
+	    if ($3 > chip->banks*chip->blocks*BLOCK_SIZE)
+		yyerrorf("address %u is outside of ROM",(unsigned) $3);
+	    $$.type = lt_rom;
+	    $$.n = $3;
+	    $$.mask = $5;
+	}
+    | register opt_byte_mask
+	{
+	    $$.type = lt_reg;
+	    $$.n = $1;
+	    $$.mask = $2;
+	}
+    | TOK_A opt_byte_mask
+	{
+	    $$.type = lt_a;
+	    $$.mask = $2;
+	}
+    | TOK_F opt_byte_mask
+	{
+	    $$.type = lt_f;
+	    $$.mask = $2;
+	}
+    | TOK_SP opt_byte_mask
+	{
+	    $$.type = lt_sp;
+	    $$.mask = $2;
+	}
+    | TOK_X opt_byte_mask
+	{
+	    $$.type = lt_x;
+	    $$.mask = $2;
+	}
+    | OLD_ID
+	{
+	    if (!$1->field) {
+		$$.type = lt_reg;
+		$$.n = $1->reg;
+		$$.mask = 0xff;
+	    }
+	    else {
+		$$.type = lt_reg;
+		$$.n = $1->reg;
+		$$.mask = $1->field;
+	    }
+	}
+    | OLD_ID byte_mask
+	{
+	    if ($1->field)
+		yyerror("masks are not allowed on fields");
+	    $$.type = lt_reg;
+	    $$.n = $1->reg;
+	    $$.mask = $2;
+	}
+    ;
+
+register:
+    TOK_REG '[' NUMBER ']'
+	{
+	    if ($3 > NUM_REGS)
+		yyerrorf("address %u is outside of REG",(unsigned) $3);
+	    $$ = $3;
+	}
+    | TOK_REG '[' TOK_REG '[' NUMBER ']' ']'
+	{
+	    if ($5 > NUM_REGS)
+		yyerrorf("address %u is outside of REG",(unsigned) $5);
+	    $$ = $5;
 	}
     ;
 
@@ -440,16 +623,6 @@ postfix_expression:
 	{
 	    $$ = $1;
 	}
-    | postfix_expression '[' expression ']'
-	{
-	    $$ = ($1 >> $3) & 1;
-	}
-    | postfix_expression '[' expression ':' expression ']'
-	{
-	    if ($3 < $5)
-		yyerror("upper bit below lower bit in [upper:lower]");
-	    $$ = ($1 >> $5) & ((2 << ($3-$5))-1);
-	}
     ;
 
 primary_expression:
@@ -457,57 +630,13 @@ primary_expression:
 	{
 	    $$ = $1;
 	}
-    | '[' NUMBER ']'
+    | lvalue
 	{
-	    if ($2 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $2);
-	    $$ = ram[$2 >> 8][$2 & 255];
-	}
-    | TOK_RAM '[' NUMBER ']'
-	{
-	    if ($3 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $3);
-	    $$ = ram[$3 >> 8][$3 & 255];
-	}
-    | TOK_ROM '[' NUMBER ']'
-	{
-	    if ($3 > chip->banks*chip->blocks*BLOCK_SIZE)
-		yyerrorf("address %u is outside of ROM",(unsigned) $3);
-	    $$ = rom[$3];
-	}
-    | TOK_REG '[' NUMBER ']'
-	{
-	    uint8_t (*fn)(struct reg *reg);
-
-	    if ($3 > NUM_REGS)
-		yyerrorf("address %u is outside of REG",(unsigned) $3);
-	    fn = regs[$3].ops->sim_read;
-	    if (!fn)
-		fn = regs[$3].ops->cpu_read;
-	    if (!fn)
-		yyerrorf("register 0x%03x (%s) is not readable",$3,
-		  regs[$3].name ? regs[$3].name : "unknown");
-	    $$ = fn(regs+$3);
-	}
-    | TOK_A
-	{
-	    $$ = a;
-	}
-    | TOK_F
-	{
-	    $$ = f;
-	}
-    | TOK_SP
-	{
-	    $$ = sp;
-	}
-    | TOK_X
-	{
-	    $$ = x;
+	    $$ = read_lvalue(&$1);
 	}
     | '.'
 	{
-	    $$ = pc-rom;
+	    $$ = pc;
 	}
     | '@'
 	{

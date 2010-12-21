@@ -35,11 +35,25 @@
 0x06d	TMP_DR1
 0x06e	TMP_DR2
 0x06f	TMP_DR3
+
 0x0d0	CUR_PP		_[5] PageBits[3]
 0x0d1	STK_PP		_[5] PageBits[3]
 0x0d3	IDX_PP		_[5] PageBits[3]
 0x0d4	MVR_PP		_[5] PageBits[3]
 0x0d5	MVW_PP		_[5] PageBits[3]
+
+0x0da	INT_CLR0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
+0x0db	INT_CLR1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
+0x0dc	INT_CLR2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
+0x0dc	INT_CLR2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1 Endpoint0 StartOfFrame BusReset
+0x0dd	INT_CLR3	_[7] I2C
+0x0de	INT_MSK3	ENSWINT _[6] I2C
+0x0df	INT_MSK2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
+0x0df	INT_MSK2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1 Endpoint0 StartOfFrame BusReset
+0x0e0	INT_MSK0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
+0x0e1	INT_MSK1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
+0x0e2	INT_VC
+
 0x0f7	CPU_F		PgMode[2] _ XIO _ Carry Zero GIE
 
 0x100	PRT0DM0		# drive mode 0
