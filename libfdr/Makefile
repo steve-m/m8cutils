@@ -15,7 +15,8 @@ OBJS=jrb.o jval.o
 
 CFLAGS=-g -O $(CFLAGS_WARN)
 
-.PHONY:		all dep depend tests filelist clean spotless
+.PHONY:		all dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 
 all:		libfdr.a
@@ -37,7 +38,15 @@ endif
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+
 tests:
+
+# ----- Installation ----------------------------------------------------------
+
+install:
+
+uninstall:
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -47,7 +56,7 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f $(OBJS)
+		rm -f $(OBJS) .depend
 
 spotless:	clean
-		rm -f libfdr.a .depend
+		rm -f libfdr.a

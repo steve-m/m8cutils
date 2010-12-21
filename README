@@ -69,17 +69,28 @@ This collection consists of the following parts:
 Installation
 ------------
 
-Just type "make". If you don't have gputils installed, the build
-will eventually fail in waspic/. If your version of gcc doesn't
-agree with the CFLAGS, edit them in Common.make.
+If you wish to install the utilities in a location different from
+/usr, edit INSTALL_PREFIX in Common.make.
 
-There is no "make install" yet. The resulting executables are:
+Then just type "make". If your version of gcc doesn't agree with
+the CFLAGS, edit them in Common.make.
+
+The resulting executables are:
 
 - assembler: as/m8cas
 - disassembler: das/m8cdas
 - simulator: sim/m8csim
 - programmer (host side): prog/m8cprog
-- programmer (firmware): waspic/waspic.hex
+
+You can now run the regression tests with "make test". If satisfied
+with the outcome, install everything with "make install". Note that
+the utilities won't be able to find their support files by default,
+unless you install them.
+
+There is also a PIC-based programmer. In order to build its
+firmware, gputils have to be installed. Then run
+make -C waspic
+The firmware will then be in waspic/waspic.hex
 
 By default, "make" output is terse, making it easy to see what is
 done, but now showing how. You can enable full output, e.g., to
@@ -89,6 +100,13 @@ invoking "make", e.g.,
 
 There are also schematics and PCB layouts for programmer hardware
 in waspic/ and watsp/.
+
+
+Unistallation
+-------------
+
+"make uninstall" will remove all files installed and also the
+directories created underneath $(INSTALL_PREFIX)/share
 
 
 Testing

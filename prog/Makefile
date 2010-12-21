@@ -27,7 +27,8 @@ CFLAGS += -I$(shell pwd) \
           -DPROGRAMMERS_OPS="$(DRIVERS:%=&%_ops,)"
 
 
-.PHONY:		all dep depend tests filelist clean spotless
+.PHONY:		all dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 
 all:		m8cprog
@@ -52,7 +53,17 @@ endif
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+
 tests:
+
+# ----- Installation ----------------------------------------------------------
+
+install:        all
+		$(INSTALL) m8cprog $(INSTALL_PREFIX)/bin/m8cprog
+
+uninstall:
+		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cprog
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -63,8 +74,8 @@ filelist:
 
 clean:
 		$(MAKE) -C ref clean
-		rm -f $(OBJS) $(LIBPROG_OBJS)
+		rm -f $(OBJS) $(LIBPROG_OBJS) .depend
 
 spotless:	clean
 		$(MAKE) -C ref spotless
-		rm -f m8cprog .depend
+		rm -f m8cprog

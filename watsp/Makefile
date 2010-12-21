@@ -13,7 +13,8 @@
 FILES=README PARTS Makefile \
       project watsp.sch watsp.pcb
 
-.PHONY:		all dep depend tests filelist clean spotless
+.PHONY:		all dep depend testlist tests filelist install uninstall
+.PHONY:		clean spotless
 
 all:
 
@@ -23,7 +24,15 @@ dep depend:
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+
 tests:
+
+# ----- Installation ----------------------------------------------------------
+
+install:
+
+uninstall:
 
 # ----- Distribution ----------------------------------------------------------
 

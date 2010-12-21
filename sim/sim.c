@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <setjmp.h>
 #include <sys/types.h>
+#include <readline/history.h>
 
 #include "interact.h"
 #include "file.h"
@@ -24,19 +25,11 @@
 #include "prog.h"
 
 #include "reg.h"
-#include "m8c.h"
+#include "core.h"
 #include "int.h"
 #include "gpio.h"
 #include "id.h"
 #include "sim.h"
-
-
-extern FILE *yyin;
-extern FILE *next_file;
-extern int new_line;
-
-int yyparse(void);
-void yyrestart(FILE *file);
 
 
 const struct chip *chip;
@@ -88,6 +81,8 @@ static FILE *find_file(const char *name,...)
 	char *buf;
 
 	dir = va_arg(ap,const char *);
+	if (!dir)
+	    break;
 	buf = malloc(strlen(name)+strlen(dir)+2);
 	if (!buf) {
 	    perror("malloc");
@@ -111,11 +106,13 @@ static void usage(const char *name)
     fprintf(stderr,
 "usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-I directory]\n"
 "          [-f script] chip [program]\n"
-"       %s -l\n\n"
+"       %s -l\n"
+"       %s -V\n\n"
 "  -b                program is a binary (overrides auto-detection)\n"
 "  -f script         file to read the script from, \"-\" for stdin (default:\n"
 "                    stdin)\n"
 "  -i                use a DIY ICE\n"
+"  -I directory      look for input files also in the specified directory\n"
 "  -l                list supported chips\n"
 "  -n                do not include default.m8csim\n"
 "  -q                quiet operation, only output the bare minimum\n"
@@ -124,11 +121,11 @@ static void usage(const char *name)
 "    -d driver       name of programmer driver, overrides M8CPROG_DRIVER\n"
 "    -3              if the programmer powers the board, supply 3V\n"
 "    -5              if the programmer powers the board, supply 5V\n"
-"  -I directory      look for input files also in the specified directory\n"
+"  -V                only print the version number and exit\n"
 "  chip              chip name, e.g., CY8C21323\n"
 "  program           binary or hex file containing ROM data, \"-\" for stdin\n"
 "                    (default: stdin)\n"
-  ,name,name);
+  ,name,name,name);
     exit(1);
 }
 
@@ -143,7 +140,7 @@ int main(int argc,char **argv)
     int binary = 0,include_default = 1,voltage = 0;
     int c;
 
-    while ((c = getopt(argc,argv,"35bd:f:ilnp:qD:I:U:")) != EOF)
+    while ((c = getopt(argc,argv,"35bd:f:ilnp:qI:V")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
@@ -182,6 +179,9 @@ int main(int argc,char **argv)
 	    case 'I':
 		include_dir = optarg;
 		break;
+	    case 'V':
+		printf("m8csim from m8cutils version %d\n",VERSION);
+		exit(0);
 	    default:
 		usage(*argv);
 
@@ -222,18 +222,20 @@ int main(int argc,char **argv)
     id_init();
 
     if (include_default) {
-	yyin = find_file("default.m8csim",".",include_dir,NULL);
+	yyin = find_file("default.m8csim",
+	  INSTALL_PREFIX "/share/m8cutils/include",include_dir,NULL);
 	next_file = find_file(script,".",NULL);
     }
     else {
 	yyin = find_file(script,".",NULL);
 	next_file = NULL;
     }
+    using_history();
     while (1) {
 	if (setjmp(error_env)) {
 	    if (!isatty(fileno(yyin)))
 		exit(1);
-	    new_line = 1;
+	    my_yyrestart();
 	    yyrestart(yyin);
 	}
 	else {

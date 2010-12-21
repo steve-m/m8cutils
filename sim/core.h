@@ -1,13 +1,13 @@
 /*              
- * m8c.h - M8C core simulation
+ * core.h - M8C core simulation
  *                
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
  */               
 
 
-#ifndef M8C_H
-#define M8C_H
+#ifndef CORE_H
+#define CORE_H
 
 #include <stdint.h>
 
@@ -50,4 +50,4 @@ extern uint8_t sp;
 uint32_t m8c_run(uint32_t cycles);
 void m8c_init(void);
 
-#endif /* !M8C_H */
+#endif /* !CORE_H */

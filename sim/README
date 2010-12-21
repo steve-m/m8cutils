@@ -180,14 +180,6 @@ There are certainly many more.
   Actually, a little GUI may be nice for once. Also add a means to override
   target lines and provide script-driven or interactive stimuli.
 
-- no handling of interrupts observed in the target:
-  Poll INT_VC of target, clear any pending interrupts through INT_CLRx, then do
-  further processing in the simulator.
-
-- no generation of interrupts:
-  Script should be able to post an interrupt, etc. To do: think one example
-  through from A to Z, e.g., operation of shift registers in a serial link.
-
 - should the name of the PC be "PC" (it's a register) or "." (like in the
   assembler) ?
   Or both ? For now it's ".".

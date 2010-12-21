@@ -20,7 +20,8 @@ FILES=README PARTS Makefile \
       project waspic.sch waspic.pcb \
       waspic.asm 
 
-.PHONY:		all prog dep depend tests filelist clean spotless
+.PHONY:		all prog dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 define prog_pic
 		picp $(PORT) $(DEVICE) -ef -bp -wp $^
@@ -41,7 +42,15 @@ dep depend:
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+
 tests:
+
+# ----- Installation ----------------------------------------------------------
+
+install:
+
+uninstall:
 
 # ----- Distribution ----------------------------------------------------------
 

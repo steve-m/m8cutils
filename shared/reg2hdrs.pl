@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# reg2simhdr.pl - Convert "registers" file to a C header for the simulator
+# reg2hdrs.pl - Convert "m8c-registers" to various headers used by m8cutils
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -16,10 +16,7 @@ sub pad
 }
 
 
-if ($ARGV[0] eq "-s") {
-    shift(@ARGV);
-    $sim = 1;
-}
+$mode = shift(@ARGV);
 while (<>) {
     s/#.*//;
     next if /^\s*$/;
@@ -39,7 +36,7 @@ while (<>) {
 	die "$name: exceeding byte" if $size > $bits;
 	$bits -= $size;
 	next if $1 eq "_";
-	if ($sim) {
+	if ($mode eq "sim") {
 	    unshift(@f,"define\t".&pad("  ".$name."_".$1,3).
 	      sprintf("%s[%d:%d]\n",$name,$bits+$size-1,$bits));
 	}
@@ -52,16 +49,25 @@ while (<>) {
     $fields{$name} .= join("",@f);
 }
 
-$name = $sim ? "DEFAULT_M8CSIM" : "REGISTERS_H";
-if ($sim) {
+if ($mode eq "sim") {
+    $name = "DEFAULT_M8CSIM";
     print "// MACHINE-GENERATED. DO NOT EDIT !\n\n" || die "print: $!";
 }
-else {
+elsif ($mode eq "asm") {
+    $name = "M8C_INC";
     print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
     print "#ifndef $name\n#define $name\n\n" || die "print: $!";
 }
+elsif ($mode eq "c") {
+    $name = "M8C_H";
+    print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
+    print "#ifndef $name\n#define $name\n\n" || die "print: $!";
+}
+else {
+    die "unknown mode \"$mode\"";
+}
 for (sort keys %reg) {
-    if ($sim) {
+    if ($mode eq "sim") {
 	print "define\t".&pad($_,3).sprintf("reg[0x%03x]\n",$reg{$_}) ||
 	  die "print: $!";
     }
@@ -71,11 +77,13 @@ for (sort keys %reg) {
     }
     print $fields{$_} || die "print: $!" if defined $fields{$_};
 }
-if (!$sim) {
+if ($mode eq "c") {
     print "\n#define\tREGISTER_NAMES_INIT \\\n";
     for (sort { $reg{$a} <=> $reg{$b} } keys %reg) {
 	print sprintf("    [0x%03x] = \"$_\", \\\n",$reg{$_}) ||
 	  die "print: $!";
     }
-    print "\n#endif /* !$name*/\n" || die "print: $!";
+}
+if ($mode ne "sim") {
+    print "\n#endif /* !$name */\n" || die "print: $!";
 }

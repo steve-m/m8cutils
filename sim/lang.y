@@ -18,7 +18,7 @@
 #include "id.h"
 #include "sim.h"
 #include "reg.h"
-#include "m8c.h"
+#include "core.h"
 #include "registers.h"
 #include "lang.h"
 
@@ -43,7 +43,7 @@ static void run_cycles(uint32_t cycles)
 
 static uint32_t read_lvalue(const struct lvalue *lv)
 {
-    uint8_t (*fn)(struct regs *reg);
+    uint8_t (*fn)(struct reg *reg);
     uint8_t v;
 
     switch (lv->type) {
@@ -81,19 +81,11 @@ static uint32_t read_lvalue(const struct lvalue *lv)
 }
 
 
-static void write_lvalue(const struct lvalue *lv,uint8_t rvalue)
+static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 {
-    void (*fn)(struct regs *reg,uint8_t value);
+    void (*fn)(struct reg *reg,uint8_t value);
 
-    if (lv->mask == 0xff) {
-	if (rvalue > 255 && rvalue < ~(uint32_t) 0x7f)
-	    yyerrorf("value %d too large for byte",rvalue);
-    }
-    else {
-	if (rvalue > lv->mask)
-	    yyerrorf("value %d too large for mask 0x%x",rvalue,lv->mask);
-    }
-    rvalue <<= ctz(lv->mask);
+    rvalue = (rvalue << ctz(lv->mask)) & lv->mask;
     switch (lv->type) {
 	case lt_ram:
 	    ram[lv->n] = (ram[lv->n] & ~lv->mask) | rvalue;
@@ -110,8 +102,12 @@ static void write_lvalue(const struct lvalue *lv,uint8_t rvalue)
 		  regs[lv->n].name ? regs[lv->n].name : "unknown");
 	    if (lv->mask == 0xff)
 		fn(regs+lv->n,rvalue);
-	    else
-		fn(regs+lv->n,(read_lvalue(lv) & ~lv->mask) | rvalue);
+	    else {
+		struct lvalue tmp_lv = *lv;
+
+		tmp_lv.mask = 0xff;
+		fn(regs+lv->n,(read_lvalue(&tmp_lv) & ~lv->mask) | rvalue);
+	    }
 	    break;
 	case lt_a:
 	    a = (a & ~lv->mask) | rvalue;
@@ -203,14 +199,9 @@ command:
 drive_port:
     PORT opt_byte_mask '=' expression opt_r
 	{
-	    uint8_t max;
-
-	    max = $2 >> ctz($2);
-	    if ($4 > max)
-		yyerrorf("value %d too large for field (max. %d)",$4,$2);
 	    if ($5)
 		gpio_drive_r($1,$2,$2);
-	    gpio_drive($1,$2,$4 << ctz($2));
+	    gpio_drive($1,$2,($4 & $2) << ctz($2));
 	    if (!$5)
 		gpio_drive_r($1,$2,0);
 	    gpio_drive_z($1,$2,0);

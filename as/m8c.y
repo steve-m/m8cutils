@@ -20,6 +20,7 @@
 #define STORE_OP_LOGIC(a,b,c,n) \
   store_op(((n) < 7 ? (a) : (n) < 9 ? (b)-7 : (c)-9)+(n))
 
+int yyparse(void);
 
 %}
 
@@ -685,7 +686,7 @@ directive:
 	}
     | TOK_ASCIZ STRING
 	{
-	    char *s = $2;
+	    const char *s = $2;
 
 	    check_store();
 	    do {
@@ -693,7 +694,7 @@ directive:
 		advance_pc(1);
 	    }
 	    while (*s++);
-	    free($2);
+	    free((char *) $2);
 	}
     | TOK_BLK expression
 	{
@@ -710,7 +711,7 @@ directive:
     | TOK_DWL dwl
     | TOK_DS STRING
 	{
-	    char *s = $2;
+	    const char *s = $2;
 
 	    check_store();
 	    while (*s) {
@@ -718,7 +719,7 @@ directive:
 		advance_pc(1);
 		s++;
 	    }
-	    free($2);
+	    free((char *) $2);
 	}
     | TOK_DSU STRING
 	{

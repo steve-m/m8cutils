@@ -18,7 +18,8 @@ FILES=README Makefile \
 OBJS=m8cdas.o
 
 
-.PHONY:		all dep depend tests filelist clean spotless
+.PHONY:		all dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 
 all:		m8cdas
@@ -40,10 +41,21 @@ endif
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+		@echo $(TESTS)
+
 tests:		all
 		passed=0 && cd tests && for n in $(TESTS); do \
 		  SCRIPT=$$n . ./$$n; done; \
 		  echo "Passed all $$passed tests" 2>&1
+
+# ----- Installation ----------------------------------------------------------
+
+install:	all
+		$(INSTALL) m8cdas $(INSTALL_PREFIX)/bin/m8cdas
+
+uninstall:
+		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cdas
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -54,7 +66,7 @@ filelist:
 
 clean:
 		rm -f y.tab.h y.tab.c lex.yy.c
-		rm -f $(OBJS) tests/_*
+		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
 		rm -f m8cdas .depend

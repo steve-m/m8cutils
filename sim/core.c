@@ -1,5 +1,5 @@
 /*
- * m8c.c - M8C core simulation
+ * core.c - M8C core simulation
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -24,7 +24,7 @@
 #include "reg.h"
 #include "sim.h"
 #include "int.h"
-#include "m8c.h"
+#include "core.h"
 
 
 typedef uint16_t fast_math_type;
@@ -311,14 +311,14 @@ uint8_t sp;
 #define CALL(offset) 				\
     stack[sp++] = pc >> 8;			\
     stack[sp++] = pc;				\
-    pc = (pc+offset-1) & 0xffff
+    pc = (pc+offset) & 0xffff
 
 #define INDEX(offset)				\
-    a = rom[(pc+offset+a-1) & 0xffff];		\
+    a = rom[(pc+offset+a) & 0xffff];		\
     zf = !a
 
 #define JMP(offset)				\
-    pc = (pc+offset-2) & 0xffff
+    pc = (pc+offset-1) & 0xffff
 
 #define JC(offset) \
     if (cf)					\
@@ -344,7 +344,7 @@ uint8_t sp;
 	offset = (rom[pc-1] & 0xf) << 8 | rom[pc]; \
 	if (offset & 0x800)			\
 	    offset |= 0xf000;			\
-	pc += 2;				\
+	pc += 1;				\
 	op(offset);				\
 	break
 

@@ -1,6 +1,6 @@
 %{
 /*
- * m8c.y - M8C assembler language
+ * m8c.l - M8C assembler language
  * 
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger

@@ -10,6 +10,21 @@
 #define SIM_H
 
 #include <setjmp.h>
+#include <stdio.h>
+
+
+/* ----- Items for LEX and YACC -------------------------------------------- */
+
+
+int yyparse(void);
+void yyrestart(FILE *file);
+void my_yyrestart(void);
+
+extern FILE *yyin;
+extern FILE *next_file;
+
+
+/* ----- Regular stuff ----------------------------------------------------- */
 
 
 extern const struct chip *chip;

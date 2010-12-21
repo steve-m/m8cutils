@@ -1,14 +1,8 @@
 cy8c2utils "to do" list
 ======================
 
-General
+m8cprog
 -------
-
-- add a -V option to display the version number
-- make global "make tests" return a count for all tests
-
-cy8c2prog
----------
 
 - support selection of reset vs. power-on mode
 - add real-time support and deadline measurements (for bit-banging)

@@ -1,0 +1,19 @@
+#!/bin/sh
+. Common
+
+asm "Bug: writing to a bit field in a register causes havoc" </dev/null
+sim <<EOF
+PRT0DM1
+PRT0DM1[0] = !PRT0DM1[0]
+PRT0DM1
+EOF
+expect <<EOF
+0xff 255
+0xfe 254
+EOF
+
+asm "Bug: find_file crashed if a file could not be found" </dev/null
+sim_fail -f nosuchfile </dev/null
+expect <<EOF
+nosuchfile: not found
+EOF

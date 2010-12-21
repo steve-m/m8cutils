@@ -14,7 +14,7 @@
 #include "util.h"
 #include "registers.h"
 #include "reg.h"
-#include "m8c.h"
+#include "core.h"
 #include "sim.h"
 #include "int.h"
 

@@ -1,0 +1,19 @@
+#!/bin/sh
+. Common
+
+asm "JMP" <<EOF
+	jmp	loop
+	halt
+loop:
+	jmp	loop
+	halt
+EOF
+sim <<EOF
+run 100
+.
+@
+EOF
+expect <<EOF
+0x3 3
+0x64 100
+EOF

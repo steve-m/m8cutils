@@ -20,17 +20,19 @@ static void usage(const char *name)
 {
     fprintf(stderr,
 "usage: %s [-p initial_pc] [-s|-t] [-b] [file]\n"
-"       %s [-p initial_pc] [-s|-t] -e byte ...\n\n"
+"       %s [-p initial_pc] [-s|-t] -e byte ...\n"
+"       %s -V\n\n"
 "  -b             override file type detection and force binary mode\n"
 "  -e             use the following bytes as code\n"
 "  -p initial_pc  set the initial PC to this value, accepts hexadecimal\n"
 "                 with leading \"0x\" (default: 0)\n"
 "  -s             short output, do not include PC and code\n"
 "  -t             include instruction timing\n"
+"  -V             only print the version number and exit\n"
 "  file           binary or hex file to read, \"-\" for stdin (default:\n"
 "                 stdin)\n"
 "  byte           hexadecimal code byte, use of \"0x\" is optional\n",
-  name,name);
+  name,name,name);
     exit(1);
 }
 
@@ -44,7 +46,7 @@ int main(int argc,char **argv)
     int from_file = 1,hex = 1,timing = 0,binary = 0;
     int c;
 
-    while ((c = getopt(argc,argv,"bep:st")) != EOF)
+    while ((c = getopt(argc,argv,"bep:stV")) != EOF)
 	switch (c) {
 	    case 'b':
 		binary = 1;
@@ -70,6 +72,9 @@ int main(int argc,char **argv)
 	    case 't':
 		timing = 1;
 		break;
+	    case 'V':
+		printf("m8cdas from m8cutils version %d\n",VERSION);
+		exit(0);
 	    default:
 		usage(*argv);
 	}

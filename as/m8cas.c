@@ -26,14 +26,16 @@ int yyparse(void);
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-b|-h] [-e] [-o output_file] [cpp_option ...] [file]\n\n"
+"usage: %s [-b|-h] [-e] [-o output_file] [cpp_option ...] [file]\n"
+"usage: %s -V\n\n"
 "  -b             produce binary output (default: ROM)\n"
 "  -e             enable language extensions (including CPP)\n"
 "  -h             produce Intel HEX output (default: ROM)\n"
 "  -o output_file write output to the specified file (default: stdout)\n"
+"  -V             only print the version number and exit\n"
 "  cpp_option     -Idir, -Dname[=value], or -Uname\n"
 "  file           input file (default: stdin)\n",
-  name);
+  name,name);
     exit(1);
 }
 
@@ -48,7 +50,7 @@ int main(int argc,char **argv)
     error_init();
     id_init();
     code_init();
-    while ((c = getopt(argc,argv,"behD:I:o:U:")) != EOF) {
+    while ((c = getopt(argc,argv,"behD:I:o:U:V")) != EOF) {
 	char opt[] = "-?";
 
     	switch (c) {
@@ -75,6 +77,9 @@ int main(int argc,char **argv)
 		add_cpp_arg(optarg);
 		cpp_options = 1;
 		break;
+	    case 'V':
+		printf("m8cas from m8cutils version %d\n",VERSION);
+		exit(0);
 	    default:
 		usage(*argv);
 	}
@@ -91,8 +96,11 @@ int main(int argc,char **argv)
 
     input = argc == optind || !strcmp(argv[optind],"-") ? NULL : argv[optind];
     set_file(input ? input : "<stdin>");
-    if (allow_extensions)
+    if (allow_extensions) {
+	add_cpp_arg("-I");
+	add_cpp_arg(INSTALL_PREFIX "/share/m8cutils/include");
 	run_cpp_on_file(input);
+    }
     else {
 	int fd;
 

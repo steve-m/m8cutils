@@ -23,6 +23,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <setjmp.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "util.h"
 #include "lang.h"
@@ -31,9 +33,7 @@
 #include "y.tab.h"
 
 
-extern FILE *next_file = NULL;
-
-int new_line = 1;
+FILE *next_file = NULL;
 
 static int lineno = 1;
 
@@ -97,18 +97,40 @@ static void backslash(char *s)
 }
 
 
+static char *line,*p;
+
+
 int my_yyinput(char *buffer,int max_size)
 {
-    if (new_line && isatty(fileno(yyin))) {
-	fflush(stdout);
-	fflush(stderr);
-	fprintf(stderr,"m8csim> ");
-	fflush(stderr);
-	new_line = 0;
+    int size = 0;
+
+    if (!isatty(fileno(yyin)))
+	return read(fileno(yyin),buffer,max_size);
+    if (!p) {
+	free(line);
+	line = p = readline("m8csim> ");
+	if (!line)
+	    return 0;
+	add_history(line);
     }
-    return read(fileno(yyin),buffer,max_size);
+    while (p && size != max_size) {
+	if (*p)
+	    *buffer++ = *p++;
+	else {
+	    *buffer = '\n';
+	    p = NULL;
+	}
+	size++;
+    }
+    return size;
 }
 
+
+void my_yyrestart(void)
+{
+    free(line);
+    line = p = NULL;
+}
 
 %}
 
@@ -181,8 +203,7 @@ $[0-9A-Fa-f]+			{ char *end;
 				  return NUMBER; }
 
 [\t ]*               
-((;|"//")[^\n]*)?\n		{ new_line = 1;
-				  lineno++;
+((;|"//")[^\n]*)?\n		{ lineno++;
 				  return TOK_NL; }
 
 .				return *yytext;
@@ -194,7 +215,8 @@ void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
 {
     va_list ap;
 
-    fprintf(stderr,"%d: ",lineno);
+    if (!isatty(fileno(yyin)))
+	fprintf(stderr,"%d: ",lineno);
     va_start(ap,fmt);
     vfprintf(stderr,fmt,ap);
     fputc('\n',stderr);

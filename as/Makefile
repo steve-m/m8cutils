@@ -28,10 +28,11 @@ OBJS=lex.yy.o y.tab.o m8cas.o error.o id.o op.o code.o
 LDLIBS += -lfl
 
 
-.PHONY:		all dep depend filelist clean spotless
+.PHONY:		all dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 
-all:		m8cas
+all:		m8cas m8c.inc
 
 m8cas:		$(OBJS) $(LIBDEPS)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
@@ -40,13 +41,16 @@ lex.yy.c:	m8c.l y.tab.h
 		$(LEX) m8c.l
 
 lex.yy.o:	lex.yy.c y.tab.h
-		$(CC) -c $(CFLAGS) -w lex.yy.c
+		$(CC) -c $(CFLAGS_LEX) lex.yy.c
 
 y.tab.c y.tab.h: m8c.y
 		$(YACC) $(YYFLAGS) -d m8c.y
 
 y.tab.o:	y.tab.c
-		$(CC) -c $(CFLAGS) -w y.tab.c
+		$(CC) -c $(CFLAGS_YACC) y.tab.c
+
+m8c.inc:	../shared/m8c-registers ../shared/reg2hdrs.pl
+		perl ../shared/reg2hdrs.pl asm >$@ $< || { rm -rf $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -60,10 +64,24 @@ endif
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+		@echo $(TESTS)
+
 tests:		all
 		passed=0 && cd tests && for n in $(TESTS); do \
 		  SCRIPT=$$n . ./$$n; done; \
 		  echo "Passed all $$passed tests" 2>&1
+
+# ----- Installation ----------------------------------------------------------
+
+install:	all
+		$(INSTALL) m8cas $(INSTALL_PREFIX)/bin/m8cas
+		$(INSTALL) m8c.inc \
+		  $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
+
+uninstall:
+		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cas
+		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -74,7 +92,7 @@ filelist:
 
 clean:
 		rm -f y.tab.h y.tab.c lex.yy.c
-		rm -f $(OBJS)
+		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8cas .depend
+		rm -f m8cas m8c.inc

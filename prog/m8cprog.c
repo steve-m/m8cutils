@@ -24,7 +24,8 @@ static void usage(const char *name)
     fprintf(stderr,
 "usage: %s [-p port] [-d driver] [-v [-v]] [-q] [-3|-5] [-R] [-b|-i]\n"
 "                 [-c] [-e] [-r|-w] [-z] [chip] [file]\n"
-"       %s -l\n\n"
+"       %s -l\n"
+"       %s -V\n\n"
 "  -3        set up 3V operation\n"
 "  -5        set up 5V operation\n"
 "  -b        use binary format (overrides auto-detection on input)\n"
@@ -44,12 +45,13 @@ static void usage(const char *name)
 "  -v        verbose operation, report major events\n"
 "  -v -v     more verbose operation, report vectors\n"
 "  -v -v -v  very verbose operation, report communication details\n"
+"  -V        only print the version number and exit\n"
 "  -w        write Flash and security data from file to chip\n"
 "  -z        zero read-protected blocks when reading or comparing\n"
 "  chip      chip name, e.g., CY8C21323 (default: auto-detect)\n"
 "  file      binary or hex file to program/verify, \"-\" for stdin/stdout\n"
 "            (default: stdin/stdout)\n",
-  name,name,programmers[0]->name,DEFAULT_TTY);
+  name,name,name,programmers[0]->name,DEFAULT_TTY);
     exit(1);
 }
 
@@ -70,7 +72,7 @@ int main(int argc,char **argv)
      * x  select XRES method even if power-on is available
      * o  pass option(s) to the driver
      */
-    while ((c = getopt(argc,argv,"35bcd:eilp:qrwRvz")) != EOF)
+    while ((c = getopt(argc,argv,"35bcd:eilp:qrwRvVz")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
@@ -119,6 +121,9 @@ int main(int argc,char **argv)
 	    case 'v':
 		verbose++;
 		break;
+	    case 'V':
+		printf("m8cprog from m8cutils version %d\n",VERSION);
+		exit(0);
 	    case 'z':
 		zero++;
 		break;

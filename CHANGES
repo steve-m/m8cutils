@@ -1,3 +1,36 @@
+Version 8 (1-MAR-2006)
+---------
+
+- sim/lang.l: now uses GNU readline to read from a tty
+- sim/lang.l:yyerrorf: line numbers are only printed if reading from a non-tty
+- all programs now support a -V option to print their version number to
+  standard output
+- Makefile: global "make tests" now counts the total number of test case
+- Makefile: global "make" no longer tries to build optional site-specific items
+  like "waspic"
+- Common.make, {as,sim}/Makefile: flex- and bison-generated code is now
+  compiled without -w
+- sim/m8c.c: when writing to a bit field in a register, the old value of the
+  register (i.e., the bits not part of the field) was not properly preserved
+  (tests/bugs7)
+- sim/m8c.c: removed value range checks, since they got in the way of negation
+  too easily
+- sim/registers: moved to shared/m8c-registers
+- sim/reg2simhdr.pl: moved to shared/reg2hdrs.pl
+- sim/Makefile: "spotless" target still tried to remove cy8c2sim, not m8csim
+- added "make install" and "make uninstall" for installation in
+  $(INSTALL_PREFIX)/bin and $(INSTALL_PREFIX)/share/m8cutils/; default
+  $(INSTALL_PREFIX) is /usr
+- {as,sim}/Makefile
+- */Makefile: already "make clean" removes .depend, not only "make spotless"
+- sim/m8c.[ch]: renamed to core.[ch]
+- sim/Makefile: updated dependencies on registers.h
+- sim/sim.c:find_file: segfaulted if the file could not be found (tests/bugs7)
+- sim/core.c: offsets of 0x80-0xff operations were off by one (tests/call,
+  tests/jmp)
+- Makefile: enabled SourceForge upload
+- sim/example/: step-by-step usage example for simulator and DIY ICE
+
 Version 7 (28-FEB-2006)
 ---------
 

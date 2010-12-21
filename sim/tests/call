@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+asm "CALL" <<EOF
+	call	doret
+	halt
+	halt
+	halt
+doret:
+	ret
+	halt
+EOF
+sim <<EOF
+run
+.
+@
+EOF
+expect <<EOF
+HALT
+0x3 3
+0x1c 28
+EOF

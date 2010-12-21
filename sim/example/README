@@ -1,0 +1,107 @@
+M8C simulator usage example
+===========================
+
+This example illustrates the use of the M8C simulator and the DIY ICE.
+For the latter, you need any CY8C2 series chip connected to one of the
+programmers supported by this package. We will assume that the chip is
+a CY8C24223 and that the programmer is the one m8cprog chooses by
+default. Furthermore, it should have the following external
+connections:
+
+- a LED ("LED A") from P0[0] to ground
+- a LED ("LED B") from VDD to P0[1]
+- a button between P0[2] and ground
+
+
+Hardware output with the DIY ICE
+--------------------------------
+
+Set up the target, supply power, and start m8csim as follows:
+
+% m8csim -i cy8c24223 /dev/null
+
+-i enables the ICE, "cy8c24223" is the name of the chip, and /dev/null
+is the program we'll use, i.e., none. We can now test the LEDs by
+configuring the GPIO pins. First, we tell the simulator to assign
+P0[0], P0[1], and P0[2] to the ICE:
+
+m8csim> connect P0[2:0]
+
+Since we'll want both LEDs to be lit, we set the output to the
+pattern that supplies them both with current:
+
+m8csim> PRT0DR[1:0] = 1
+
+The pins are still configured as inputs, so no change is visible
+yet. Next, we switch the drive mode from Hi-Z/Hi-Z to
+Strong(Slow)/Hi-Z and then to Strong(Slow)/Strong(Slow):
+
+m8csim> PRT0DM0[1:0] = 3
+
+LED B is now on
+
+m8csim> PRT0DM1[1:0] = 0
+
+This also gives us LED A. The LEDs can now be toggled with
+
+m8csim> PRT0DR[0] = !PRT0DR[0]
+
+and
+
+m8csim> PRT0DR[1] = !PRT0DR[1]
+
+
+Simulating program execution
+----------------------------
+
+While switching LEDs manually is fun, it would be much better to
+let the machine take care of providing us with this kind of
+entertainment. There is an example in blink.asm, which flashes
+LED A at 1.9 Hz, and LED B at 0.95 Hz.
+
+Assemble the program with
+
+% m8cas -e -o blink.rom blink.asm
+
+The option -e turns on non-standard extensions, so that we can
+use the C preprocessor to include register definitions.
+
+Now, run it in the simulator:
+
+% m8csim cy8c24223 blink.rom
+m8csim> run
+
+Strange, nothing happens. Of course, all the port changes are done
+inside the simulator, and we haven't told the simulator to use the
+ICE. Stop the simulation by hitting ^C, then try again:
+
+% m8csim -i cy8c24223 blink.rom
+m8csim> connect p0[1:0]
+m8csim> run
+
+Now the LEDs should be flickering. However, they're probably too
+fast. This is because the simulator currently doesn't try to track
+real time, and most PCs can even simulate M8C instructions much
+faster than the real chip would.
+
+
+Running the program on the chip
+-------------------------------
+
+To try our program on the real hardware, download it to the chip:
+
+% m8cprog -v -5 -w blink.rom
+selected 5V operation
+chip identified as CY8C24223 (0x0013), revision (AX) 0x1112
+erased the entire Flash
+wrote and checksummed 64 program bytes (1 block)
+
+-5 sets the programming voltage to 5V. Change this to -3 if using
+3.3V. -v makes m8cprog a bit more chatty. Last but not least, -w
+tells m8cprog to write a file to Flash. We don't have to specify
+the chip type, because m8cprog autmatically obtains this
+information from the target.
+
+You may have to disconnect the programmer and reset (power cycle)
+the test circuit to start the program. Now you should see the LEDs
+blink happily.

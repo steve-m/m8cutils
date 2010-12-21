@@ -9,12 +9,14 @@ include ../Common.make
 
 
 FILES=README Makefile \
+      m8c-registers reg2hdrs.pl \
       file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
       interact.h interact.c
 OBJS=file.o disasm.o chips.o cpp.o interact.o
 
 
-.PHONY:		all dep depend tests filelist clean spotless
+.PHONY:		all dep depend testlist tests install uninstall filelist
+.PHONY:		clean spotless
 
 
 all:		libm8cutils.a
@@ -36,7 +38,15 @@ endif
 
 # ----- Tests -----------------------------------------------------------------
 
+testlist:
+
 tests:
+
+# ----- Installation ----------------------------------------------------------
+
+install:
+
+uninstall:
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -46,7 +56,7 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f $(OBJS)
+		rm -f $(OBJS) .depend
 
 spotless:	clean
-		rm -f libm8cutils.a .depend
+		rm -f libm8cutils.a
