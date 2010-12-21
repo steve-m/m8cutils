@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "POP A" 18 <<EOF
+POP A
+EOF
+
+try "POP X" 20 40 <<EOF
+POP X
+NOP
+EOF

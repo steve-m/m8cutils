@@ -1,0 +1,31 @@
+#!/bin/sh
+. Common
+
+try "SBB A,expr" 19 c0 <<EOF
+SBB A,0xC0
+EOF
+
+try "SBB A,[expr]" 1a 00 <<EOF
+SBB A,[0x00]
+EOF
+
+try "SBB A,[X+expr]" 1b  6 <<EOF
+SBB A,[X+0x06]
+EOF
+
+try "SBB [expr],A" 1c 0 30 <<EOF
+SBB [0x00],A
+HALT
+EOF
+
+try "SBB [X+expr],A" 1d 19 <<EOF
+SBB [X+0x19],A
+EOF
+
+try "SBB [expr],expr" 1e 99 11 <<EOF
+SBB [0x99],0x11
+EOF
+
+try "SBB [X+expr],expr" 1f e  90 <<EOF
+SBB [X+0x0E],0x90
+EOF

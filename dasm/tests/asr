@@ -1,0 +1,15 @@
+#!/bin/sh
+. Common
+
+try "ASR A" 67 40 <<EOF
+ASR A
+NOP
+EOF
+
+try "ASR [expr]" 68 1 <<EOF
+ASR [0x01]
+EOF
+
+try "ASL [X+expr]" 69 2 <<EOF
+ASR [X+0x02]
+EOF

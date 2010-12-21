@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+try "JZ 0xfe" a0 fe 40 <<EOF
+JZ 0x00FF
+NOP
+EOF
+
+try "JZ 0" a0 0 40 <<EOF
+JZ 0x0001
+NOP
+EOF

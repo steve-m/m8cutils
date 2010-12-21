@@ -1,0 +1,42 @@
+#!/bin/sh
+. Common
+
+try "OR A,expr" 29 80 <<EOF
+OR A,0x80
+EOF
+
+try "OR A,[expr]" 2a 0 <<EOF
+OR A,[0x00]
+EOF
+
+try "OR A,[X+expr]" 2b 3 <<EOF
+OR A,[X+0x03]
+EOF
+
+try "OR [expr],A" 2c ff <<EOF
+OR [0xFF],A
+EOF
+
+try "OR [X+expr],A" 2d 0 <<EOF
+OR [X+0x00],A
+EOF
+
+try "OR [expr],expr" 2e 90 a0 <<EOF
+OR [0x90],0xA0
+EOF
+
+try "OR [X+expr],expr" 2f 5 8 <<EOF
+OR [X+0x05],0x08
+EOF
+
+try "OR REG[expr],expr" 43 d f <<EOF
+OR REG[0x0D],0x0F
+EOF
+
+try "OR REG[X+expr],expr" 44 80 7f <<EOF
+OR REG[X+0x80],0x7F
+EOF
+
+try "OR F,expr" 71 1 <<EOF
+OR F,0x01
+EOF

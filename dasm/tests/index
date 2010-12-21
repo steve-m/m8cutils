@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+try "INDEX 0x7fe" f7 fe 40 <<EOF
+INDEX 0x0800
+NOP
+EOF
+
+try "INDEX 0xfff" ff ff 0 <<EOF
+INDEX 0x0001
+SSC
+EOF

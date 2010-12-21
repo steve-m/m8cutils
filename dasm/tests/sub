@@ -1,0 +1,32 @@
+#!/bin/sh
+. Common
+
+try "SUB A,expr" 11 c <<EOF
+SUB A,0x0C
+EOF
+
+try "SUB A,[expr]" 12 10 <<EOF
+SUB A,[0x10]
+EOF
+
+try "SUB A,[X+expr]" 13 60 40 <<EOF
+SUB A,[X+0x60]
+NOP
+EOF
+
+try "SUB [expr],A" 14 30 <<EOF
+SUB [0x30],A
+EOF
+
+try "SUB [X+expr],A" 15 73 <<EOF
+SUB [X+0x73],A
+EOF
+
+try "SUB [expr],expr" 16 1 80 40 <<EOF
+SUB [0x01],0x80
+NOP
+EOF
+
+try "SUB [X+expr],expr" 17 ee  9 <<EOF
+SUB [X+0xEE],0x09
+EOF

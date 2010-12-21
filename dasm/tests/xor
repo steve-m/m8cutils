@@ -1,0 +1,42 @@
+#!/bin/sh
+. Common
+
+try "XOR A,expr" 31 1 <<EOF
+XOR A,0x01
+EOF
+
+try "XOR A,[expr]" 32 2 <<EOF
+XOR A,[0x02]
+EOF
+
+try "XOR A,[X+expr]" 33 4 <<EOF
+XOR A,[X+0x04]
+EOF
+
+try "XOR [expr],A" 34 8 <<EOF
+XOR [0x08],A
+EOF
+
+try "XOR [X+expr],A" 35 10 <<EOF
+XOR [X+0x10],A
+EOF
+
+try "XOR [expr],expr" 36 0x20 40 <<EOF
+XOR [0x20],0x40
+EOF
+
+try "XOR [X+expr],expr" 37 80 0 <<EOF
+XOR [X+0x80],0x00
+EOF
+
+try "XOR REG[expr],expr" 45 12 34 <<EOF
+XOR REG[0x12],0x34
+EOF
+
+try "XOR REG[X+expr],expr" 46 56 78 <<EOF
+XOR REG[X+0x56],0x78
+EOF
+
+try "XOR F,expr" 72 0 <<EOF
+XOR F,0x00
+EOF

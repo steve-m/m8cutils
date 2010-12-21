@@ -12,12 +12,6 @@
 
 #define OUTPUT_WIDTH 79
 
-#define PROGRAM_SIZE	16384
-#define BLOCK_SIZE	64
-#define SECURITY_SIZE	BLOCK_SIZE
-#define PAD_BYTE	0
-
-
 extern int verbose;
 
 #endif /* !CY8C2PROG */

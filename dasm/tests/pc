@@ -1,0 +1,20 @@
+#!/bin/sh
+. Common
+
+try_bare "Non-zero PC (JMP)" -p 100 -e 80 00 <<EOF
+0064  80 00	JMP	0x0065
+EOF
+
+try_bare "Non-zero PC (LCALL)" -p 0x8000 -e 7c 01 02 <<EOF
+8000  7C 01 02	LCALL	0x0102
+EOF
+
+try_bare "Non-zero PC (with timing)" -p 520 -t -e 40 7f <<EOF
+0208  40	[04]	NOP
+0209  7F	[08]	RET
+EOF
+
+try_bare "Non-zero PC (warp around 0xFFFF)" -p 65534 -e 41 1 2 3 4 <<EOF
+FFFE  41 01 02	AND	REG[0x01],0x02
+0001  03 04	ADD	A,[X+0x04]
+EOF

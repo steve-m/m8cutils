@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+
+try "RRC A" 6d <<EOF
+RRC A
+EOF
+
+try "RRC [expr]" 6e 80 <<EOF
+RRC [0x80]
+EOF
+
+try "RRC [X+expr]" 6f f <<EOF
+RRC [X+0x0F]
+EOF

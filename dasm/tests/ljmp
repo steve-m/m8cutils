@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+try "LJMP 0x1000" 7d 10 0 40 <<EOF
+LJMP 0x1000
+NOP
+EOF
+
+try "LJMP 0x8ff" 7d 08 ff 40 <<EOF
+LJMP 0x08FF
+NOP
+EOF

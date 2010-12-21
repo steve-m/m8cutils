@@ -69,6 +69,7 @@
 #define POINTER		0xfb
 #define CLOCK		0xfc
 #define DELAY		0xfe
+#define RETURN_CODE	0xf8
 
 #define MAGIC_EXEC	0x12	/* magic number to trigger execution */
 
@@ -164,7 +165,7 @@
 
 #define CHECKSUM_SETUP(blocks) \
   VECTOR_PTROP_PREAMBLE \
-  WRITE_MEM(BLOCKID,blocks & 0xff) \
+  WRITE_MEM(BLOCKID,(blocks) & 0xff) \
   VECTOR_SSC(SSC_Checksum)
 
 #define VERIFY_SETUP \
@@ -183,7 +184,7 @@
   PROGRAM_BLOCK(0x15,0x56)
 
 #define READ_BYTE(addr) \
-  READ_MEM(addr | 0x80)
+  READ_MEM((addr) | 0x80)
 
 #define ERASE \
   WRITE_MEM(CLOCK,0x15) \
@@ -210,7 +211,7 @@
   SECURE(0x15,0x56)
 
 #define WRITE_BYTE(addr,data) \
-  WRITE_MEM(addr | 0x80,data)
+  WRITE_MEM((addr) | 0x80,data)
 
 #define READ_CHECKSUM \
   READ_MEM(0xf9) \

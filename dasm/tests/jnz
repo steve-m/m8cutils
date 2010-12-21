@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "JNZ 0x100" b1 00 <<EOF
+JNZ 0x0101
+EOF
+
+try "JNZ 0xff" b0 FF 40 <<EOF
+JNZ 0x0100
+NOP
+EOF

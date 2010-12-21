@@ -1,5 +1,5 @@
 #
-# Makefile - Makefile of the cy8c2prog programmer
+# Makefile - Makefile of the M8C disassembler
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -8,19 +8,22 @@
 include ../Common.make
 
 
+TESTS=adc add and asl asr call cmp cpl dec halt inc index \
+      jacc jc jmp jnc jnz jz lcall ljmp mov mvi nop or pop push \
+      ret reti rlc romx rrc sub sbb swap ssc tst xor \
+      exceed output input pc
 FILES=README Makefile \
-      cy8c2prog.h cy8c2prog.c cy8c2regs.h vectors.h chips.h chips.c \
-      tty.h tty.c prog.h prog.c \
-      prog_waspic.c
-OBJS=cy8c2prog.o chips.o tty.o prog.o prog_waspic.o
+      m8cdasm.c \
+      tests/Common $(TESTS:%=tests/%)
+OBJS=m8cdasm.o
 
 
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		cy8c2prog
+all:		m8cdasm
 
-cy8c2prog:	$(OBJS) $(LIBDEP)
+m8cdasm:	$(OBJS)	$(LIBDEP)
 
 
 # ----- Dependencies ----------------------------------------------------------
@@ -33,14 +36,17 @@ dep depend .depend:
 		  { rm -f .depend; exit 1; }
 
 ifeq (.depend,$(wildcard .depend))
-include .depend
+include .depend               
 endif
 
 
 # ----- Tests -----------------------------------------------------------------
 
 
-tests:
+tests:		all
+		passed=0 && cd tests && for n in $(TESTS); do \
+		  . ./$$n; done; \
+		  echo "Passed all $$passed tests" 2>&1
 
 
 # ----- Distribution ----------------------------------------------------------
@@ -54,7 +60,8 @@ filelist:
 
 
 clean:
-		rm -f $(OBJS)
+		rm -f y.tab.h y.tab.c lex.yy.c
+		rm -f $(OBJS) tests/_*
 
 spotless:	clean
-		rm -f cy8c2prog .depend
+		rm -f m8cdasm .depend

@@ -1,0 +1,20 @@
+#!/bin/sh
+. Common
+
+try "INC A" 74 <<EOF
+INC A
+EOF
+
+try "INC X" 75 <<EOF
+INC X
+EOF
+
+try "INC [expr]" 76 8 30 <<EOF
+INC [0x08]
+HALT
+EOF
+
+try "INC [X+expr]" 77 a1 40 <<EOF
+INC [X+0xA1]
+NOP
+EOF

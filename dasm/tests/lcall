@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "LCALL 0" 7c 0 0 30 <<EOF
+LCALL 0x0000
+HALT
+EOF
+
+try "LCALL 0xffff" 7c ff ff <<EOF
+LCALL 0xFFFF
+EOF

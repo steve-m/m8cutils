@@ -22,11 +22,15 @@
 
 int verbose = 0;
 
+static int quiet = 0;
+
 
 static void progress(const char *label,int n,int end)
 {
     int left,hash,i;
 
+    if (quiet)
+	return;
     left = OUTPUT_WIDTH-strlen(label)-1;
     hash = left*((n+0.0)/end);
     fprintf(stderr,"\r%s ",label);
@@ -37,14 +41,43 @@ static void progress(const char *label,int n,int end)
 
 static void progress_clear(void)
 {
-    fprintf(stderr,"\r%*s\r",OUTPUT_WIDTH,"");
+    if (!quiet)
+	fprintf(stderr,"\r%*s\r",OUTPUT_WIDTH,"");
 }
+
+
+static void read_block(int block)
+{
+    uint8_t res;
+
+    prog_vectors(SET_BLOCK_NUM(block));
+    prog_vectors(VERIFY_SETUP);
+    res = prog_vectors(READ_MEM(RETURN_CODE));
+    switch (res) {
+	case 0:
+	    return;
+	case 1:
+	    fprintf(stderr,"block %d is read-protected\n",block);
+	    exit(1);
+	case 2:
+	    fprintf(stderr,"reset while reading block %d\n",block);
+	    exit(1);
+	case 3:
+	    fprintf(stderr,"fatal error while reading block %d\n",block);
+	    exit(1);
+	default:
+	    fprintf(stderr,"unknown error %d while reading block %d\n",
+	      res,block);
+	    exit(1);
+    }
+}
+
 
 
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-p port] [-d driver] [-v [-v]] [-3|-5] [-R] [-b]\n"
+"usage: %s [-p port] [-d driver] [-v [-v]] [-q] [-3|-5] [-R] [-b|-i]\n"
 "                 (-r|-w [-c]|-c) [chip] [file]\n"
 "       %s -l\n\n"
 "  -3        set up 3V operation\n"
@@ -53,9 +86,12 @@ static void usage(const char *name)
 "  -c        compare Flash with file\n"
 "  -d driver name of programmer driver (overrides CY8C2PROG_DRIVER, default:\n"
 "            %s)\n"
+"  -i        write Intel HEX format (ignored for input; default: \"ROM\"\n"
+"            format)\n"
 "  -l        list supported programmers and chips\n"
 "  -p port   port to programmer (overrides CY8C2PROG_PORT, default for tty:\n"
 "            %s)\n"
+"  -q        quiet operation, don't show progress bars\n"
 "  -r        read Flash content from chip to file\n"
 //"  -R        run timing-critical parts at real-time priority (requires root)\n"
 "  -v        verbose operation, report major events\n"
@@ -63,7 +99,7 @@ static void usage(const char *name)
 "  -v -v -v  very verbose operation, report communication details\n"
 "  -w        write Flash and security data from file to chip\n"
 "  chip      chip name, e.g., CY8C21323 (default: auto-detect)\n"
-"  file      binary or hex file to program/verify, - for stdin/stdout\n"
+"  file      binary or hex file to program/verify, \"-\" for stdin/stdout\n"
 "            (default: stdin/stdout)\n",
   name,name,programmers[0]->name,DEFAULT_TTY);
     exit(1);
@@ -79,7 +115,7 @@ int main(int argc,char **argv)
     const struct chip *chip = NULL;
     uint16_t id;
     char *env;
-    int binary = 0,voltage = 0,compare = 0,do_read = 0,do_write = 0;
+    int binary = 0,hex = 0,voltage = 0,compare = 0,do_read = 0,do_write = 0;
     int c;
 
     env = getenv("CY8C2PROG_PORT");
@@ -89,7 +125,7 @@ int main(int argc,char **argv)
     if (env)
 	driver = env;
 
-    while ((c = getopt(argc,argv,"35bcdlp:rwRv")) != EOF)
+    while ((c = getopt(argc,argv,"35bcdilp:qrwRv")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
@@ -110,6 +146,9 @@ int main(int argc,char **argv)
 	    case 'd':
 		driver = optarg;
 		break;
+	    case 'i':
+		hex = 1;
+		break;
 	    case 'l':
 		printf("supported programmers:\n");
 		prog_list(stdout);
@@ -118,6 +157,9 @@ int main(int argc,char **argv)
 		exit(0);
 	    case 'p':
 		port = optarg;
+		break;
+	    case 'q':
+		quiet = 1;
 		break;
 	    case 'r':
 		do_read = 1;
@@ -133,6 +175,8 @@ int main(int argc,char **argv)
 	}
 
     if (!(do_read || do_write || compare))
+	usage(*argv);
+    if (binary && hex)
 	usage(*argv);
     if (do_read && (do_write || compare))
 	usage(*argv);
@@ -195,18 +239,19 @@ int main(int argc,char **argv)
     if (verbose)
 	fprintf(stderr,"chip identified as %s (0x%04x)\n",chip->name,chip->id);
     if (do_write || compare)
-	if (file_size > chip->blocks*BLOCK_SIZE) {
+	if (program_size > chip->blocks*BLOCK_SIZE) {
 	    fprintf(stderr,
 	      "file of %lu bytes is too big for flash of %d bytes\n",
-	      (unsigned long) file_size,chip->blocks*BLOCK_SIZE);
+	      (unsigned long) program_size,chip->blocks*BLOCK_SIZE);
 	    exit(1);
 	}
     if (do_write) {
 	int block,i;
 	uint16_t checksum;
 
+	pad_file();
 	prog_vectors(ERASE);
-	for (block = 0; block != file_size/BLOCK_SIZE; block++) {
+	for (block = 0; block != program_size/BLOCK_SIZE; block++) {
 	    prog_vectors(SET_BLOCK_NUM(block));
 	    for (i = 0; i != BLOCK_SIZE; i++)
 		prog_vectors(WRITE_BYTE(i,program[block*BLOCK_SIZE+i]));
@@ -214,7 +259,7 @@ int main(int argc,char **argv)
 		prog_vectors(PROGRAM_BLOCK_CY8C27xxx);
 	    else
 		prog_vectors(PROGRAM_BLOCK_REGULAR);
-	    progress("Write",block,file_size/BLOCK_SIZE);
+	    progress("Write",block,program_size/BLOCK_SIZE);
 	}
 	progress_clear();
 	prog_vectors(CHECKSUM_SETUP(chip->blocks));
@@ -225,42 +270,74 @@ int main(int argc,char **argv)
 	      checksum,do_checksum());
 	    exit(1);
 	}
-	if (verbose)
-	    fprintf(stderr,"wrote and checksummed %lu bytes (%d blocks)\n",
-	      (unsigned long) file_size,block);
+	if (security_size) {
+	    uint8_t res;
+
+	    if (security_size != BLOCK_SIZE) {
+		fprintf(stderr,
+		  "internal error: security size is not one block\n");
+		exit(1);
+	    }
+	    for (block = 0; block != security_size/BLOCK_SIZE; block++) {
+		for (i = 0; i != BLOCK_SIZE; i++)
+		    prog_vectors(WRITE_BYTE(i,security[block*BLOCK_SIZE+i]));
+		if (chip->cy8c27xxx)
+		    prog_vectors(SECURE_CY8C27xxx);
+		else
+		    prog_vectors(SECURE_REGULAR);
+	    }
+	    res = prog_vectors(READ_MEM(RETURN_CODE));
+	    if (res) {
+		fprintf(stderr,
+		  "write of security data failed with return code %d\n",res);
+		exit(1);
+	    }
+	}
+	if (verbose) {
+	    fprintf(stderr,
+	      "wrote and checksummed %lu program bytes (%lu block%s)",
+	      (unsigned long) program_size,
+	      (unsigned long) program_size/BLOCK_SIZE,
+	      program_size == BLOCK_SIZE ? "" : "s");
+	    if (security_size)
+		fprintf(stderr,
+		  ",\n  wrote %lu security bytes (%lu block%s)",
+		  (unsigned long) security_size,
+		  (unsigned long) security_size/BLOCK_SIZE,
+		  security_size == BLOCK_SIZE ? "" : "s");
+	    fputc('\n',stderr);
+	}
     }
     if (compare) {
 	int block,i;
 
-	for (block = 0; block != file_size/BLOCK_SIZE; block++) {
-	    prog_vectors(SET_BLOCK_NUM(block));
-	    prog_vectors(VERIFY_SETUP);
-	    for (i = 0; i != BLOCK_SIZE; i++) {
-		uint8_t res;
+	for (i = 0; i != program_size; i++) {
+	    uint8_t res;
 
-		res = prog_vectors(READ_BYTE(i));
-		if (res != program[block*BLOCK_SIZE+i]) {
-		    progress_clear();
-		    fprintf(stderr,
-		      "comparison failed: block %d, byte %d: got 0x%02x, "
-		      "expected 0x%02x\n",block,i,res,
-		     program[block*BLOCK_SIZE+i]);
-		    exit(1);
-		}
+	    if (!(i & (BLOCK_SIZE-1))) {
+		read_block(i/BLOCK_SIZE);
+		progress("Compare",i,program_size);
 	    }
-	    progress("Compare",block,file_size/BLOCK_SIZE);
+	    res = prog_vectors(READ_BYTE(i & (BLOCK_SIZE-1)));
+	    if (res != program[i]) {
+		progress_clear();
+		fprintf(stderr,
+		  "comparison failed: block %d, byte %d: got 0x%02x, "
+		  "expected 0x%02x\n",i/BLOCK_SIZE,i % BLOCK_SIZE,res,
+		  program[i]);
+		exit(1);
+	    }
 	}
 	progress_clear();
 	if (verbose)
 	    fprintf(stderr,"compared %lu bytes (%d blocks)\n",
-	      (unsigned long) file_size,block);
+	      (unsigned long) program_size,block);
     }
     if (do_read) {
 	int block,i;
 
 	for (block = 0; block != chip->blocks; block++) {
-	    prog_vectors(SET_BLOCK_NUM(block));
-	    prog_vectors(VERIFY_SETUP);
+	    read_block(block);
 	    for (i = 0; i != BLOCK_SIZE; i++)
 		program[block*BLOCK_SIZE+i] =
 		  prog_vectors(READ_BYTE(i));
@@ -270,8 +347,8 @@ int main(int argc,char **argv)
 	if (verbose)
 	    fprintf(stderr,"read %d bytes (%d blocks)\n",
 	      block*BLOCK_SIZE,block);
-	file_size = block*BLOCK_SIZE;
-	write_file(file_name,binary);
+	program_size = block*BLOCK_SIZE;
+	write_file(file_name,binary,hex);
     }
     return 0;
 }

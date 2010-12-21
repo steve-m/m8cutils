@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+
+try "RLC A" 6a <<EOF
+RLC A
+EOF
+
+try "RLC [expr]" 6b 0 <<EOF
+RLC [0x00]
+EOF
+
+try "RLC [X+expr]" 6c 0xff <<EOF
+RLC [X+0xFF]
+EOF

@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "JMP -2" 8f fe <<EOF
+JMP 0xFFFF
+EOF
+
+try "JMP 1" 80 01 30 <<EOF
+JMP 0x0002
+HALT
+EOF

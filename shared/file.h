@@ -1,5 +1,5 @@
 /*
- * file.h - File I/O
+ * file.h - File I/O for the CY8C2 Utilities
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -12,17 +12,22 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "cy8c2prog.h"
+
+#define PROGRAM_SIZE	16384
+#define BLOCK_SIZE	64
+#define SECURITY_SIZE	BLOCK_SIZE
+#define PAD_BYTE	0
 
 
-extern size_t file_size;
-extern int have_security; /* non-zero if "security" contains valid data */
+extern size_t program_size;
+extern size_t security_size; /* zero if we have no security data */
 
 extern uint8_t program[PROGRAM_SIZE];
 extern uint8_t security[SECURITY_SIZE];
 
 uint16_t do_checksum(void);
 void read_file(const char *name,int binary);
-void write_file(const char *name,int binary);
+void write_file(const char *name,int binary,int hex);
+void pad_file(void);
 
 #endif /* !FILE_H */

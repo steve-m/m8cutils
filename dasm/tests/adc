@@ -1,0 +1,35 @@
+#!/bin/sh
+. Common
+
+try "ADC A,expr" 09 00 30 00 <<EOF
+ADC A,0x00
+HALT
+SSC
+EOF
+
+try "ADC A,[expr]" 0a ff 00 <<EOF
+ADC A,[0xFF]
+SSC
+EOF
+
+try "ADC A,[X+expr]" 0b 7f 30 <<EOF
+ADC A,[X+0x7F]
+HALT
+EOF
+
+try "ADC [expr],A" 0c 80 <<EOF
+ADC [0x80],A
+EOF
+
+try "ADC [X+expr],A" 0d f9 40 <<EOF
+ADC [X+0xF9],A
+NOP
+EOF
+
+try "ADC [expr],expr" 0e 7 ff <<EOF
+ADC [0x07],0xFF
+EOF
+
+try "ADC [X+expr],expr" 0f fe 9 <<EOF
+ADC [X+0xFE],0x09
+EOF

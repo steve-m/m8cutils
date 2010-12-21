@@ -1,0 +1,21 @@
+#!/bin/sh
+. Common
+
+try "DEC A" 78 40 <<EOF
+DEC A
+NOP
+EOF
+
+try "DEC X" 79 0 <<EOF
+DEC X
+SSC
+EOF
+
+try "DEC [expr]" 7a ef <<EOF
+DEC [0xEF]
+EOF
+
+try "DEC [X+expr]" 7b 2 40 <<EOF
+DEC [X+0x02]
+NOP
+EOF

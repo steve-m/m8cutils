@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+try "CMP A,expr" 39 93 <<EOF
+CMP A,0x93
+EOF
+
+try "CMP A,[expr]" 3a d <<EOF
+CMP A,[0x0D]
+EOF
+
+try "CMP A,[X+expr]" 3b C0 <<EOF
+CMP A,[X+0xC0]
+EOF
+
+try "CMP [expr],expr" 3c 10 20 <<EOF
+CMP [0x10],0x20
+EOF
+
+try "CMP [X+expr],expr" 3d 3 4 <<EOF
+CMP [X+0x03],0x04
+EOF

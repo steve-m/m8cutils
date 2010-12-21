@@ -1,5 +1,5 @@
 #
-# Makefile - Makefile of the cy8c2prog programmer
+# Makefile - Makefile for shared parts of the CY8C2 utilities
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -9,18 +9,17 @@ include ../Common.make
 
 
 FILES=README Makefile \
-      cy8c2prog.h cy8c2prog.c cy8c2regs.h vectors.h chips.h chips.c \
-      tty.h tty.c prog.h prog.c \
-      prog_waspic.c
-OBJS=cy8c2prog.o chips.o tty.o prog.o prog_waspic.o
+      file.h file.c disasm.h disasm.c
+OBJS=file.o disasm.o
 
 
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		cy8c2prog
+all:		libcy8c2utils.a
 
-cy8c2prog:	$(OBJS) $(LIBDEP)
+libcy8c2utils.a: $(OBJS)
+		$(AR) crv $@ $^
 
 
 # ----- Dependencies ----------------------------------------------------------
@@ -57,4 +56,4 @@ clean:
 		rm -f $(OBJS)
 
 spotless:	clean
-		rm -f cy8c2prog .depend
+		rm -f libcy8c2utils.a .depend

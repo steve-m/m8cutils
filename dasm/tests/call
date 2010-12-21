@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+try "CALL -1" 0x9f ff 40 <<EOF
+CALL 0x0001
+NOP
+EOF
+
+try "CALL 5" 0x90 5 40 <<EOF
+CALL 0x0007
+NOP
+EOF
+
+try "CALL 0x7ff" 0x97 ff 0 <<EOF
+CALL 0x0801
+SSC
+EOF
+
+try "CALL 0x800" 0x98 00 0 <<EOF
+CALL 0xF802
+SSC
+EOF

@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "PUSH A" 8 40 <<EOF
+PUSH A
+NOP
+EOF
+
+try "PUSH X" 10 <<EOF
+PUSH X
+EOF

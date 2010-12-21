@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+try "JACC 0xff" e0 ff 0 <<EOF
+JACC 0x0100
+SSC
+EOF
+
+try "JACC 0xeff" ee ff 40 <<EOF
+JACC 0xFF00
+NOP
+EOF

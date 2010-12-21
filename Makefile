@@ -7,7 +7,7 @@
 
 DIR=cy8c2
 NAME=cy8c2utils
-DIRS=prog waspic
+DIRS=shared dasm prog waspic
 
 SF_ACCOUNT=almesber@cy8c2utils.sourceforge.net
 SF_DIR=/home/groups/c/cy/cy8c2utils/htdocs         
@@ -17,11 +17,12 @@ VERSION=$(shell cat VERSION)
 DISTFILE=$(NAME)-$(VERSION).tar.gz
 
 
-FILES=VERSION README COPYING.GPLv2 Makefile \
+FILES=VERSION README CHANGES TODO COPYING.GPLv2 \
+  Makefile Common.make \
   $(shell for n in $(DIRS); do $(MAKE) -s -C $$n filelist | \
     sed 's/^\| / '$$n'\//g'; done)
 
-.PHONY:	all dist upload
+.PHONY:	all clean spotless dep depend tests dist upload
 
 
 all:
@@ -29,6 +30,15 @@ all:
 
 clean:
 		for n in $(DIRS); do $(MAKE) -C $$n clean; done
+
+spotless:
+		for n in $(DIRS); do $(MAKE) -C $$n spotless; done
+
+dep depend:
+		for n in $(DIRS); do $(MAKE) -C $$n depend; done
+
+tests:
+		for n in $(DIRS); do $(MAKE) -C $$n tests; done
 
 dist:		$(FILES)
 		cd ..; tar cfz $(DIR)/$(DISTFILE) $(FILES:%=$(DIR)/%)

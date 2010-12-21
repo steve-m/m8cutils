@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+try "JC 0x7ff" c7 ff 40 <<EOF
+JC 0x0800
+NOP
+EOF
+
+try "JC 0x800" c8 00 40 <<EOF
+JC 0xF801
+NOP
+EOF

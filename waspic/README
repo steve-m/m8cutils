@@ -1,8 +1,7 @@
 Werner's slow PIC-based programmer
 ==================================
 
-With the exception noted below, all files are copyright 2006 Werner
-Almesberger
+Copyright 2006 Werner Almesberger
 
 The files containing firmware in this directory are distributed under
 the terms of the GNU General Public License (GPL), version 2. This
@@ -13,10 +12,6 @@ are distributed under the terms of an augmented version of the GNU
 General Public License (GPL), which is described in the file COPYING.
 The original GPL, which is included by reference, is in the file
 ../COPYING.GPLv2.
-
-BC337.sym and pic16LF88.sym are based on work of the authors of gEDA
-and distributed under version 2 of the GNU General Public License
-(GPL), a copy of which can be found in ../COPYING.GPLv2.
 
 
 This is a very basic serial programmer for CY8C2xxxx chips. The
@@ -51,10 +46,6 @@ the PIC and the target for now.
 
 The schematic was produced with gschem from the gEDA project, see
 http://www.geda.seul.org/
-
-In order to view or edit the schematic, you have to copy the files
-BC337.sym and pic16LF88.sym into a symbol directory of gschem, e.g.
-cp BC337.sym pic16LF88.sym /usr/share/gEDA/sym/local/
 
 
 The layout

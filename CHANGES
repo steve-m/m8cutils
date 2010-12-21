@@ -1,0 +1,34 @@
+Version 1 (15-FEB-2006)
+---------
+
+- waspic: schematic uses transistor symbols with correct pin information,
+  removed BC337.sym and pic16LF88.sym, and updated the READMEs
+- waspic: added "project", which guides the operation of gsch2pcb
+- prog/Makefile: moved common settings to top-level Common.make, and added
+  -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wshadow
+  -Werror to CFLAGS
+- moved prog/file.[ch] to shared/
+- shared/file.[ch]: added support for reading and writing ROM files
+- shared/file.c: Intel HEX file records now output with \n, not \r\n, as record
+  terminator
+- shared/file.c: added full support for security data and cleaned up confusion
+  with checksum data
+- shared/file.[ch]: program and security data size now has byte granularity,
+  and no automatic padding occurs
+- cy8c2prog: files are now only padded to full blocks when writing
+- cy8c2prog: added support for writing security data
+- cy8c2prog: added detection of error codes retuned by SSC when reading
+- cy8c2prog: new option -i to write an Intel HEX file, changed the default to
+  "ROM"
+- cy8c2prog: default isn't as silent as README claimed; added option -q to make
+  it so (i.e., to suppress progress bars)
+- dasm/: added a disassembler
+- improved the READMEs a little
+- moved prog/TODO to the top level
+- prog/vectors.h: some macro arguments lacked parentheses
+- added CHANGES (forgot that one, oops)
+
+Version 0 (14-FEB-2006)
+---------
+
+- Initial release

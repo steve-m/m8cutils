@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+try "JNC 0" d0 00 <<EOF
+JNC 0x0001
+EOF
+
+try "JNC 0xfff" df ff 40 <<EOF
+JNC 0x0000
+NOP
+EOF

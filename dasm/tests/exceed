@@ -1,0 +1,17 @@
+#!/bin/sh
+. Common
+
+fail "Exceed 1 byte by 1" 4c <<EOF
+SWAP A,[0x00]
+disassembled beyond end of code
+EOF
+
+fail "Exceed 1 byte by 2" 4a 12 <<EOF
+TST REG[X+0x12],0x00
+disassembled beyond end of code
+EOF
+
+fail "Exceed 2 bytes by 1" 7d 34 <<EOF
+LJMP 0x3400
+disassembled beyond end of code
+EOF

@@ -1,0 +1,38 @@
+#!/bin/sh
+. Common
+
+try "ADD A,expr" 01 ad <<EOF
+ADD A,0xAD
+EOF
+
+try "ADD A,[expr]" 02 f <<EOF
+ADD A,[0x0F]
+EOF
+
+try "ADD A,[X+expr]" 03 81 40 <<EOF
+ADD A,[X+0x81]
+NOP
+EOF
+
+try "ADD [expr],A" 04 80 00 <<EOF
+ADD [0x80],A
+SSC
+EOF
+
+try "ADD [X+expr],A" 05 13 <<EOF
+ADD [X+0x13],A
+EOF
+
+try "ADD [expr],expr" 06 a0 1 <<EOF
+ADD [0xA0],0x01
+EOF
+
+try "ADD [X+expr],expr" 07 02 b3 30 <<EOF
+ADD [X+0x02],0xB3
+HALT
+EOF
+
+try "ADD SP,expr" 38 a0 40 <<EOF
+ADD SP,0xA0
+NOP
+EOF

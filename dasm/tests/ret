@@ -1,0 +1,6 @@
+#!/bin/sh
+. Common
+
+try "RET" 7f <<EOF
+RET
+EOF

@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+
+try "MVI A,[[expr]++]" 3e 2 <<EOF
+MVI A,[[0x02]++]
+EOF
+
+try "MVI [[expr]++],A" 3f de <<EOF
+MVI [[0xDE]++],A
+EOF

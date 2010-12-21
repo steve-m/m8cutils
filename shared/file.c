@@ -1,5 +1,5 @@
 /*
- * file.c - File I/O
+ * file.c - File I/O for the CY8C2 utilities
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -16,11 +16,13 @@
 #include "file.h"
 
 
+#define SECURITY_AREA	0x100000
+#define CHECKSUM_AREA	0x200000
 #define MAX_RECORD 255
 
 
-size_t file_size = 0;
-int have_security = 0;
+size_t program_size = 0;
+size_t security_size = 0;
 
 uint8_t program[PROGRAM_SIZE];
 uint8_t security[SECURITY_SIZE];
@@ -34,7 +36,7 @@ uint16_t do_checksum(void)
     uint16_t sum = 0;
     int i;
 
-    for (i = 0; i != file_size; i++)
+    for (i = 0; i != program_size; i++)
 	sum += program[i];
     return sum;
 }
@@ -42,7 +44,7 @@ uint16_t do_checksum(void)
 
 static void read_binary(FILE *file)
 {
-    file_size = fread(program,1,PROGRAM_SIZE,file);
+    program_size = fread(program,1,PROGRAM_SIZE,file);
     if (ferror(file)) {
 	perror("fread");
 	exit(1);
@@ -65,6 +67,42 @@ static int is_hex(char c)
 static int hex_value(char c)
 {
     return isdigit(c) ? c-'0' : toupper(c)-'A'+10;
+}
+
+
+static void read_rom(FILE *file)
+{
+    int second = 0,c;
+    uint8_t value;
+
+    while ((c = fgetc(file)) != EOF) {
+	if (is_hex(c)) {
+	    if (second) {
+		if (program_size == PROGRAM_SIZE) {
+		    fprintf(stderr,"file bigger than maximum memory\n");
+		    exit(1);
+		}
+		program[program_size++] = (value << 4) | hex_value(c);
+		second = 0;
+	    }
+	    else {
+		value = hex_value(c);
+		second = 1;
+	    }
+	}
+	else {
+	    if (second) {
+		fprintf(stderr,
+		  "syntax error: byte contains a non-hex character\n");
+		exit(1);
+	    }
+	    if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+		continue;
+	    fprintf(stderr,
+	      "syntax error: file contains non-hex non-blank character\n");
+	    exit(1);
+	}
+    }
 }
 
 
@@ -150,11 +188,11 @@ static void read_hex(FILE *file)
 		memcpy(p+(address & 0xffff),record+3,got-3);
 		last_address = address+got-3;
 		if (!(last_address & ~0xffff))
-		    file_size = last_address;
-		else if (last_address == 0x100002)
+		    program_size = last_address;
+		else if (last_address == CHECKSUM_AREA+2)
 		    have_checksum = 1;
-		else if (last_address == 0x200040)
-		    have_security = 1;
+		else if ((last_address & ~0xffff) == SECURITY_AREA)
+		    security_size = last_address-SECURITY_AREA;
 		break;
 	    case 1:
 		if (got != 3) {
@@ -175,11 +213,11 @@ static void read_hex(FILE *file)
 		    limit = PROGRAM_SIZE;
 		    p = program;
 		}
-		else if (extended == 0x100000) {
+		else if (extended == SECURITY_AREA) {
 		    limit = SECURITY_SIZE;
 		    p = security;
 		}
-		else if (extended == 0x200000) {
+		else if (extended == CHECKSUM_AREA) {
 		    limit = 2;
 		    p = checksum;
 		}
@@ -212,8 +250,8 @@ void read_file(const char *name,int binary)
 	    exit(1);
 	}
     }
-    file_size = 0;
-    have_checksum = have_security = 0;
+    program_size = security_size = 0;
+    have_checksum = 0;
     if (binary)
 	read_binary(file);
     else {
@@ -225,14 +263,10 @@ void read_file(const char *name,int binary)
 	ungetc(c,file);
 	if (c == ':')
 	    read_hex(file);
+	else if (is_hex(c))
+	    read_rom(file);
 	else
 	    read_binary(file);
-    }
-    if (file_size % BLOCK_SIZE) {
-	fprintf(stderr,
-	  "warning: padding file to a block boundary\n");
-	while (file_size % BLOCK_SIZE)
-	    program[file_size++] = PAD_BYTE;
     }
     if (have_checksum) {
 	uint16_t sum = (checksum[0] << 8) | checksum[1];
@@ -254,38 +288,43 @@ static void write_binary(FILE *file)
 {
     size_t wrote;
 
-    wrote = fwrite(program,1,file_size,file);
-    if (wrote == file_size)
+    wrote = fwrite(program,1,program_size,file);
+    if (wrote == program_size)
 	return;
     perror("fwrite");
     exit(1);
 }
 
 
-static void write_hex(FILE *file)
+static void write_rom(FILE *file)
 {
-    int i = 0;
+    int i;
+
+    for (i = 0; i != program_size; i++)
+	if (fprintf(file,"%02X%c",program[i],
+	  (i & 7) == 7 || i == program_size-1 ? '\n' : ' ') < 0) {
+	    perror("fprintf");
+	    exit(1);
+	}
+}
+
+
+static void write_hex_record(FILE *file,uint16_t addr,const uint8_t *data,
+  size_t size)
+{
+    const uint8_t *end = data+size;
     int sum;
 
-    while (i != file_size) {
-	sum = 0x40+(i >> 8)+i;
-	if (fprintf(file,":40%04X00",i) < 0)
-	    goto error;
-	do {
-	    if (fprintf(file,"%02X",program[i]) < 0)
-		goto error;
-	    sum += program[i];
-	    i++;
-	}
-	while (i % BLOCK_SIZE);
-	if (fprintf(file,"%02X\r\n",(-sum) & 0xff) < 0)
-	    goto error;
-    }
-    sum = do_checksum();
-    if (fprintf(file,":020000040020DA\r\n:02000000%02X%02X%02X\r\n",
-      (sum >> 8) & 0xff,sum & 0xff,-(2+(sum >> 8)+sum) & 0xff) < 0)
+    sum = size+(addr >> 8)+addr;
+    if (fprintf(file,":40%04X00",addr) < 0)
 	goto error;
-    if (fprintf(file,":00000001FF\r\n") < 0)
+    while (data != end) {
+	if (fprintf(file,"%02X",*data) < 0)
+	    goto error;
+	sum += *data;
+	data++;
+    }
+    if (fprintf(file,"%02X\n",(-sum) & 0xff) < 0)
 	goto error;
     return;
 
@@ -295,7 +334,32 @@ error:
 }
 
 
-void write_file(const char *name,int binary)
+static void write_hex(FILE *file)
+{
+    int i = 0;
+    int sum;
+
+    for (i = 0; i < program_size; i += BLOCK_SIZE)
+	write_hex_record(file,i,program+i,
+	  program_size-i > BLOCK_SIZE ? BLOCK_SIZE : program_size-i);
+    for (i = 0; i < security_size; i += BLOCK_SIZE)
+	write_hex_record(file,i,security+i,
+	  security_size-i > BLOCK_SIZE ? BLOCK_SIZE : security_size-i);
+    sum = do_checksum();
+    if (fprintf(file,":020000040020DA\n:02000000%02X%02X%02X\n",
+      (sum >> 8) & 0xff,sum & 0xff,-(2+(sum >> 8)+sum) & 0xff) < 0)
+	goto error;
+    if (fprintf(file,":00000001FF\n") < 0)
+	goto error;
+    return;
+
+error:
+    perror("fprintf");
+    exit(1);
+}
+
+
+void write_file(const char *name,int binary,int hex)
 {
     FILE *file;
 
@@ -310,10 +374,21 @@ void write_file(const char *name,int binary)
     }
     if (binary)
 	write_binary(file);
+    else if (!hex)
+	write_rom(file);
     else
 	write_hex(file);
     if (fclose(file)) {
 	perror(name);
 	exit(1);
     }
+}
+
+
+void pad_file(void)
+{
+    while (program_size & (BLOCK_SIZE-1))
+	program[program_size++] = PAD_BYTE;
+    while (security_size & (BLOCK_SIZE-1))
+	security[security_size++] = PAD_BYTE;
 }

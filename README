@@ -1,7 +1,7 @@
-CY8C2 utils
-===========
+CY8C2 Utilities
+===============
 
-Copyright 2006 Werner Almesberger and others
+Copyright 2006 Werner Almesberger
 
 The files in this package are distributed under the terms of the
 GNU General Public License (GPL), version 2, or an augmented
@@ -17,9 +17,38 @@ http://www.cypress.com/psoc
 
 This collection consists of the following parts:
 
+  dasm/
+    A disassembler for the M8C language
+
   prog/
     A programmer, with drivers for different types of programmer
-    hardware.
+    hardware
 
   waspic/
-    A simple PIC-based programmer that communicates via RS-232C.
+    A simple PIC-based programmer that communicates via RS-232C
+
+  shared/
+    Code shared among programs of this project
+
+
+Installation
+------------
+
+Just type "make". If you don't have gputils installed, the build
+will eventually fail in waspic/. If your version of gcc doesn't
+agree with the CFLAGS, edit them in Common.make.
+
+There is no "make install" yet. The resulting executables are:
+
+- programmer (host side): prog/cy8c2prog
+- disassembler: dasm/m8cdasm
+- programmer (firmware): waspic/waspic.hex
+
+
+Testing
+-------
+
+Once everything is built, you can run the regression tests with
+"make test" from the top-level directory (i.e., this one). They
+can also be run individually per component, by running "make
+test" in the respective directory.

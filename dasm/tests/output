@@ -1,0 +1,27 @@
+#!/bin/sh
+. Common
+
+try_bare "Default output" -e 40 80 01 7c 00 03 <<EOF
+0000  40	NOP
+0001  80 01	JMP	0x0003
+0003  7C 00 03	LCALL	0x0003
+EOF
+
+try_bare "Short output" -s -e 40 80 01 7c 00 03 <<EOF
+NOP
+JMP	0x0003
+LCALL	0x0003
+EOF
+
+
+try_bare "Regular output with timing" -t -e 40 80 01 7c 00 03 <<EOF
+0000  40	[04]	NOP
+0001  80 01	[05]	JMP	0x0003
+0003  7C 00 03	[13]	LCALL	0x0003
+EOF
+
+try_bare "Short output with timing" -s -t -e 40 80 01 7c 00 03 <<EOF
+[04]	NOP
+[05]	JMP	0x0003
+[13]	LCALL	0x0003
+EOF

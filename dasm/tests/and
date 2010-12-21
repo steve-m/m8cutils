@@ -1,0 +1,46 @@
+#!/bin/sh
+. Common
+
+try "AND A,expr" 21 21 <<EOF
+AND A,0x21
+EOF
+
+try "AND A,[expr]" 22 d0 <<EOF
+AND A,[0xD0]
+EOF
+
+try "AND A,[X+expr]" 23 30 30 <<EOF
+AND A,[X+0x30]
+HALT
+EOF
+
+try "AND [expr],A" 24 12 <<EOF
+AND [0x12],A
+EOF
+
+try "AND [X+expr],A" 25 e7 <<EOF
+AND [X+0xE7],A
+EOF
+
+try "AND [expr],expr" 26 01 02 <<EOF
+AND [0x01],0x02
+EOF
+
+try "AND [X+expr],expr" 27 10 20 <<EOF
+AND [X+0x10],0x20
+EOF
+
+try "AND REG[expr],expr" 41 d0 ff 0 <<EOF
+AND REG[0xD0],0xFF
+SSC
+EOF
+
+try "AND REG[X+expr],expr" 42 0 f 30 <<EOF
+AND REG[X+0x00],0x0F
+HALT
+EOF
+
+try "AND F,expr" 70 b7 40 <<EOF
+AND F,0xB7
+NOP
+EOF

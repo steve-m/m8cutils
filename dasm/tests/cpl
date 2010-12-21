@@ -1,0 +1,7 @@
+#!/bin/sh
+. Common
+
+try "CPL A" 73 40 <<EOF
+CPL A
+NOP
+EOF

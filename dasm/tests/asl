@@ -1,0 +1,17 @@
+#!/bin/sh
+. Common
+
+try "ASL A" 0x64 30 <<EOF
+ASL A
+HALT
+EOF
+
+try "ASL [expr]" 65 0x90 40 <<EOF
+ASL [0x90]
+NOP
+EOF
+
+try "ASL [X+expr]" 66 cc 0x40 <<EOF
+ASL [X+0xCC]
+NOP
+EOF

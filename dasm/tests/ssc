@@ -1,0 +1,6 @@
+#!/bin/sh
+. Common
+
+try "SSC" 0 <<EOF
+SSC
+EOF

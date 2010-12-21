@@ -1,0 +1,91 @@
+#!/bin/sh
+. Common
+
+try "MOV X,SP" 4f 40 <<EOF
+MOV X,SP
+NOP
+EOF
+
+try "MOV A,expr" 50 1 <<EOF
+MOV A,0x01
+EOF
+
+try "MOV A,[expr]" 51 2 <<EOF
+MOV A,[0x02]
+EOF
+
+try "MOV A,[X+expr]" 52 3 <<EOF
+MOV A,[X+0x03]
+EOF
+
+try "MOV [expr],A" 53 4 <<EOF
+MOV [0x04],A
+EOF
+
+try "MOV [X+expr],A" 54 5 40 <<EOF
+MOV [X+0x05],A
+NOP
+EOF
+
+try "MOV [expr],expr" 55 88 99 <<EOF
+MOV [0x88],0x99
+EOF
+
+try "MOV [X+expr],expr" 56 6 7 <<EOF
+MOV [X+0x06],0x07
+EOF
+
+try "MOV X,expr" 57 90 40 <<EOF
+MOV X,0x90
+NOP
+EOF
+
+try "MOV X,[expr]" 58 8 <<EOF
+MOV X,[0x08]
+EOF
+
+try "MOV X,[X+expr]" 59 80 <<EOF
+MOV X,[X+0x80]
+EOF
+
+try "MOV [expr],X" 5a 9 <<EOF
+MOV [0x09],X
+EOF
+
+try "MOV A,X" 5b 30 <<EOF
+MOV A,X
+HALT
+EOF
+
+try "MOV X,A" 5c 40 <<EOF
+MOV X,A
+NOP
+EOF
+
+try "MOV A,REG[expr]" 5d a <<EOF
+MOV A,REG[0x0A]
+EOF
+
+try "MOV A,REG[X+expr]" 5e ab <<EOF
+MOV A,REG[X+0xAB]
+EOF
+
+try "MOV [expr],[expr]" 5f b c<<EOF
+MOV [0x0B],[0x0C]
+EOF
+
+try "MOV REG[expr],A" 60 d <<EOF
+MOV REG[0x0D],A
+EOF
+
+try "MOV REG[X+expr],A" 61 f0 <<EOF
+MOV REG[X+0xF0],A
+EOF
+
+try "MOV REG[expr],expr" 62 e f <<EOF
+MOV REG[0x0E],0x0F
+EOF
+
+try "MOV REG[X+expr],expr" 63 ed fc <<EOF
+MOV REG[X+0xED],0xFC
+EOF

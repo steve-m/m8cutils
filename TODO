@@ -1,5 +1,8 @@
-cy8c2prog "to do" list
+cy8c2utils "to do" list
 ======================
+
+cy8c2prog
+---------
 
 - support selection of reset vs. power-on mode
 - check bit-banging code
@@ -7,11 +10,20 @@ cy8c2prog "to do" list
 - don't pile up all the "intelligence" at the bottom of cy8c2prog.c
 - add terminal control helper functions to tty.c (for bit-banging)
 - add real-time support and deadline measurements (for bit-banging)
-- add support for the remaining current (and obsolete ?) models
+- add support for the remaining current (and obsolete ?) chip models
 - generalize interface device support to USB, etc.
 - check that the Intel hex format is properly implemented
 - don't require voltage if we're reading and the target supplies power
-- support ROM files
-- support writing of the security data
-- check the result of reading a block when in read mode
 - validate vectors against "official" vectors (?)
+- add regression tests
+
+share/file
+----------
+
+- include line number and file name in diagnostics
+- add file output regression tests
+
+m8cdasm
+-------
+
+- regression tests need to check file input error handling

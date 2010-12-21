@@ -1,0 +1,7 @@
+#!/bin/sh
+. Common
+
+try "HALT" 30 40 <<EOF
+HALT
+NOP
+EOF

@@ -1,0 +1,82 @@
+#!/bin/sh
+#
+# Common - Elements shared by all regression tests for the M8C disassembler
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+
+expect()
+{
+    echo -n "$1: " 1>&2
+    cat >_ref
+}
+
+
+check_result()
+{
+    diff -u -w _ref _out >_diff || {
+	echo FAILED 1>&2
+	cat _diff 1>&2
+	rm -f _ref _out _diff
+	exit 1
+    }
+    echo PASSED 1>&2
+    rm -f _ref _out
+    passed=`expr $passed + 1`
+}
+
+
+m8cdasm()
+{
+    ../m8cdasm "$@" >_out || {
+	echo FAILED 1>&2
+	rm -f _ref _out
+	exit 1
+    }
+    check_result
+}
+
+
+m8cdasm_fail()
+{
+    ../m8cdasm "$@" >_out 2>&1 && {
+	echo FAILED 1>&2
+	rm -f _ref _out
+	exit 1
+    }
+    check_result
+}
+
+
+try_bare()
+{
+    expect "$1"
+    shift
+    m8cdasm "$@"
+}
+
+
+try()
+{
+    title="$1"
+    shift
+    try_bare "$title" -s -e "$@"
+}
+
+
+fail_bare()
+{
+    expect "$1"
+    shift
+    m8cdasm_fail "$@"
+}
+
+
+fail()
+{
+    title="$1"
+    shift
+    fail_bare "$title" -s -e "$@"
+}

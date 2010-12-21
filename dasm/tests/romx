@@ -1,0 +1,6 @@
+#!/bin/sh
+. Common
+
+try "ROMX" 28 <<EOF
+ROMX
+EOF

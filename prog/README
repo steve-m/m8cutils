@@ -25,11 +25,12 @@ operation and performs file I/O.
 Usage
 -----
 
-cy8c2prog reads and writes either raw binary files or files in the
-Intel HEX format. The file type is auto-detected when reading.
-The auto-detection can be overridden by selecting the binary format
-with the option -b. When writing, the default format is Intel HEX,
-which can be overridden with -b.
+cy8c2prog reads and writes either raw binary files, "ROM" files,
+or files in the Intel HEX format. The file type is auto-detected
+when reading. The auto-detection can be overridden by selecting
+the binary format with the option -b. When writing, the default
+format is "ROM", which can be overridden with -b (binary) and -i
+(Intel HEX).
 
 The name of the file to read or write is specified on the, with the
 special name "-" meaning standard input or output. The file name can
@@ -74,17 +75,18 @@ auto-detected voltage does not correspond to it, cy8c2prog aborts
 with an error.
 
 Last but not least, several degrees of verboseness can be selected
-with the option -v. By default, cy8c2prog is completely quiet. A
-single -v adds general progress information. More -v options add
-more and more noise. Note that excessive output may slow down some
-programmers such that they fail to meet protocol deadlines.
+with the options -q and -v. By default, cy8c2prog only displays
+progress bars, which can be turned off with -q. A single -v adds
+general progress messages. More -v options add more and more noise.
+Note that excessive output may slow down some programmers such that
+they fail to meet protocol deadlines.
 
 Examples:
 
-% cy8c2prog -3 -w -v prog.hex
+% cy8c2prog -3 -w prog.hex
 
 Writes the file prog.hex to the programmer, using defaults. The
-voltage is set to 3V. We use verbose mode to obtain a progress bar.
+voltage is set to 3V.
 
 % cy8c2prog -d waspic -p /dev/ttyS1 -3 -r -b data.hex
 

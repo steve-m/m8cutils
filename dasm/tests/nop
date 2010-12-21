@@ -1,0 +1,6 @@
+#!/bin/sh
+. Common
+
+try "NOP" 40 <<EOF
+NOP
+EOF
