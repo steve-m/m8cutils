@@ -1,5 +1,5 @@
 #
-# Makefile - Makefile for shared parts of the CY8C2 utilities
+# Makefile - Makefile for shared parts of the M8C utilities
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -16,9 +16,9 @@ OBJS=file.o disasm.o
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		libcy8c2utils.a
+all:		libm8cutils.a
 
-libcy8c2utils.a: $(OBJS)
+libm8cutils.a: $(OBJS)
 		$(AR) crv $@ $^
 
 # ----- Dependencies ----------------------------------------------------------
@@ -48,4 +48,4 @@ clean:
 		rm -f $(OBJS)
 
 spotless:	clean
-		rm -f libcy8c2utils.a .depend
+		rm -f libm8cutils.a .depend

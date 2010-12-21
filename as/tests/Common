@@ -12,8 +12,8 @@ reas()
     echo -n "$1: " 1>&2
     shift
     in=`echo $* | tr 'a-z' 'A-Z'`
-    asm=`../../dasm/m8cdasm -s -e $*`
-    out=`echo "$asm" | ../m8cas`
+    asm=`$VALGRIND ../../das/m8cdas -s -e $*`
+    out=`echo "$asm" | $VALGRIND ../m8cas`
     if [ "$in" = "$out" ]; then
 	echo PASSED 2>&1
 	passed=`expr $passed + 1`
@@ -29,7 +29,7 @@ asm()
 {
     echo -n "$1: " 1>&2
     shift
-    ../m8cas "$@" >_out || {
+    $VALGRIND ../m8cas "$@" >_out || {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
 	rm -f _out
@@ -42,7 +42,7 @@ asm_fail()
 {
     echo -n "$1: " 1>&2
     shift
-    ../m8cas "$@" >_out 2>&1 && {
+    $VALGRIND ../m8cas "$@" >_out 2>&1 && {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
 	rm -f _out

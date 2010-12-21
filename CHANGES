@@ -1,3 +1,23 @@
+Version 4 (20-FEB-2006)
+--------
+
+- renamed CY8C2 to M8C (package name, cy8c2prog, etc.)
+- renamed m8cdasm to m8cdas
+- m8cprog: added support for chips with banked Flash (CY8C24x94 and CY8C29xxx);
+  UNTESTED !
+- shared/file.h: increased sizes to 32 kB Flash
+- m8cprog: write security data after reading or comparing
+- m8cprog: the INITIALIZE_3 vector must set BDG_TR, not ILO_TR
+- m8cprog: as an exception, if there are 128 blocks, CHECKUP_SETUP sets POINTER
+  to 0 instead of 0x80
+- prog/m8cprog.c: turn off progress bar if verbose > 1
+- prog/ref/: tools and data for comparing the vectors against the official
+  published reference AN2026A and AN2026B
+- m8cas: cleaned up implementation of AREA and made list of attributes optional
+- m8cas: added support for overlaid areas
+- m8cas: code area is now called "text" and is pre-defined as (ROM, ABS, CON).
+- as/tests/{blk,blkw}: updated to use the "text" area
+
 Version 3 (18-FEB-2006)
 --------
 

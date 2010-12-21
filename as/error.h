@@ -21,6 +21,18 @@ extern struct loc current_loc;
 extern int allow_extensions;
 
 
+static inline const char *get_file(const struct loc *loc)
+{
+    return loc->file;
+}
+
+
+static inline int get_line(const struct loc *loc)
+{
+    return loc->line;
+}
+
+
 void set_file(char *name);
 
 void __attribute__((noreturn)) vlerrorf(const struct loc *loc,const char *fmt,

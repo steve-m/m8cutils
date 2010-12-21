@@ -8,7 +8,7 @@ foo:
 	blk	1
 bar:
 	blk	2
-	area	rom(rom)
+	area	text
 here:	mov	A,[foo]
 	mov	A,[bar]
 	db	here
@@ -26,7 +26,7 @@ bar:
 	blk	foo
 end:
 	blk	0
-	area	rom(rom)
+	area	text
 	db	end
 	nop
 EOF
@@ -40,7 +40,7 @@ asm "BLK (self-reference)" <<EOF
 	blk	2
 foo:
 	blk	foo
-	area	rom(rom)
+	area	text
 	db	foo
 	nop
 EOF
@@ -52,7 +52,7 @@ asm_fail "BLK (forward-defined)" <<EOF
 	nop
 	area	ram(ram)
 	blk	foo
-	area	rom(rom)
+	area	text
 foo:
 	nop
 EOF

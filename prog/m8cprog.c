@@ -1,5 +1,5 @@
 /*
- * cy8c2prog.c - General programmer for the CY8C2 microcontroller family
+ * m8cprog.c - General programmer for the M8C microcontroller family
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -13,7 +13,7 @@
 #include <string.h>
 #include "file.h"
 
-#include "cy8c2prog.h"
+#include "m8cprog.h"
 #include "vectors.h"
 #include "chips.h"
 #include "tty.h"
@@ -29,7 +29,7 @@ static void progress(const char *label,int n,int end)
 {
     int left,hash,i;
 
-    if (quiet)
+    if (quiet || verbose > 1)
 	return;
     left = OUTPUT_WIDTH-strlen(label)-1;
     hash = left*((n+0.0)/end);
@@ -41,7 +41,7 @@ static void progress(const char *label,int n,int end)
 
 static void progress_clear(void)
 {
-    if (!quiet)
+    if (!quiet && verbose <= 1)
 	fprintf(stderr,"\r%*s\r",OUTPUT_WIDTH,"");
 }
 
@@ -128,14 +128,16 @@ static void do_erase(const struct chip *chip)
 }
 
 
-static void do_write(const struct chip *chip)
+static void do_write_program(const struct chip *chip)
 {
     int block,i;
     uint16_t checksum;
 
     pad_file();
     for (block = 0; block != program_size/BLOCK_SIZE; block++) {
-	prog_vectors(SET_BLOCK_NUM(block));
+	if (chip->banks > 1 && !(block % chip->blocks))
+	    prog_vectors(SET_BANK_NUM(block/chip->blocks));
+	prog_vectors(SET_BLOCK_NUM(block % chip->blocks));
 	for (i = 0; i != BLOCK_SIZE; i++)
 	    prog_vectors(WRITE_BYTE(i,program[block*BLOCK_SIZE+i]));
 	if (chip->cy8c27xxx)
@@ -145,30 +147,49 @@ static void do_write(const struct chip *chip)
 	progress("Write",block,program_size/BLOCK_SIZE);
     }
     progress_clear();
-    prog_vectors(CHECKSUM_SETUP(chip->blocks));
-    checksum =
-      prog_vectors(READ_BYTE(0xf9) READ_BYTE(0xf8));
+    checksum = 0;
+    for (i = 0; i != chip->banks; i++) {
+	if (chip->banks > 1)
+	    prog_vectors(SET_BANK_NUM(i));
+	prog_vectors(CHECKSUM_SETUP(chip->blocks));
+	checksum += prog_vectors(READ_BYTE(0xf9) READ_BYTE(0xf8));
+    }
     if (checksum != do_checksum()) {
 	fprintf(stderr,"checksum error: got 0x%04x, expected 0x%04x\n",
 	  checksum,do_checksum());
 	exit(1);
     }
-    if (security_size) {
+    if (verbose)
+	fprintf(stderr,
+	  "wrote and checksummed %lu program byte%s (%lu block%s)\n",
+	  (unsigned long) program_size,program_size == 1 ? "" : "s",
+	  (unsigned long) program_size/BLOCK_SIZE,
+	  program_size == BLOCK_SIZE ? "" : "s");
+}
+
+
+static void do_write_security(const struct chip *chip)
+{
+    int bank;
+
+    if (!security_size)
+	return;
+    for (bank = 0; bank != chip->banks; bank++) {
+	int base,i;
 	uint8_t res;
 
-	if (security_size != BLOCK_SIZE) {
-	    fprintf(stderr,
-	      "internal error: security size is not one block\n");
-	    exit(1);
-	}
-	for (block = 0; block != security_size/BLOCK_SIZE; block++) {
-	    for (i = 0; i != BLOCK_SIZE; i++)
-		prog_vectors(WRITE_BYTE(i,security[block*BLOCK_SIZE+i]));
-	    if (chip->cy8c27xxx)
-		prog_vectors(SECURE_CY8C27xxx);
-	    else
-		prog_vectors(SECURE_REGULAR);
-	}
+	if (chip->banks > 1)
+	    prog_vectors(SET_BANK_NUM(bank));
+	base = bank*chip->blocks/4;
+	if (base >= security_size)
+	    break;
+	for (i = 0; i != chip->blocks/4; i++)
+	    prog_vectors(WRITE_BYTE(i,
+	      base+i < security_size ? security[base+i] : 0));
+	if (chip->cy8c27xxx)
+	    prog_vectors(SECURE_CY8C27xxx);
+	else
+	    prog_vectors(SECURE_REGULAR);
 	res = prog_vectors(READ_MEM(RETURN_CODE));
 	if (res) {
 	    fprintf(stderr,
@@ -177,18 +198,16 @@ static void do_write(const struct chip *chip)
 	}
     }
     if (verbose) {
-	fprintf(stderr,
-	  "wrote and checksummed %lu program bytes (%lu block%s)",
-	  (unsigned long) program_size,
-	  (unsigned long) program_size/BLOCK_SIZE,
-	  program_size == BLOCK_SIZE ? "" : "s");
-	if (security_size)
-	    fprintf(stderr,
-	      ",\n  wrote %lu security bytes (%lu block%s)",
-	      (unsigned long) security_size,
-	      (unsigned long) security_size/BLOCK_SIZE,
-	      security_size == BLOCK_SIZE ? "" : "s");
-	fputc('\n',stderr);
+	int blocks;
+
+	blocks = chip->blocks/4;
+	blocks = (security_size+blocks-1)/blocks;
+	if (blocks > chip->banks)
+	    blocks = chip->banks;
+	fprintf(stderr,"wrote %lu security byte%s (%lu block%s)\n",
+	  security_size < chip->blocks/4 ? (unsigned long) security_size :
+	  chip->blocks/4,security_size == 1 ? "" : "s",
+	  (unsigned long) blocks,blocks == 1 ? "" : "s");
     }
 }
 
@@ -206,7 +225,9 @@ static void do_compare(const struct chip *chip,int zero)
 	if (!(i & (BLOCK_SIZE-1))) {
 	    int ok;
 
-	    ok = read_block(block);
+	    if (chip->banks > 1 && !(block % chip->blocks))
+		prog_vectors(SET_BANK_NUM(block/chip->blocks));
+	    ok = read_block(block % chip->blocks);
 	    progress("Compare",i,program_size);
 	    if (!ok) {
 		if (!zero) {
@@ -254,6 +275,8 @@ static void do_read(const struct chip *chip,int zero)
     int block;
 
     for (block = 0; block != chip->blocks; block++) {
+	if (chip->banks > 1 && !(block % chip->blocks))
+	    prog_vectors(SET_BANK_NUM(block/chip->blocks));
 	if (!read_block(block)) {
 	    if (!zero) {
 		progress_clear();
@@ -301,12 +324,12 @@ static void usage(const char *name)
 "  -c        compare Flash with file, can be combined with all other\n"
 "            operations\n"
 "  -e        erase the Flash (this is implied by -w)\n"
-"  -d driver name of programmer driver (overrides CY8C2PROG_DRIVER, default:\n"
+"  -d driver name of programmer driver (overrides M8CPROG_DRIVER, default:\n"
 "            %s)\n"
 "  -i        write Intel HEX format (ignored for input; default: \"ROM\"\n"
 "            format)\n"
 "  -l        list supported programmers and chips\n"
-"  -p port   port to programmer (overrides CY8C2PROG_PORT, default for tty:\n"
+"  -p port   port to programmer (overrides M8CPROG_PORT, default for tty:\n"
 "            %s)\n"
 "  -q        quiet operation, don't show progress bars\n"
 "  -r        read Flash content from chip to file\n"
@@ -336,10 +359,10 @@ int main(int argc,char **argv)
     int op_erase = 0,op_compare = 0,op_read = 0,op_write = 0;
     int c;
 
-    env = getenv("CY8C2PROG_PORT");
+    env = getenv("M8CPROG_PORT");
     if (env)
 	port = env;
-    env = getenv("CY8C2PROG_DRIVER");
+    env = getenv("M8CPROG_DRIVER");
     if (env)
 	driver = env;
 
@@ -446,7 +469,7 @@ int main(int argc,char **argv)
     do_initialize(op_erase || op_write,voltage);
     chip = do_identify(chip);
     if (op_write || op_compare)
-	if (program_size > chip->blocks*BLOCK_SIZE) {
+	if (program_size > chip->banks*chip->blocks*BLOCK_SIZE) {
 	    fprintf(stderr,
 	      "file of %lu bytes is too big for Flash of %d bytes\n",
 	      (unsigned long) program_size,chip->blocks*BLOCK_SIZE);
@@ -455,11 +478,13 @@ int main(int argc,char **argv)
     if (op_write || op_erase)
 	do_erase(chip);
     if (op_write)
-	do_write(chip);
+	do_write_program(chip);
     if (op_read)
 	do_read(chip,zero);
     if (op_compare)
 	do_compare(chip,zero);
+    if (op_write)
+	do_write_security(chip);
     if (op_read)
 	write_file(file_name,binary,hex);
     return 0;

@@ -9,7 +9,7 @@ foo:
 	blkw	3
 bar:
 	blkw	2
-	area	rom(rom)
+	area	text
 here:	mov	A,[foo]
 	mov	A,[bar]
 	db	here

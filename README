@@ -1,5 +1,5 @@
-CY8C2 Utilities
-===============
+M8C Utilities
+=============
 
 Copyright
 ---------
@@ -35,9 +35,9 @@ refer directly to the respective file for details.
 Overview
 --------
 
-This is a collection of utilities for programming the Cypress
-CY8C2xxxx series of microcontrollers, see
-http://www.cypress.com/psoc
+This is a collection of utilities for programming the Cypress M8C
+family of microcontrollers, and in particular the CY8C2xxxx series,
+see http://www.cypress.com/psoc
 
 
 This collection consists of the following parts:
@@ -45,7 +45,7 @@ This collection consists of the following parts:
   as/
     An assembler for the M8C assembly language
 
-  dasm/
+  das/
     A disassembler for the M8C assembly language
 
   prog/
@@ -69,8 +69,8 @@ agree with the CFLAGS, edit them in Common.make.
 There is no "make install" yet. The resulting executables are:
 
 - assembler: as/m8cas
-- disassembler: dasm/m8cdasm
-- programmer (host side): prog/cy8c2prog
+- disassembler: dasm/m8cdas
+- programmer (host side): prog/m8cprog
 - programmer (firmware): waspic/waspic.hex
 
 

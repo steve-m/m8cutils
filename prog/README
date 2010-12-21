@@ -1,5 +1,5 @@
-cy8c2prog - General programmer for the CY8C2 microcontroller family
-===================================================================
+m8cprog - General programmer for the M8C microcontroller family
+===============================================================
 
 Copyright 2006 Werner Almesberger
 
@@ -11,21 +11,21 @@ included in the file ../COPYING.GPLv2.
 Overview
 --------
 
-cy8c2prog is a programmer for all the chips described in Cypress'
-application note AN2026A, i.e., all current CY8C2 models except
-CY8C24x94 and CY8C29xxx.
+m8cprog is a programmer for all the chips described in Cypress'
+application notes AN2026A and AN2026B, i.e., all current CY8C2
+models.
 
 The programmer communicates with the programmer hardware through a
 driver. Drivers are statically linked into the programmer and
 handles the low-level program to the hardware and any data format
-conversions needed. cy8c2prog controls the overall programming
+conversions needed. m8cprog controls the overall programming
 operation and performs file I/O.
 
 
 Usage
 -----
 
-cy8c2prog reads and writes either raw binary files, "ROM" files,
+m8cprog reads and writes either raw binary files, "ROM" files,
 or files in the Intel HEX format. The file type is auto-detected
 when reading. The auto-detection can be overridden by selecting
 the binary format with the option -b. When writing, the default
@@ -56,21 +56,21 @@ filled with zeroes or skipped).
 
 The driver for the programmer hardware is selected with the option
 "-d driver". The name is case-insensitive. A list of available
-drivers can be obtained with "cy8c2prog -l". A default driver name
-can be set via the environment variable CY8C2PROG_DRIVER. If no
+drivers can be obtained with "m8cprog -l". A default driver name
+can be set via the environment variable M8CPROG_DRIVER. If no
 driver is specified, the first driver in the internal driver list
 is used.
 
 The port to which the driver is attached (if applicable) can be set
 with the option "-p port". A default can be provided through the
-environment variable CY8C2PROG_PORT. If no port is set, the default
+environment variable M8CPROG_PORT. If no port is set, the default
 depends on the driver hardware. For hardware attached via a serial
 port, the default is /dev/ttyS0.
 
 The name of the chip to program can be specified as a the command
 line argument. The name is case-insensitive. A list of supported
-chips can be obtained with "cy8c2prog -l". If no chip name is
-specified, cy8c2prog will auto-detect the chip. Note that the chip
+chips can be obtained with "m8cprog -l". If no chip name is
+specified, m8cprog will auto-detect the chip. Note that the chip
 name argument must be specified if the file name happens to be a
 valid chip name.
 
@@ -80,11 +80,11 @@ not sense the chip voltage or if the programmer needs to provide
 power to the circuit being programmed, and has to decide between
 3V and 5V. In all other cases, the voltage is auto-detected. If
 the voltage is also specified on the command line, and the
-auto-detected voltage does not correspond to it, cy8c2prog aborts
+auto-detected voltage does not correspond to it, m8cprog aborts
 with an error.
 
 Last but not least, several degrees of verboseness can be selected
-with the options -q and -v. By default, cy8c2prog only displays
+with the options -q and -v. By default, m8cprog only displays
 progress bars, which can be turned off with -q. A single -v adds
 general progress messages. More -v options add more and more noise.
 Note that excessive output may slow down some programmers such that
@@ -92,17 +92,17 @@ they fail to meet protocol deadlines.
 
 Examples:
 
-% cy8c2prog -3 -w prog.hex
+% m8cprog -3 -w prog.hex
 
 Writes the file prog.hex to the programmer, using defaults. The
 voltage is set to 3V.
 
-% cy8c2prog -d waspic -p /dev/ttyS1 -3 -r -b data.hex
+% m8cprog -d waspic -p /dev/ttyS1 -3 -r -b data.hex
 
 Silently reads the Flash content with a "waspic" programmer
 connected to /dev/ttyS1, and stores it in binary format.
 
-% cy8c2prog -l
+% m8cprog -l
 
 Lists the supported programmers (drivers) and chips.
 

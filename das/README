@@ -1,5 +1,5 @@
-m8cdasm - Disassembler for M8C binaries
-=======================================
+m8cdas - Disassembler for M8C binaries
+======================================
 
 Copyright 2006 Werner Almesberger
 
@@ -11,7 +11,7 @@ included in the file ../COPYING.GPLv2.
 Overview
 --------
 
-m8cdasm is a non-symbolic disassembler for the M8C instruction set.
+m8cdas is a non-symbolic disassembler for the M8C instruction set.
 It disassembles one instruction at a time and does not attempt to
 separate code from non-code.
 
@@ -22,7 +22,7 @@ and for testing.
 Usage
 -----
 
-m8cdasm reads raw binary, ROM, and Intel HEX files either from a
+m8cdas reads raw binary, ROM, and Intel HEX files either from a
 file or from standard input. The special file name "-" is a synonym
 for standard input. Format auto-detection can be overridden with
 the option -b, for "binary".
@@ -30,7 +30,7 @@ the option -b, for "binary".
 Alternatively, a sequence of hex bytes can be passed on the command
 line after the option -e.
 
-m8cdasm disassembles the byte sequence, assuming that the first byte
+m8cdas disassembles the byte sequence, assuming that the first byte
 it at address 0. This address can be changed with the option -p.
 
 An output line contains usually the address, the bytes making up the
@@ -41,6 +41,6 @@ instruction.
 
 Example:
 
-% m8cdasm prog.hex
+% m8cdas prog.hex
 
 Disassembles the content of prog.hex.

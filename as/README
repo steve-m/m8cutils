@@ -30,7 +30,7 @@ linker. Instead of implementing its own preprocessor, it uses CPP.
 Usage
 -----
 
-m8cas reads the file specified on the command line. If no file it
+m8cas reads the file specified on the command line. If no file is
 specified or if its name is "-", it reads from standard input.
 
 The assembler language either closely follows the specification in the
@@ -96,12 +96,10 @@ Assumptions
   use as a label, even if completely unrelated to the area
 - it is an error to try to store data in a RAM area
 
+
 Missing features
 - - - - - - - -
 
-- AREA: code and directives generating data always go into ROMspace, while
-  directives not generating data always use RAM space, "." always references
-  ROM locations
 - DSU: not yet implemented
 - IF, ELSE, ENDIF: not yet implemented - use CPP's conditional compilation
 - INCLUDE: not yet implemented - use CPP's file inclusion
@@ -126,12 +124,21 @@ assembler:
 - ORG, EQU, etc. accept any valid expression
 
 
+Errata
+- - -
+
+According to "Assembly Language User Guide, Document #38-12004 Rev *C",
+section 5.1, page 78, the list of attributes of AREA is not optional.
+However, the example in section 9.3.1, on page 115, in "PSoC Designer
+IDE User Guide, Document # 38-12002 Rev. E", shows an AREA directive
+without attributes. This type of use appears reasonable, so that's also
+what m8cas supports.
+
+
 Known problems
 --------------
 
-- since there is no AREA, variables allocation always begins at RAM address 0
-  (work-around: use BLK to move in RAM address space)
-- if multiple labels precede BLK or BLKW, all but the last one are in ROM space
 - there is no provision for detecting exceeding the available ROM or RAM
   space (this is of course something the linker should do, not the assembler)
-- the grammar har four conflicts (due to how BLK and BLKW are handled now)
+- the behaviour of AREA is still unsatisfactory. We really need a linker to
+  properly use this.

@@ -28,9 +28,9 @@ check_result()
 }
 
 
-m8cdasm()
+m8cdas()
 {
-    ../m8cdasm "$@" >_out || {
+    ../m8cdas "$@" >_out || {
 	echo FAILED "($SCRIPT)" 1>&2
 	rm -f _ref _out
 	exit 1
@@ -39,9 +39,9 @@ m8cdasm()
 }
 
 
-m8cdasm_fail()
+m8cdas_fail()
 {
-    ../m8cdasm "$@" >_out 2>&1 && {
+    ../m8cdas "$@" >_out 2>&1 && {
 	echo FAILED "($SCRIPT)" 1>&2
 	rm -f _ref _out
 	exit 1
@@ -54,7 +54,7 @@ try_bare()
 {
     expect "$1"
     shift
-    m8cdasm "$@"
+    m8cdas "$@"
 }
 
 
@@ -70,7 +70,7 @@ fail_bare()
 {
     expect "$1"
     shift
-    m8cdasm_fail "$@"
+    m8cdas_fail "$@"
 }
 
 

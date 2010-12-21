@@ -9,8 +9,8 @@ CFLAGS_WARN=-Wall -Wstrict-prototypes -Wmissing-prototypes \
             -Wmissing-declarations -Wshadow -Werror
 CFLAGS=$(CFLAGS_WARN) -g -I../shared -I../libfdr
 
-LDLIBS=-L../shared -lcy8c2utils -L../libfdr -lfdr
-LIBDEP=../shared/libcy8c2utils.a ../libfdr/libfdr.a
+LDLIBS=-L../shared -lm8cutils -L../libfdr -lfdr
+LIBDEP=../shared/libm8cutils.a ../libfdr/libfdr.a
 
 LEX=flex
 YYFLAGS=-v

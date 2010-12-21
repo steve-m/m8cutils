@@ -1,5 +1,5 @@
-Code shared among programs of the cy8c2utils project
-====================================================
+Code shared among programs of the m8cutils project
+==================================================
 
 Copyright 2006 Werner Almesberger
 
@@ -8,7 +8,7 @@ GNU General Public License (GPL), version 2. This license is
 included in the file ../COPYING.GPLv2.
 
 
-The library libcy8c2utils.a contains functions used by more than
+The library libm8cutils.a contains functions used by more than
 one programm in this project:
 
 - file: reading and writing of program data in binary, "ROM", and

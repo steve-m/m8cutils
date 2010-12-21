@@ -12,6 +12,7 @@
 
 #include "util.h"
 #include "error.h"
+#include "op.h"
 #include "id.h"
 
 
@@ -95,6 +96,8 @@ static void free_tree(JRB tree)
 	struct id *id = jval_v(jrb_val(entry));
 
 	free(id->name);
+	if (id->defined)
+	    put_op(id->value);
 	free(id);
     }
     jrb_free_tree(tree);

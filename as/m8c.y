@@ -21,18 +21,6 @@
   store_op(((n) < 7 ? (a) : (n) < 9 ? (b)-7 : (c)-9)+(n))
 
 
-enum area_attr {
-    ATTR_RAM = 1,
-    ATTR_ROM = 2,
-    ATTR_ABS = 4,
-    ATTR_REL = 8,
-    ATTR_CON = 16,
-    ATTR_OVR = 32,
-};
-
-
-static int ram = 0;
-
 %}
 
 
@@ -689,23 +677,11 @@ label_directive:
 directive:
     TOK_AREA LABEL '(' area_attributes ')'
 	{
-	    if (($4 & ATTR_RAM) && ($4 & ATTR_ROM))
-		yyerror("an area can't be both ROM and RAM");
-	    if ($4 & ATTR_RAM) {
-		pc = &ram;
-		next_pc = *pc;
-	    }
-	    else if ($4 & ATTR_ROM) {
-		pc = &rom;
-		next_pc = *pc;
-	    }
-	    else {
-		yyerror("must specify RAM or ROM");
-	    }
-	    if ($4 & ATTR_REL)
-		yyerror("relocatable areas are not yet supported");
-	    if (($4 & ATTR_CON) && ($4 & ATTR_OVR))
-		yyerror("an area can't be both CON and OVR");
+	    set_area($2->name,$4);
+	}
+    | TOK_AREA LABEL
+	{
+	    set_area($2->name,0);
 	}
     | TOK_ASCIZ STRING
 	{

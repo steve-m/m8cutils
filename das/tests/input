@@ -5,13 +5,13 @@ expect "Read a binary file" <<EOF
 0000  48 45 4C	TST	[X+0x45],0x4C
 0003  4C 4F	SWAP	A,[0x4F]
 EOF
-echo -n HELLO | m8cdasm
+echo -n HELLO | m8cdas
 
 expect "Read a ROM file (lower case)" <<EOF
 MOV A,0xE8
 AND F,0x00
 EOF
-{ echo "50 e8"; echo "70 00"; } | m8cdasm -s
+{ echo "50 e8"; echo "70 00"; } | m8cdas -s
 
 expect "Read a ROM file (upper case)" <<EOF
 MOV A,[0xF8]
@@ -22,10 +22,10 @@ expect "Read a ROM file (no whitespace)" <<EOF
 ADD SP,0x20
 HALT
 EOF
-echo "382030" | m8cdasm -s
+echo "382030" | m8cdas -s
 
 expect "Read an Intel HEX file" <<EOF
 SWAP A,[0x33]
 RETI
 EOF
-{ echo ":030000004C337E00"; echo ":00000001FF"; } | m8cdasm -s
+{ echo ":030000004C337E00"; echo ":00000001FF"; } | m8cdas -s

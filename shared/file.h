@@ -13,9 +13,9 @@
 #include <sys/types.h>
 
 
-#define PROGRAM_SIZE	16384
+#define PROGRAM_SIZE	32768
 #define BLOCK_SIZE	64
-#define SECURITY_SIZE	BLOCK_SIZE
+#define SECURITY_SIZE	(PROGRAM_SIZE/BLOCK_SIZE/4)
 #define PAD_BYTE	0
 
 

@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "cy8c2prog.h"
+#include "m8cprog.h"
 #include "vectors.h"
 #include "prog.h"
 

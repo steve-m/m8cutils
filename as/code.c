@@ -7,17 +7,13 @@
 
 
 #include <stdlib.h>
+#include "jrb.h"
+#include "file.h"
 
 #include "util.h"
 #include "error.h"
 #include "op.h"
 #include "code.h"
-
-
-int *pc = &rom;
-int rom = 0,ram = 0;
-int highest_rom = 0;
-int next_pc = 0;
 
 
 static struct patch {
@@ -29,6 +25,15 @@ static struct patch {
 } *patches = NULL;
 
 
+int *pc; /* must call set_area before doing anything else */
+int next_pc = 0;
+
+const struct area *text;
+static struct area *current_area;
+
+
+static JRB areas;
+
 
 void advance_pc(int n)
 {                             
@@ -39,15 +44,15 @@ void advance_pc(int n)
 void next_statement(void)
 {
     *pc = next_pc;
-    if (rom > highest_rom)
-	highest_rom = rom;
+    if (*pc > current_area->highest_pc)
+	current_area->highest_pc = *pc;
 }
 
 
 void check_store(void)
 {
-    if (pc != &rom)
-	yyerror("assembler cannot store data in RAM");
+    if (current_area != text)
+	yyerror("assembler can store data only in \"text\" area");
 }
 
 
@@ -136,4 +141,63 @@ void resolve(void)
 	free(patches);
 	patches = next;
     }
+}
+
+
+struct area *set_area(char *name,int attributes)
+{
+    JRB entry;
+    struct area *area;
+
+    entry = jrb_find_str(areas,name);
+    if (entry) {
+	area = jval_v(jrb_val(entry));
+	if (attributes & ~area->attributes)
+	    lerrorf(&current_loc,
+	      "attributes of area differ from definition at %s:%d",
+	      get_file(&area->loc),get_line(&area->loc));
+    }
+    else {
+	if ((attributes & ATTR_RAM) && (attributes & ATTR_ROM))
+	    yyerror("an area can't be both ROM and RAM");
+	if (!(attributes & ATTR_RAM) && !(attributes & ATTR_ROM))
+	    yyerror("must specify RAM or ROM");           
+	if (attributes & ATTR_REL)
+	    yyerror("relocatable areas are not yet supported");
+	if ((attributes & ATTR_CON) && (attributes & ATTR_OVR))           
+	    yyerror("an area can't be both CON and OVR");
+	area = alloc_type(struct area);
+	area->name = name;
+	area->attributes = attributes;
+	area->pc = area->highest_pc = 0;
+	area->loc = current_loc;
+	jrb_insert_str(areas,area->name,new_jval_v(area));
+    }
+    pc = &area->pc;
+    if (area->attributes & ATTR_OVR)
+	*pc = 0;
+    next_pc = *pc;
+    current_area = area;
+    return area;
+}
+
+
+
+void code_init(void)
+{
+    areas = make_jrb();
+    text = set_area("text",ATTR_ROM | ATTR_ABS | ATTR_CON);
+}
+
+
+void code_cleanup(void)
+{
+    JRB entry;
+
+    jrb_traverse(entry,areas) {
+	struct area *area = jval_v(jrb_val(entry));
+
+	free(area);
+    }
+    jrb_free_tree(areas);
 }

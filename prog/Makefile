@@ -1,5 +1,5 @@
 #
-# Makefile - Makefile of the cy8c2prog programmer
+# Makefile - Makefile of the M8C programmer
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -10,10 +10,13 @@ include ../Common.make
 
 DRIVERS=waspic watsp
 FILES=README Makefile \
-      cy8c2prog.h cy8c2prog.c cy8c2regs.h vectors.h chips.h chips.c \
+      m8cprog.h m8cprog.c cy8c2regs.h vectors.h chips.h chips.c \
       tty.h tty.c prog.h prog.c \
+      ref/Makefile ref/main.c \
+      ref/vectorconv.pl ref/vdecode.pl ref/mapconv.pl \
+      ref/an2026a.txt ref/an2026a.map ref/an2026b.txt ref/an2026b.map \
       $(DRIVERS:%=drv/%.c)
-OBJS=cy8c2prog.o chips.o tty.o prog.o $(DRIVERS:%=drv/%.o)
+OBJS=m8cprog.o chips.o tty.o prog.o $(DRIVERS:%=drv/%.o)
 
 CFLAGS += -I$(shell pwd) \
           -DPROGRAMMERS_DECL="$(DRIVERS:%=extern struct prog_ops %_ops;)" \
@@ -23,9 +26,9 @@ CFLAGS += -I$(shell pwd) \
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		cy8c2prog
+all:		m8cprog
 
-cy8c2prog:	$(OBJS) $(LIBDEP)
+m8cprog:	$(OBJS) $(LIBDEP)
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -51,7 +54,9 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
+		$(MAKE) -C ref clean
 		rm -f $(OBJS)
 
 spotless:	clean
-		rm -f cy8c2prog .depend
+		$(MAKE) -C ref spotless
+		rm -f m8cprog .depend

@@ -17,7 +17,7 @@
 #include <sys/ioctl.h>
 
 
-#include "cy8c2prog.h"
+#include "m8cprog.h"
 #include "tty.h"
 
 

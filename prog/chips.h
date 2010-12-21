@@ -17,6 +17,7 @@
 struct chip {
     const char *name;
     uint16_t id;
+    int banks;
     int blocks;
     int cy8c27xxx;
 };

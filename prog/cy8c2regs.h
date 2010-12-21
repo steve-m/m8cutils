@@ -20,8 +20,9 @@
 #define REG_CPU_SCR0	0xff
 
 #define REG_OSC_CR0	0x1e0
-#define REG_IMO_TR	0x1ea
-#define REG_ILO_TR	0x1e9
+#define REG_IMO_TR	0x1e8
+#define REG_BDG_TR	0x1ea
+#define REG_FLS_PR1	0x1fa
 
 #define CPU_F_XIO	0x10
 

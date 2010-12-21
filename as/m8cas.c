@@ -44,8 +44,9 @@ int main(int argc,char **argv)
     char *input;
     int c;
 
-    id_init();
     error_init();
+    id_init();
+    code_init();
     while ((c = getopt(argc,argv,"behD:I:o:U:")) != EOF) {
 	char opt[] = "-?";
 
@@ -110,9 +111,10 @@ int main(int argc,char **argv)
     if (allow_extensions)
 	reap_cpp();
     resolve();
+    program_size = text->highest_pc;
     id_cleanup();
+    code_cleanup();
     error_cleanup();
-    program_size = highest_rom;
     write_file(output ? output : "-",binary,hex);
     return 0;
 }

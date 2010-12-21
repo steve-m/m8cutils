@@ -4,15 +4,14 @@ cy8c2utils "to do" list
 cy8c2prog
 ---------
 
+- don't set trailing 3 bits in first vector
 - support selection of reset vs. power-on mode
 - check bit-banging code
 - query terminal settings to determine terminal width (OUTPUT_WIDTH)
 - add real-time support and deadline measurements (for bit-banging)
-- add support for the remaining current (and obsolete ?) chip models
 - generalize interface device support to USB, etc.
 - check that the Intel hex format is properly implemented
 - don't require voltage if we're reading and the target supplies power
-- validate vectors against "official" vectors (?)
 - add regression tests
 - validate the silicon revision procedure
 
@@ -30,8 +29,8 @@ share/file
 - include line number and file name in diagnostics
 - add file output regression tests
 
-m8cdasm
--------
+m8cdas
+------
 
 - regression tests need to check file input error handling
 

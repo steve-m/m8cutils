@@ -13,17 +13,17 @@ TESTS=adc add and asl asr call cmp cpl dec halt inc index \
       ret reti rlc romx rrc sub sbb swap ssc tst xor \
       exceed output input pc
 FILES=README Makefile \
-      m8cdasm.c \
+      m8cdas.c \
       tests/Common $(TESTS:%=tests/%)
-OBJS=m8cdasm.o
+OBJS=m8cdas.o
 
 
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		m8cdasm
+all:		m8cdas
 
-m8cdasm:	$(OBJS)	$(LIBDEP)
+m8cdas:		$(OBJS)	$(LIBDEP)
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -56,4 +56,4 @@ clean:
 		rm -f $(OBJS) tests/_*
 
 spotless:	clean
-		rm -f m8cdasm .depend
+		rm -f m8cdas .depend

@@ -1,16 +1,16 @@
 #           
-# Makefile - CY8C2 utils, main Makefile
+# Makefile - M8C utils, main Makefile
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
 #
 
-DIR=cy8c2
-NAME=cy8c2utils
-DIRS=shared libfdr dasm as prog waspic
+DIR=m8c
+NAME=m8cutils
+DIRS=shared libfdr das as prog waspic
 
-SF_ACCOUNT=almesber@cy8c2utils.sourceforge.net
-SF_DIR=/home/groups/c/cy/cy8c2utils/htdocs         
+SF_ACCOUNT=almesber@m8cutils.sourceforge.net
+SF_DIR=/home/groups/m/m8/m8cutils/htdocs         
 SF_UPLOAD=$(SF_ACCOUNT):$(SF_DIR)
 
 VERSION=$(shell cat VERSION)

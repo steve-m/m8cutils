@@ -12,9 +12,27 @@
 #include "op.h"
 
 
+enum area_attribute {
+    ATTR_RAM = 1,
+    ATTR_ROM = 2,
+    ATTR_ABS = 4,
+    ATTR_REL = 8,
+    ATTR_CON = 16,
+    ATTR_OVR = 32,
+};
+
+struct area {
+    char *name;
+    int attributes;
+    int pc;
+    int highest_pc;
+    struct loc loc;
+};
+
+
 extern int *pc;
-extern int rom,ram,highest_rom,next_pc;
-extern uint8_t program[];
+extern int next_pc;
+extern const struct area *text;
 
 
 void advance_pc(int n);
@@ -39,5 +57,10 @@ void store(void (*fn)(const struct loc *loc,int pos,uint32_t data),
   int offset,struct op *op);
 
 void resolve(void);
+
+struct area *set_area(char *name,int attributes);
+
+void code_init(void);
+void code_cleanup(void);
 
 #endif /* !CODE_H */
