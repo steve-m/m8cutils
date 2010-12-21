@@ -11,6 +11,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <sys/termios.h>
 
 #include "interact.h"
 
@@ -20,8 +21,8 @@ int quiet = 0;
 
 
 static int output_fd = -1;
-static int output_width; /* 0 if output disabled */
-
+static int output_width;  /* 0 if output disabled */
+static int last_hash = -1;  /* number of hash signs, -1 for none */
 
 
 int get_output_width(FILE *file)
@@ -52,18 +53,24 @@ int get_output_width(FILE *file)
 
 void progress(FILE *file,const char *label,int n,int end)
 {
-    int width,left,hash,i;
+    static int width,left;
+    int hash;
 
     if (quiet || verbose > 1)
         return;
-    width = get_output_width(file);
-    if (!width)
-	return;
-    left = width-strlen(label)-2;
+    if (last_hash == -1) {
+	width = get_output_width(file);
+	if (!width)
+	    return;
+	left = width-strlen(label)-2;
+	fprintf(file,"\r%s ",label);
+	last_hash = 0;
+    }
     hash = left*((n+0.0)/end);
-    fprintf(file,"\r%s ",label);
-    for (i = 0; i != hash; i++)
+    while (last_hash != hash) {
 	fputc('#',file);
+	last_hash++;
+    }
 }
 
 
@@ -76,5 +83,6 @@ void progress_clear(FILE *file)
     width = get_output_width(file);
     if (width)
 	fprintf(file,"\r%*s\r",width-1,"");
+    last_hash = -1;
 }
 

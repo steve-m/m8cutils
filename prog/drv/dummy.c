@@ -158,7 +158,7 @@ static uint8_t dummy_return_code(void)
 }
 
 
-struct prog_prim dummy_prim = {
+static struct prog_prim dummy_prim = {
     .initialize_1 = &dummy_initialize_1,
     .initialize_2 = &dummy_initialize_2,
     .initialize_3 = &dummy_initialize_3,

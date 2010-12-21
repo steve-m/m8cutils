@@ -52,6 +52,6 @@ int prog_open_cli(void);
  * and driver, and whether the -D flag was set.
  */
 
-void prog_close_cli(void);
+void prog_close_cli(int reuse);
 
 #endif /* !CLI_H */

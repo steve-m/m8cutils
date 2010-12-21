@@ -38,4 +38,4 @@ clean:
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f reginfo
+		rm -f reginfo reginfo.exe

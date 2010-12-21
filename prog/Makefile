@@ -8,7 +8,7 @@
 include ../Common.make
 
 
-DRIVERS=waspic watsp watpp ecb_at91 dummy
+DRIVERS=waspic watsp watpp wadsp ecb_at91 dummy
 TESTS=rd errd ercmok ercmf wrrd wrcmok wrcmf wrlkcmok wrlkcmf wrlkrdf wrlkrdz \
       secu secf secr secw secfsrw secfsur secfsfw \
       secfspu secfspf secfspr secfspw secmir inrom inhex outrom outhex \
@@ -46,8 +46,11 @@ all:		m8cprog
 m8cprog:	$(OBJS) $(LIBDEP)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
+torture-static:	torture.o $(LIBDEP)
+		$(CC) $(LDFLAGS) -static -o $@ $< $(LDLIBS) -lcrypto
+
 torture:	torture.o $(LIBDEP)
-		$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS) -lssl
+		$(CC) $(LDFLAGS) -o $@ $< $(LDLIBS) -lcrypto
 
 libprog.a:	$(LIBPROG_OBJS)
 		$(AR) cr$(AR_v) $@ $^
@@ -71,7 +74,8 @@ uninstall:
 clean:
 		$(MAKE) -C ref clean
 		rm -f $(OBJS) $(LIBPROG_OBJS) libprog.a .depend
+		rm -f torture.o
 
 spotless:	clean
 		$(MAKE) -C ref spotless
-		rm -f m8cprog
+		rm -f m8cprog m8cprog.exe torture torture.exe torture-static

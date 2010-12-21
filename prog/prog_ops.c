@@ -130,15 +130,25 @@ static void ops_erase_all(const struct chip *chip)
 
 static void ops_write_program(const struct chip *chip)
 {
-    int block;
+    static uint8_t zero_block[BLOCK_SIZE];
+    int current_bank = 0,skipped = 0,bank,block;
 
     pad_file();
     for (block = 0; block != program_size/BLOCK_SIZE; block++) {
-	if (chip->banks > 1 && !(block % chip->blocks))
-	    prog_prim.set_bank_num(block/chip->blocks);
-	prog_prim.set_block_num(block % chip->blocks);
-	prog_prim.write_block(program+block*BLOCK_SIZE);
-	prog_prim.program_block(chip);
+	if (!memcmp(program+block*BLOCK_SIZE,zero_block,BLOCK_SIZE))
+	    skipped++;
+	else {
+	    if (chip->banks > 1) {
+		bank = block/chip->blocks;
+		if (bank != current_bank) {
+		    prog_prim.set_bank_num(bank);
+		    current_bank = bank;
+		}
+	    }
+	    prog_prim.set_block_num(block % chip->blocks);
+	    prog_prim.write_block(program+block*BLOCK_SIZE);
+	    prog_prim.program_block(chip);
+	}
 	progress(stderr,"Write",block,program_size/BLOCK_SIZE);
     }
     progress_clear(stderr);
@@ -146,10 +156,11 @@ static void ops_write_program(const struct chip *chip)
 	exit(1);
     if (verbose)
 	fprintf(stderr,
-	  "wrote and checksummed %lu program byte%s (%lu block%s)\n",
+	  "wrote and checksummed %lu program byte%s "
+	  "(%lu block%s, %u skipped)\n",
 	  (unsigned long) program_size,program_size == 1 ? "" : "s",
 	  (unsigned long) program_size/BLOCK_SIZE,
-	  program_size == BLOCK_SIZE ? "" : "s");
+	  program_size == BLOCK_SIZE ? "" : "s",skipped);
 }
 
 

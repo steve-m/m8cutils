@@ -22,6 +22,46 @@ conversions needed. m8cprog controls the overall programming
 operation and performs file I/O.
 
 
+Quick start
+-----------
+
+m8cprog has a lot of options, which can be confusing. The most common
+task is to simply write an Intel HEX or ROM file to Flash, and to
+verify the outcome. This can be accomplished with
+
+... -w -c -s filename
+
+-w tells m8cprog to write the file to Flash, -c tells it to compare
+the Flash content with what was written, and -s tells it to also
+check the security data. This is the most thorough checking available.
+m8cprog can usually auto-detect the file format.
+
+Furthermore, the driver for the programmer needs to be selected.
+This is done with
+
+... -d programmer ...
+
+E.g., -d watpp, for the trivial parallel-port programmer.
+
+It is usually necessary to tell m8cprog what voltage to use (-3 or
+-5, for 3 and 5 volts, respectively) and whether to use reset or
+power-on mode. The default is reset mode.  Power-on mode is selected
+with the option -P.
+
+For example, reset mode and 5 V operation is selected with
+
+... -5 ...
+
+Last but not least, if running m8cprog from a privileged account
+(e.g., root), it is a good idea to request real-time priority:
+
+... -R ...
+
+So the entire command line would look like this:
+
+m8cprog -d watpp -5 -R -w -c -s somefile.rom
+
+
 Usage
 -----
 
@@ -150,20 +190,54 @@ Lists the supported programmers (drivers) and chips.
 Writing a driver
 ----------------
 
-*** THIS SECTION NEEDS UPDATING ***
+Drivers can operate any one or more of the following layers:
 
-Drivers are either vector-based or bit-banging. A vector-based
-driver processes a 22 bit vector at a time, while a bit-banging
-driver receives calls for single bit transmissions.
+- "operations": highest-level operations, such as transferring
+  the entire Flash content or verifying the checksum of all banks
+
+- "primitives": the ISSP primitives described in AN2026
+
+- "vectors": individual memory/register read/write operations,
+  conveyed in 22 bit vectors
+
+- "bit-banging": toggling of SCLK and SDATA under program control
+
+The protocol stack in m8cprog automatically substitutes high-level
+functions not provided by the driver with operations using the
+lower-level functions.
+
+Each driver needs to provide a "struct prog_common", with the
+driver's name and general functions to open and close the driver.
+In its "open" function, the driver calls "prog_init", passing
+pointers to its functions for all the layers. For layers not
+directly supported by the driver, NULL is passed.
 
 
-High-level
-- - - - -
+High-level operations
+- - - - - - - - - - -
 
-Programmer hardware that operates with hard-coded vectors or
-hard-coded sequences of them, are currently not supported by this
-programmer. In fact, several of its features depend on being able
-to send arbitrary vectors.
+Programmers that implement high-level operations, such as those
+affecting the entire Flash, in a single function, can use the
+high-level interface for this.
+
+Note that this interface is still subject to refining.
+
+
+ISSP primitives
+- - - - - - - -
+
+Programmers that implement entire ISSP primitives or even sequences
+of them in firmware can use the "primitives" interface. It basically
+provides a functions for each ISSP operation documented in AN2026.
+
+The driver can omit any of these functions (as long as it provides
+vector or bit-banging functions), in which case they are replaced by
+the corresponding sequence of vector operations.
+
+If supported by the firmware, a vector-based interface should be
+provided alongside with the ISSP primitives, to allow for use of
+m8csim's DIY ICE. Also, retrieval of protection bits is not documented
+in AN2026 and may have to be performed though vector-level operations.
 
 
 Vector-based
@@ -196,9 +270,12 @@ of the programmer itself are in the directory ../waspic
 Bit-banging
 - - - - - -
 
-The bit-banging interface is currently completely untested and
-supporting it properly will need some more infrastructure work.
-Please don't try to use it yet.
+The bit-banging interface consists of three functions: one to
+send a bit on SDATA while pulsing SCLK, one to make SDATA an
+input (Z) and pulse SCLK, and one to read the current status of
+SDATA (which is an input at that time).
+
+Examples for bit-banging drivers include "watpp" and "watsp".
 
 
 Programmer testing
@@ -240,6 +317,13 @@ affect data. Similarly, also the three bits identifying the
 operation can be corrupted.
 
 To build the torture-tester, do "make torture". It is then
-available as "./torture". It accepts the usual programmer
-options. The program loops forever and reports its findings to
-standard error.
+available as "./torture". Since libcrypto (needed for MD5, which
+is used to generate a pseudo-random data pattern) may not be
+available on all systems, a static version of "torture" can be
+built with "make torture-static".
+
+"torture" accepts the usual programmer options. The program loops
+forever and reports its findings to standard error. If the number
+of cycles per session is passed as an argument, "torture" will
+close the programmer session and re-open it again whenever the
+specified number of cycles has been reached in the a session.

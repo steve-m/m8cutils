@@ -124,7 +124,7 @@ static int ecb_at91_read_bit(void)
 }
 
 
-struct prog_bit ecb_at91_bit = {
+static struct prog_bit ecb_at91_bit = {
     .send_bit = ecb_at91_send_bit,
     .send_z = ecb_at91_send_z,
     .read_bit = ecb_at91_read_bit,

@@ -16,6 +16,9 @@
 #include "prog.h"
 
 
+#define	READ_TIMEOUT	5	/* allow for enough time to let buffer drain */
+
+
 static int fd;
 
 
@@ -53,7 +56,7 @@ static uint8_t waspic_vector(uint32_t v)
     if (IS_WRITE(v)) {
 	tty_write(t,3);
 	if (IS_SSC(v)) {
-	    c = tty_read_byte(1);
+	    c = tty_read_byte(READ_TIMEOUT);
 	    if (c == '@') {
 		fprintf(stderr,
 		  "programmer timed out in WAIT-AND-POLL\n");
@@ -69,12 +72,12 @@ static uint8_t waspic_vector(uint32_t v)
     }
     else {
 	tty_write(t,2);
-	return tty_read_byte(1);
+	return tty_read_byte(READ_TIMEOUT);
     }
 }
 
 
-struct prog_vector waspic_vec = {
+static struct prog_vector waspic_vec = {
     .acquire_reset = waspic_vector,
     .vector = waspic_vector,
 };
@@ -91,7 +94,7 @@ static int waspic_open(const char *dev,int voltage,int power_on,
 	return -1;
     fd = tty_open_raw(dev,B19200);
     tty_write(HELLO_STRING,5);
-    while (tty_read_byte(1) != '+');
+    while (tty_read_byte(READ_TIMEOUT) != '+');
     return voltage;
 }
 

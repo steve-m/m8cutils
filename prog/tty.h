@@ -29,6 +29,7 @@ int tty_open_raw(const char *path,speed_t bps);
 void tty_write(const void *data,size_t size);
 void tty_read(void *data,size_t size,int timeout);
 uint8_t tty_read_byte(int timeout);
+void tty_discard_input(void);
 void tty_close(void);
 
 #endif /* !TTY_H */

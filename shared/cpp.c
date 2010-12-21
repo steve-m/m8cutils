@@ -19,9 +19,6 @@
 #include "cpp.h"
 
 
-#define CPP "/lib/cpp"
-
-
 static pid_t cpp_pid;
 static int cpp_argc = 0;
 static const char **cpp_argv;

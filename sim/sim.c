@@ -135,6 +135,12 @@ static FILE *find_file(const char *name,...)
 }
 
 
+static void close_cli(void)
+{
+    prog_close_cli(0);
+}
+
+
 static void usage(const char *name)
 {
     fprintf(stderr,
@@ -266,7 +272,7 @@ int main(int argc,char **argv)
 	prog_initialize(0,voltage,prog_power_on);
 	chip = prog_identify(chip,0);
 	ice_init();
-	atexit(prog_close_cli);
+	atexit(close_cli);
     }
     if (program_file)
 	set_program(program,program_size);

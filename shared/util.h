@@ -17,6 +17,16 @@
      if (!alloc_type_tmp) abort(); \
      alloc_type_tmp; })
 
+#define alloc_type_n(t,n) \
+  ({ t *alloc_type_tmp = (t *) malloc((n)*sizeof(t)); \
+     if (!alloc_type_tmp) abort(); \
+     alloc_type_tmp; })
+
+#define realloc_type(p,n) \
+  ({ typeof(p) alloc_type_tmp = (typeof(p)) realloc(p,(n)*sizeof(*(p))); \
+     if (!alloc_type_tmp) abort(); \
+     alloc_type_tmp; })
+
 #define stralloc(s) \
   ({ char *stralloc_tmp = strdup(s); \
      if (!stralloc_tmp) abort(); \

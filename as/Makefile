@@ -64,8 +64,8 @@ uninstall:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f y.tab.h y.tab.c lex.yy.c
+		rm -f y.tab.h y.tab.c lex.yy.c y.output
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8cas
+		rm -f m8cas m8cas.exe

@@ -9,8 +9,17 @@ include Config.make
 
 
 NAME=m8cutils
-DIRS=shared regs libfdr das as prog sim misc
+
+DIRS=shared regs libfdr das as
 NONBUILD_DIRS=
+
+ifeq ($(BUILD_LIBPROG),1)
+    DIRS += prog
+else
+    NONBUILD_DIRS += prog
+endif
+
+DIRS += sim misc
 
 SF_ACCOUNT=almesber@m8cutils.sourceforge.net
 SF_DIR=/home/groups/m/m8/m8cutils/htdocs

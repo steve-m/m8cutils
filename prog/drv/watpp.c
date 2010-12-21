@@ -47,7 +47,7 @@
 #define SCLK_Z()	(data = (data & ~nSCLK_L_BIT) | nSCLK_H_BIT)
 
 
-static uint8_t data;
+static uint8_t data,inverted;
 static int fd;
 
 
@@ -78,10 +78,10 @@ static void watpp_send_bit(int bit)
 static void watpp_send_z(void)
 {
     Z();
-    SCLK(1);
+    SCLK(!inverted);
     COMMIT();
     delay_hook(1);
-    SCLK(0);
+    SCLK(inverted);
     COMMIT();
     delay_hook(0);
 }
@@ -93,10 +93,21 @@ static int watpp_read_bit(void)
 }
 
 
-struct prog_bit watpp_bit = {
+static void watpp_invert_phase(void)
+{
+    inverted = !inverted;
+    if (inverted) {
+	SCLK(1);
+	COMMIT();
+    }
+}
+
+
+static struct prog_bit watpp_bit = {
     .send_bit = watpp_send_bit,
     .send_z = watpp_send_z,
     .read_bit = watpp_read_bit,
+    .invert_phase = watpp_invert_phase,
 };
 
 
@@ -114,6 +125,7 @@ static int watpp_open(const char *dev,int voltage,int power_on,
     PWR_TARGET(0);
     SCLK(0);
     Z();
+    inverted = 0;
     if (power_on) {
 	XRES(0);
 	COMMIT();

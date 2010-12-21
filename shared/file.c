@@ -49,7 +49,9 @@ static void read_binary(FILE *file)
 	perror("fread");
 	exit(1);
     }
-    if (!feof(file)) {
+    if (feof(file))
+	return;
+    if (fgetc(file) != EOF) {
 	fprintf(stderr,"file bigger than maximum memory\n");
 	exit(1);
     }
@@ -223,7 +225,8 @@ static void read_hex(FILE *file)
 		}
 		else {
 		    fprintf(stderr,
-		      "extended address 0x%08x out of range\n",extended);
+		      "extended address 0x%08lx out of range\n",
+		      (unsigned long) extended);
 		    exit(1);
 		}
 		break;

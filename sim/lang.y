@@ -89,7 +89,8 @@ static uint32_t read_lvalue(const struct lvalue *lv)
 	    if (!fn)
 		fn = regs[lv->n].ops->cpu_read;
 	    if (!fn)
-		yyerrorf("register 0x%03x (%s) is not readable",lv->n,
+		yyerrorf("register 0x%03x (%s) is not readable",
+		  (unsigned) lv->n,
 		  regs[lv->n].name ? regs[lv->n].name : "unknown");
 	    v = fn(regs+lv->n);
 	    break;
@@ -132,7 +133,8 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 	    if (!fn)
 		fn = regs[lv->n].ops->cpu_write;
 	    if (!fn)
-		yyerrorf("register 0x%03x (%s) is not writeable",lv->n,
+		yyerrorf("register 0x%03x (%s) is not writeable",
+		  (unsigned) lv->n,
 		  regs[lv->n].name ? regs[lv->n].name : "unknown");
 	    if (lv->mask == 0xff)
 		fn(regs+lv->n,rvalue);
@@ -224,7 +226,7 @@ item:
     TOK_NL
     | expression TOK_NL
 	{
-	    printf("0x%x %u\n",$1,$1);
+	    printf("0x%lx %lu\n",(unsigned long) $1,(unsigned long) $1);
 	}
     | assignment TOK_NL
     | command TOK_NL
@@ -242,7 +244,8 @@ command:
     | TOK_RUN expression
 	{
 	    if ($2 < now)
-		yyerrorf("can't turn back time (%u < %u)\n",$2,now);
+		yyerrorf("can't turn back time (%lu < %lu)\n",
+		  (unsigned long) $2,(unsigned long) now);
 	    if ($2 != now)
 		run_cycles($2-now);
 	}
@@ -348,7 +351,7 @@ byte_mask:
     '[' expression ']'
 	{
 	    if ($2 > 7)
-		yyerrorf("bit %d out of range",$2);
+		yyerrorf("bit %ld out of range",(unsigned long) $2);
 	    $$ = 1 << $2;
 	}
     | '[' expression ':' expression ']'
@@ -356,7 +359,7 @@ byte_mask:
 	    if ($2 < $4)
 		yyerror("upper bit below lower bit in [upper:lower]");
 	    if ($2 > 7)
-		yyerrorf("bit %d out of range",$2);
+		yyerrorf("bit %ld out of range",(unsigned long) $2);
 	    $$ = ((2 << $2)-1) & ~((1 << $4)-1);
 	}
     ;
@@ -468,7 +471,7 @@ assignment:
     | '.' '=' expression
 	{
 	    if ($3 > 0xffff)
-		yyerrorf("value 0x%x too large for PC",$3);
+		yyerrorf("value 0x%lx too large for PC",(unsigned long) $3);
 	    pc = $3;
 	}
     ;
@@ -477,7 +480,7 @@ lvalue:
     opt_ram '[' expression ']' opt_byte_mask
 	{
 	    if ($3 > chip->pages*256)
-		yyerrorf("address %u is outside of RAM",(unsigned) $3);
+		yyerrorf("address %lu is outside of RAM",(unsigned long) $3);
 	    $$.type = lt_ram;
 	    $$.n = $3;
 	    $$.mask = $5;
@@ -485,7 +488,7 @@ lvalue:
     | TOK_ROM '[' expression ']' opt_byte_mask
 	{
 	    if ($3 > chip->banks*chip->blocks*BLOCK_SIZE)
-		yyerrorf("address %u is outside of ROM",(unsigned) $3);
+		yyerrorf("address %lu is outside of ROM",(unsigned long) $3);
 	    $$.type = lt_rom;
 	    $$.n = $3;
 	    $$.mask = $5;
@@ -557,13 +560,13 @@ register:
     TOK_REG '[' expression ']' %prec SINGLE_REG
 	{
 	    if ($3 > NUM_REGS)
-		yyerrorf("address %u is outside of REG",(unsigned) $3);
+		yyerrorf("address %lu is outside of REG",(unsigned long) $3);
 	    $$ = $3;
 	}
     | TOK_REG '[' TOK_REG '[' expression ']' ']'
 	{
 	    if ($5 > NUM_REGS)
-		yyerrorf("address %u is outside of REG",(unsigned) $5);
+		yyerrorf("address %lu is outside of REG",(unsigned long) $5);
 	    $$ = $5;
 	}
     ;

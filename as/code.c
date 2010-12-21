@@ -91,8 +91,8 @@ void store_offset(const struct loc *loc,int pos,uint32_t data)
 
      offset = (int16_t) (data-pos-base);
      if (offset > 0x7ff && offset < (uint32_t) -0x800)
-	lerrorf(loc,"offset .%+d is out of range %d to %d",
-	    offset+base,base-2048,base+2047);
+	lerrorf(loc,"offset .%+ld is out of range %d to %d",
+	    (unsigned long) (offset+base),base-2048,base+2047);
      program[pos] =
        (program[pos] & 0xf0) | ((offset >> 8) & 0xf);
      program[pos+1] = offset;

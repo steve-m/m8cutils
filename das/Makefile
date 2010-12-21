@@ -42,4 +42,4 @@ clean:
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8cdas
+		rm -f m8cdas m8cdas.exe

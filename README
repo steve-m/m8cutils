@@ -8,10 +8,8 @@ With the exceptions noted below, all files are
 Copyright 2006 Werner Almesberger
 
 The files in this package are distributed under the terms of the
-GNU General Public License (GPL), version 2, or an augmented
-version thereof. For details, please refer to the README file in
-the respective directory. Version 2 of the GPL is included in
-the file COPYING.GPLv2.
+GNU General Public License (GPL), version 2. This license is
+included in the file COPYING.GPLv2.
 
 shared/cpp.h, shared/cpp.c:
   Copyright 2002,2003 California Institute of Technology
@@ -33,7 +31,7 @@ under version 2 of the GPL, but have additional copyright holders.
 Please refer directly to the respective file for details.
 
 The following are contributed files and are copyrighted by their
-respective copyright holders: prog/drv/ecb_ar91.[ch]
+respective copyright holders: prog/drv/ecb_ar91.[ch], sim/icestubs.c
 
 
 Overview

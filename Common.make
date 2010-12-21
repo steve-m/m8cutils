@@ -17,7 +17,11 @@ SLOPPY_LOCALS=-Wno-unused
 CFLAGS_COMMON=-g -I../shared -I../regs -I../libfdr \
 	      -DVERSION=`cat ../VERSION` \
 	      -DINSTALL_PREFIX=\"$(INSTALL_PREFIX)\"
-CFLAGS=$(CFLAGS_WARN) $(CFLAGS_COMMON)
+ifeq ($(TEST32),1)
+# 32 bit platforms only ! glibc required !
+CFLAGS_PORTABILITY_TEST=-D__uint32_t_defined -Duint32_t='unsigned long'
+endif
+CFLAGS=$(CFLAGS_WARN) $(CFLAGS_COMMON) $(CFLAGS_PORTABILITY_TEST)
 CFLAGS_LEX=$(CFLAGS_WARN) $(SLOPPY_PROTOTYPES) $(SLOPPY_LOCALS) \
            $(CFLAGS_COMMON)
 CFLAGS_YACC=$(CFLAGS_WARN) $(SLOPPY_PROTOTYPES) $(SLOPPY_LOCALS) \
@@ -59,7 +63,7 @@ UNINSTALL_quiet	= \
   @___() { echo "  RM       " "$$1" && $(UNINSTALL_normal) "$$@"; }; ___
 DEPEND_quiet	= @echo "  DEPENDENCIES" && $(DEPEND_normal)
 
-ifdef V
+ifeq ($(V),1)
     CC		= $(CC_normal)
     LD		= $(LD_normal)
     AR		= $(AR_normal)

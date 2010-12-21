@@ -57,6 +57,7 @@ void sym_read_file(FILE *file)
     while (fgets(buf,MAX_LINE,file)) {
 	char *here,*name;
 	char space[4],scope;
+	unsigned long value;
 	int attr;
 
 	line++;
@@ -70,11 +71,16 @@ void sym_read_file(FILE *file)
 	    perror("realloc");
 	    exit(1);
 	}
-	if (sscanf(buf,"%3s %x %c %as",
-	  space,&map[entries].value,&scope,&name) != 4) {
+	name = malloc(strlen(buf));
+	  /* this guess is slightly worse than worst-case */
+	if (!name)
+	    abort();
+	if (sscanf(buf,"%3s %lx %c %s",
+	  space,&value,&scope,name) != 4) {
 	    fprintf(stderr,"error in symbol map, line %d\n",line);
 	    exit(1);
 	}
+	map[entries].value = value;
 	if (!strcmp(space,"ROM"))
 	    attr = SYM_ATTR_ROM;
 	else if (!strcmp(space,"RAM"))

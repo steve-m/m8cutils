@@ -205,6 +205,15 @@ uint8_t tty_read_byte(int timeout)
 }
 
 
+void tty_discard_input(void)
+{
+    if (tcflush(fd,TCIFLUSH) < 0) {
+	perror("tcflush(TCIFLUSH)");
+	exit(1);
+    }
+}
+
+
 void tty_close(void)
 {
     if (tcsetattr(fd,TCSANOW,&termios) < 0) {

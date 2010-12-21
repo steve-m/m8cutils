@@ -220,6 +220,6 @@ int main(int argc,char **argv)
 	prog_dump_security(chip,stdout);
     if (op_read)
 	write_file(file_name,binary,hex);
-    prog_close_cli();
+    prog_close_cli(0);
     return 0;
 }

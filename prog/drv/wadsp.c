@@ -1,5 +1,5 @@
 /*
- * watsp.c - Werner's trivial serial programmer
+ * wadsp.c - Werner's discrete serial programmer
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -21,10 +21,10 @@
  *
  *              Voltage
  *              +        -
- * DTR  out     Active   Reset     reset
- * CTS  in      !SDATA   SDATA     data
- * RTS  out     !SDATA/Z SDATA     data
- * TD   out     !SCLK    SCLK      clock
+ * RTS  out     Reset    Active	   reset
+ * DCD  in      !SDATA   SDATA     data
+ * TD   out     SDATA    !SDATA/Z  data
+ * DTR  out     SCLK     !SCLK     clock
  */
 
 
@@ -36,24 +36,25 @@ static int reset,inverted,sdata;
  * Note: XRES and SDATA_IN are inverted by the circuit, hence the nots.
  */
 
-#define XRES(on)	tty_dtr(!(on))
-#define SCLK(on)	tty_td(!(on))
-#define	SDATA_IN()	(!tty_cts())
+#define XRES(on)	tty_rts(on)
+#define SCLK(on)	tty_dtr(on)
+#define	SDATA_IN()	(!tty_dcd())
 #define Z()		SDATA(0)
 
 
 static inline void SDATA(int on)
 {
     if (sdata != on) {
-	tty_rts(!on);
+	tty_td(on);
 	sdata = on;
     }
 }
 
+
 /* ----- Bit --------------------------------------------------------------- */
 
 
-static void watsp_send_bit(int bit)
+static void wadsp_send_bit(int bit)
 {
     if (reset) {
 	XRES(0);
@@ -65,7 +66,7 @@ static void watsp_send_bit(int bit)
 }
 
 
-static void watsp_send_z(void)
+static void wadsp_send_z(void)
 {
     Z();
     SCLK(!inverted);
@@ -73,34 +74,35 @@ static void watsp_send_z(void)
 }
 
 
-static int watsp_read_bit(void)
+static int wadsp_read_bit(void)
 {
     return SDATA_IN();
 }
 
 
-static void watsp_invert_phase(void)
+static void wadsp_invert_phase(void)
 {
     inverted = !inverted;
     if (inverted)
 	SCLK(1);
 }
 
-static struct prog_bit watsp_bit = {
-    .send_bit = watsp_send_bit,
-    .send_z = watsp_send_z,
-    .read_bit = watsp_read_bit,
-    .invert_phase = watsp_invert_phase,
+
+static struct prog_bit wadsp_bit = {
+    .send_bit = wadsp_send_bit,
+    .send_z = wadsp_send_z,
+    .read_bit = wadsp_read_bit,
+    .invert_phase = wadsp_invert_phase,
 };
 
 
 /* ----- Common ------------------------------------------------------------ */
 
 
-static int watsp_open(const char *dev,int voltage,int power_on,
+static int wadsp_open(const char *dev,int voltage,int power_on,
   const char *args[])
 {
-    prog_init(NULL,NULL,NULL,&watsp_bit);
+    prog_init(NULL,NULL,NULL,&wadsp_bit);
     if (power_on)
 	return -1;
     if (voltage == 3)
@@ -117,7 +119,7 @@ static int watsp_open(const char *dev,int voltage,int power_on,
 }
 
 
-static void watsp_close(void)
+static void wadsp_close(void)
 {
     XRES(1);
     Z();
@@ -126,8 +128,8 @@ static void watsp_close(void)
 }
 
 
-struct prog_common watsp = {
-    .name = "watsp",
-    .open = watsp_open,
-    .close = watsp_close,
+struct prog_common wadsp = {
+    .name = "wadsp",
+    .open = wadsp_open,
+    .close = wadsp_close,
 };

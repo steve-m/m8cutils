@@ -1,3 +1,56 @@
+Version 20 (xx-NOV-2006)
+----------
+
+- shared/file.c:read_binary: complained that files of exactly 32 kB were
+  already too big
+- prog/torture.c: updated and made compile again, now for real
+- prog/torture.c: added optional cycles per session argument
+- prog/torture.c: added detection of session loss (chip stops responding)
+- prog/Makefile: added target torture-static and changed -lssl to -lcrypto
+- prog/Makefile: also remove "torture" when cleaning up
+- prog/README: updated description of the protocol stack
+- prog/README: added a "quick start" section
+- shared/util.h: added convenience functions alloc_type_n and realloc_type
+- prog/cli.[ch]:prog_close_cli: now has an argument to indicate whether a new
+  session will be opened with the same settings
+- prog/vector.h:VECTOR_ADDR, VECTOR_DATA: new macros to extract vector
+  components
+- shared/interact.c:progress: reduced number of characters output for the
+  progress bar by a factor of up to 250
+- prog/prog_ops.c:ops_write_program: skip blocks containing only zeroes
+- prog/drv/*.c: made bit- and vector-level operations structures "static"
+- prog/prog_vector.c:vec_vector, prog/prog_bit.[ch]: added new bit-banging
+  operation "invert_phase" to invert the SCLK phase when receiving
+- prog/drv/watpp.c, prog/drv/watsp.c: added support for phase inversion
+- prog/drv/watsp.c: set SDATA only when it changed, reducing the number of I/O
+  operations by about 25%
+- prog/drv/waspic.c: increased the read timeout from 1 to 5 seconds to allow
+  large host-side buffers to drain
+- prog/tty.[ch]:tty_discard_input: new function to flush queued-up input
+- prog/drv/wadsp.[ch]: added driver for the wadsp programmer
+- README: the license is plain GPLv2, no longer with an augmented version (that
+  was for the programmer hardware, that has since moved to m8cprogs)
+- shared/file.c:read_hex, shared/symmap.c:sym_read_file,
+  as/code.c:store_offset, prog/prog_vector.c:prog_vector,
+  prog/prog_vector.c:do_prog_acquire_reset, sim/lang.y:read_lvalue,
+  sim/lang.y:write_lvalue, sim/lang.y: fixed portability problems with uint32_t
+  in printf and sscanf (reported by Mike Moreton)
+- Common.make: invocation with TEST32=1 now enables uint32_t portability
+  testing for 32 bit platforms (this hack only works with glibc)
+- shared/symmap.c:sym_read_file: replaced non-portable %as with %s (based on a
+  patch by Mike Moreton)
+- Config.make, Makefile: added configuration variable BUILD_LIBPROG to control
+  whether to build libprog and things that depend on it, such as m8cprog (based
+  on a patch by Mike Moreton)
+- Config.make, shared/Makefile, shared/cpp.c: CPP is now set by configration
+  variable CPP_COMMAND, which now defaults to "cpp" instead of /lib/cpp (based
+  on a patch by Mike Moreton)
+- */Makefile: "clean" now removed y.output (by Mike Moreton)
+- */Makefile: "spotless" also removes executables with .exe suffix, for Cygwin
+  compatibility (by Mike Moreton)
+- sim/Makefile, sim/icestubs.c: added support for building m8csim without the
+  DIY ICE (by Mike Moreton)
+
 Version 19 (30-OCT-2006)
 ----------
 

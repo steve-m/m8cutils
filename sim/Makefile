@@ -27,16 +27,23 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
 FILES=README Makefile \
       lang.l lang.y lang.h id.h id.c \
       reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
-      int.h int.c printf.h printf.c \
+      int.h int.c printf.h printf.c icestubs.c \
       example/README example/blink.asm example/switch.asm \
       tests/Common $(TESTS:%=tests/%)
 OBJS=lex.yy.o y.tab.o id.o reg.o sim.o core.o gpio.o int.o printf.o
 
-CFLAGS += -I../prog
-# don't use += because libprog may need symbols from libm8cutils, so we need to
-# put -lprog before the old $(LDLIBS).
-LDLIBS := -lfl -L../prog -lprog $(LDLIBS) -lreadline -lcurses
-LIBDEP += ../prog/libprog.a
+ifeq ($(BUILD_LIBPROG),1)
+    CFLAGS += -I../prog -DDIY_ICE
+    # don't use += because libprog may need symbols from libm8cutils, so we
+    # need to put -lprog before the old $(LDLIBS).
+    LDLIBS := -lfl -L../prog -lprog $(LDLIBS) -lreadline -lcurses
+    LIBDEP += ../prog/libprog.a
+else
+    CFLAGS += -I../prog
+    LDLIBS += -lfl $(LDLIBS) -lreadline -lcurses
+    OBJS += icestubs.o
+endif
+
 
 .PHONY:		all install uninstall clean spotless
 
@@ -78,8 +85,8 @@ uninstall:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f y.tab.h y.tab.c lex.yy.c
+		rm -f y.tab.h y.tab.c lex.yy.c y.output
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8csim default.m8csim
+		rm -f m8csim m8csim.exe default.m8csim

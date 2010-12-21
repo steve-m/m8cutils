@@ -103,7 +103,6 @@ ready:
 
 static uint8_t vec_vector(uint32_t v)
 {
-    static int first = 1;
     int value = 0;
     int i;
 
@@ -116,18 +115,19 @@ static uint8_t vec_vector(uint32_t v)
 	    prog_bit_send((v >> i) & 1);
 	for (i = 0; i != 3; i++)
 	    prog_bit_send(1);
-	first = 0;
     }
     else {
 	for (i = 18; i >= 8; i--)
 	    prog_bit_send((v >> i) & 1);
 	prog_bit_z();
+	prog_bit_invert();
 	for (i = 0; i != 8; i++) {
 	    prog_bit_z();
 	    if (prog_bit_read())
 		value |= 1 << (7-i);
 	}
 	prog_bit_z();
+	prog_bit_invert();
 	prog_bit_send(1);
     }
     if (IS_SSC(v))
@@ -159,17 +159,19 @@ uint8_t prog_vector(uint32_t v)
     int value = 0;
 
     if (verbose > 1) {
-	fprintf(stderr,"VECTOR 0x%08x: ",v);
+	fprintf(stderr,"VECTOR 0x%08x: ",(unsigned) v);
 	if (!v)
 	    fprintf(stderr,"ZEROES\n");
 	else {
 	    if (IS_WRITE(v))
 		fprintf(stderr,"WRITE %s 0x%02x,0x%02x%s\n",
-		  IS_REG(v) ? "REG" : "MEM",(v >> 8) & 0xff,v & 0xff,
+		  IS_REG(v) ? "REG" : "MEM",
+		  (unsigned) ((v >> 8) & 0xff),(unsigned) (v & 0xff),
 		  IS_SSC(v) ? " (SSC)" : "");
 	    else
 		fprintf(stderr,"READ %s 0x%02x\n",
-		  IS_REG(v) ? "REG" : "MEM",(v >> 8) & 0xff);
+		  IS_REG(v) ? "REG" : "MEM",
+		  (unsigned) ((v >> 8) & 0xff));
 	}
     }
     value = prog_vec.vector(v);
@@ -254,7 +256,7 @@ static uint8_t vec_acquire_reset(uint32_t v)
 void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
 {
     if (verbose > 1)
-	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
+	fprintf(stderr,"ACQUIRE VECTOR 0x%08lx\n",(unsigned long) v);
     prog_vec.acquire_reset(v);
 }
 
@@ -268,7 +270,7 @@ void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
 void do_prog_acquire_power_on(uint32_t v,uint32_t dummy)
 {
     if (verbose > 1)
-	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
+	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",(unsigned) v);
     do_prog_acquire(v,1,"Tacq",T_ACQ);
 }
 

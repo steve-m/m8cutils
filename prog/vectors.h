@@ -65,6 +65,9 @@
 #define IS_EXEC(v)	((v) == EXEC_VECTOR_VALUE)
 #define IS_SSC(v)	((v) == EXEC_VECTOR_SSC_VALUE)
 
+#define VECTOR_ADDR(v)	(((v) >> 8) & 0xff)
+#define VECTOR_DATA(v)	((v) & 0xff)
+
 #define MAGIC_EXEC	0x12	/* magic number to trigger execution */
 
 #define EXEC_VECTOR_VALUE \

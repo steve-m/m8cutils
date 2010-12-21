@@ -16,6 +16,7 @@ FILES=README Makefile \
       backslash.h backslash.c security.h security.c
 OBJS=file.o disasm.o chips.o cpp.o interact.o symmap.o error.o backslash.o \
      security.o
+CFLAGS += -DCPP='"$(CPP_COMMAND)"'
 
 
 .PHONY:		all install uninstall clean spotless

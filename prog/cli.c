@@ -121,11 +121,13 @@ int prog_open_cli(void)
 }
 
 
-void prog_close_cli(void)
+void prog_close_cli(int reuse)
 {
     int i;
 
     prog_close(detach);
+    if (reuse)
+	return;
     for (i = 0; i != prog_options_n; i++)
 	free((void *) prog_options[i]);
     free(prog_options);

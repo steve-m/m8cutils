@@ -12,6 +12,13 @@
 struct prog_bit prog_bit;
 
 
+void prog_bit_invert(void)
+{
+    if (prog_bit.invert_phase)
+	prog_bit.invert_phase();
+}
+
+
 void prog_bit_init(const struct prog_bit *bit)
 {
     if (bit)
