@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "AND reg[expr],expr (carry remains unset)" <<EOF

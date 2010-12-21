@@ -1,0 +1,92 @@
+#/bin/sh
+. Common
+
+asm "ASR A (inside A)" <<EOF
+	asr	a
+	halt
+EOF
+sim <<EOF
+a = 4
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x2 2
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "ASR A (out of A[7])" <<EOF
+	asr	a
+	halt
+EOF
+sim <<EOF
+a = 0x80
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0xc0 192
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "ASR [expr] (into carry)" <<EOF
+	asr	[20]
+	halt
+EOF
+sim <<EOF
+[20] = 1
+run
+[20]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x1 1
+0x3 3
+0x10 16
+EOF
+
+asm "ASR [X+expr] (carry is set)" <<EOF
+	asr	[x+255]
+	halt
+EOF
+sim <<EOF
+x = 11
+[10] = 48
+CPU_F_Carry = 1
+run
+[10]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x18 24
+0x0 0
+0x0 0
+0x3 3
+0x11 17
+EOF

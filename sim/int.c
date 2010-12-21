@@ -9,10 +9,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "m8c.h"
 #include "ice.h"
 
 #include "util.h"
-#include "registers.h"
 #include "reg.h"
 #include "core.h"
 #include "sim.h"

@@ -24,7 +24,7 @@ check_result()
     }
     echo PASSED 1>&2
     rm -f _ref _out _diff
-    passed=`expr $passed + 1`
+    passed=`expr ${passed:-0} + 1`
 }
 
 

@@ -28,8 +28,9 @@ libfdr/ (Red-black trees)
   The files in as/libfdr/ are distributed under the GNU Lesser General
   Public License. See the file libfdr/LICENSE for details.
 
-Common.make, libfdr/Makefile, and as/m8c.l have additional copyright
-holders. Please refer directly to the respective file for details.
+Common.make, libfdr/Makefile, as/m8c.l, and prog/rt.[ch] are distributed
+under version 2 of the GPL, but have additional copyright holders.
+Please refer directly to the respective file for details.
 
 
 Overview

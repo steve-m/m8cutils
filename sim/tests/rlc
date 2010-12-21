@@ -1,0 +1,92 @@
+#/bin/sh
+. Common
+
+asm "RLC A (inside A)" <<EOF
+	rlc	a
+	halt
+EOF
+sim <<EOF
+a = 4
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x8 8
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "RLC A (into A[7])" <<EOF
+	rlc	a
+	halt
+EOF
+sim <<EOF
+a = 64
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x80 128
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "RLC [expr] (into carry)" <<EOF
+	rlc	[20]
+	halt
+EOF
+sim <<EOF
+[20] = 0x80
+run
+[20]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x1 1
+0x3 3
+0x10 16
+EOF
+
+asm "RLC [X+expr] (carry is set)" <<EOF
+	rlc	[x+255]
+	halt
+EOF
+sim <<EOF
+x = 11
+[10] = 48
+CPU_F_Carry = 1
+run
+[10]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x61 97
+0x0 0
+0x0 0
+0x3 3
+0x11 17
+EOF

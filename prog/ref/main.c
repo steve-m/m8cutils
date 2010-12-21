@@ -1,5 +1,5 @@
 /*
- * main.c - ID_CY8C21123
+ * main.c - Extract vectors from official reference and check implementation
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -12,6 +12,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+
+#include "chips.h"
 
 #include "../vectors.h"
 
@@ -121,7 +123,7 @@ static void check_map(void)
 		    bits--;
 		    b = (b << 1) | ((m->data >> bits) & 1);
 		}
-		*p++;
+		p++;
 	    }
 	    if (a != b) {
 		fprintf(stderr,"\"%s\" (%s) [%d]: ref 0x%x != 0x%0x\n",
@@ -182,6 +184,7 @@ int main(int argc,char **argv)
 	default:
 	    fprintf(stderr,"usage: %s [vector_name [chip_name]]\n",*argv);
 	    fprintf(stderr,"       %s -d\n",*argv);
+	    fprintf(stderr,"       %s\n",*argv);
 	    return 1;
     }
     return 0;

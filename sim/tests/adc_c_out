@@ -1,3 +1,4 @@
+#/bin/sh
 . Common
 
 asm "ADC A,[X+expr] (outgoing carry is set)" <<EOF

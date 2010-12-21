@@ -12,7 +12,6 @@
 #include <termios.h>
 
 #include "vectors.h"
-#include "cy8c2regs.h"
 #include "tty.h"
 #include "prog.h"
 
@@ -90,6 +89,7 @@ static void waspic_close(void)
 struct prog_ops waspic_ops = {
     .name = "waspic",
     .open = waspic_open,
+    .acquire_reset = waspic_vector,
     .vector = waspic_vector,
     .close = waspic_close,
 };

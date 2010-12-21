@@ -19,11 +19,25 @@
 #include "ops.h"
 
 
+static void decode_security(FILE *file)
+{
+    int i;
+
+    fprintf(file,"Flash protection (%d blocks):\n",(int) security_size*4);
+    for (i = 0; i != security_size*4; i++)
+	fprintf(file,"%c%s",
+	  "UFRW"[block_protection(i)],
+	  (i & 63) == 63 ? "\n" : (i & 7) == 7 ? " " : "");
+    if (i & 63)
+	fputc('\n',file);
+}
+
+
 static void usage(const char *name)
 {
     fprintf(stderr,
 "usage: %s [-p port] [-d driver] [-v [-v]] [-q] [-3|-5] [-R] [-b|-i]\n"
-"                 [-c] [-e] [-r|-w] [-z] [chip] [file]\n"
+"                 [-c] [-e] [-r|-w] [-z] [-s] [chip] [file]\n"
 "       %s -l\n"
 "       %s -V\n\n"
 "  -3        set up 3V operation\n"
@@ -41,7 +55,10 @@ static void usage(const char *name)
 "            %s)\n"
 "  -q        quiet operation, don't show progress bars\n"
 "  -r        read Flash content from chip to file\n"
-//"  -R        run timing-critical parts at real-time priority (requires root)\n"
+"  -s        read protection data from chip (with -c or -r: use to skip over\n"
+"            inaccessible blocks and include in HEX file; with -e and -w:\n"
+"            check; alone: decode and print)\n"
+"  -R        run timing-critical parts at real-time priority (requires root)\n"
 "  -v        verbose operation, report major events\n"
 "  -v -v     more verbose operation, report vectors\n"
 "  -v -v -v  very verbose operation, report communication details\n"
@@ -64,7 +81,7 @@ int main(int argc,char **argv)
     const char *chip_name = NULL;
     const struct chip *chip = NULL;
     int binary = 0,hex = 0,voltage = 0,zero = 0;
-    int op_erase = 0,op_compare = 0,op_read = 0,op_write = 0;
+    int op_erase = 0,op_compare = 0,op_read = 0,op_write = 0,op_security = 0;
     int c,width;
 
     /*
@@ -72,7 +89,7 @@ int main(int argc,char **argv)
      * x  select XRES method even if power-on is available
      * o  pass option(s) to the driver
      */
-    while ((c = getopt(argc,argv,"35bcd:eilp:qrwRvVz")) != EOF)
+    while ((c = getopt(argc,argv,"35bcd:eilp:qrswRvVz")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
@@ -114,6 +131,12 @@ int main(int argc,char **argv)
 		break;
 	    case 'r':
 		op_read = 1;
+		break;
+	    case 'R':
+		real_time = 1;
+		break;
+	    case 's':
+		op_security = 1;
 		break;
 	    case 'w':
 		op_write = 1;
@@ -159,7 +182,7 @@ int main(int argc,char **argv)
 	    exit(1);
 	}
     }
-    if (op_write || op_compare)
+    if (op_write || (op_compare && !op_read))
 	read_file(file_name ? file_name : "-",binary);
 
     voltage = prog_open(port,driver,voltage);
@@ -178,12 +201,21 @@ int main(int argc,char **argv)
 	prog_erase(chip);
     if (op_write)
 	prog_write_program(chip);
+    if (op_security && !(op_write || op_erase)) {
+	prog_read_security(chip);
+	if (!op_read && !op_compare)
+	     decode_security(stdout);
+    }
     if (op_read)
-	prog_read_program(chip,zero);
+	prog_read_program(chip,zero || op_security,
+	  op_write || op_erase || op_security);
     if (op_compare)
-	prog_compare_program(chip,zero);
+	prog_compare_program(chip,zero || op_security,
+	  op_write || op_erase || op_security);
     if (op_write)
 	prog_write_security(chip);
+    if (op_security && (op_write || op_erase))
+	prog_compare_security(chip);
     if (op_read)
 	write_file(file_name,binary,hex);
     return 0;

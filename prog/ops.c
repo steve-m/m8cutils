@@ -20,6 +20,14 @@
 #include "ops.h"
 
 
+int block_protection(int block)
+{
+    if (block/4 > security_size)
+	return 0;
+    return (security[block/4] >> ((block & 3)*2)) & 3; 
+}
+
+
 static int read_block(int block)
 {
     uint8_t res;
@@ -50,7 +58,8 @@ void prog_initialize(int may_write,int voltage)
 {
     if (may_write && !voltage)
 	fprintf(stderr,"must specify voltage (-3 or -5)\n");
-    prog_vectors(INITIALIZE_1);
+    prog_acquire_reset(INIT_VECTOR);
+    prog_vectors(INITIALIZE_1_REST);
     if (may_write) {
 	prog_vectors(INITIALIZE_2);
 	switch (voltage) {
@@ -86,8 +95,8 @@ const struct chip *prog_identify(const struct chip *chip)
     if (verbose) {
 	uint8_t a,x;
 
-	a = prog_vectors(READ_REG(REG_CPU_A));
-	x = prog_vectors(READ_REG(REG_CPU_X));
+	a = prog_vectors(READ_REG(CPU_A));
+	x = prog_vectors(READ_REG(CPU_X));
 	fprintf(stderr,
 	  "chip identified as %s (0x%04x), revision (AX) 0x%02x%02x\n",
 	  chip->name,chip->id,a,x);
@@ -188,7 +197,7 @@ void prog_write_security(const struct chip *chip)
 }
 
 
-void prog_compare_program(const struct chip *chip,int zero)
+void prog_compare_program(const struct chip *chip,int zero,int use_security)
 {
     int skipped = 0;
     int i;
@@ -199,11 +208,14 @@ void prog_compare_program(const struct chip *chip,int zero)
 
 	block = i/BLOCK_SIZE;
 	if (!(i & (BLOCK_SIZE-1))) {
-	    int ok;
+	    int ok = 1;
 
 	    if (chip->banks > 1 && !(block % chip->blocks))
 		prog_vectors(SET_BANK_NUM(block/chip->blocks));
-	    ok = read_block(block % chip->blocks);
+	    if (use_security)
+		ok = !block_protection(block);
+	    if (ok)
+		ok = read_block(block % chip->blocks);
 	    progress(stderr,"Compare",i,program_size);
 	    if (!ok) {
 		if (!zero) {
@@ -245,15 +257,21 @@ void prog_compare_program(const struct chip *chip,int zero)
 }
 
 
-void prog_read_program(const struct chip *chip,int zero)
+void prog_read_program(const struct chip *chip,int zero,int use_security)
 {
     int zeroed = 0;
     int block;
 
     for (block = 0; block != chip->blocks; block++) {
+	int ok = 1;
+
 	if (chip->banks > 1 && !(block % chip->blocks))
 	    prog_vectors(SET_BANK_NUM(block/chip->blocks));
-	if (!read_block(block)) {
+	if (use_security)
+	    ok = !block_protection(block);
+	if (ok)
+	    ok = read_block(block);
+	if (!ok) {
 	    if (!zero) {
 		progress_clear(stderr);
 		fprintf(stderr,"block %d is read-protected\n",block);
@@ -285,4 +303,67 @@ void prog_read_program(const struct chip *chip,int zero)
 	      block*BLOCK_SIZE,block);
     }
     program_size = block*BLOCK_SIZE;
+}
+
+
+void prog_compare_security(const struct chip *chip)
+{
+    int bytes,i;
+
+    bytes = chip->blocks/4;
+    for (i = 0; i != bytes; i++) {
+	uint8_t expected,got;
+
+	if (!(i & (chip->blocks-1))) {
+	    uint8_t res;
+
+	    if (chip->banks > 1)
+		prog_vectors(SET_BANK_NUM(i/chip->blocks));
+	    prog_vectors(VERIFY_SECURE_SETUP);
+	    res = prog_vectors(READ_MEM(RETURN_CODE));
+	    if (res) {
+		fprintf(stderr,
+		  "read of security data failed with return code %d\n",res);
+		exit(1);
+	    }
+	}
+	expected = i >= security_size ? 0 : security[i];
+	got = prog_vectors(READ_BYTE(i));
+	if (expected != got) {
+	    fprintf(stderr,
+	      "comparison failed: protection byte %d: got 0x%02x, "
+	      "expected 0x%02x\n",i,got,expected);
+	    exit(1);
+	}
+    }
+    if (verbose)
+	fprintf(stderr,"compared %d byte%s of security data\n",
+	  bytes,bytes == 1 ? "" : "s");
+}
+
+
+void prog_read_security(const struct chip *chip)
+{
+    int i;
+
+    security_size = chip->blocks/4;
+    for (i = 0; i != security_size; i++) {
+	if (!(i & (chip->blocks-1))) {
+	    uint8_t res;
+
+	    if (chip->banks > 1)
+		prog_vectors(SET_BANK_NUM(i/chip->blocks));
+	    prog_vectors(VERIFY_SECURE_SETUP);
+	    res = prog_vectors(READ_MEM(RETURN_CODE));
+	    if (res) {
+		fprintf(stderr,
+		  "read of security data failed with return code %d\n",res);
+		exit(1);
+	    }
+	}
+	security[i] = prog_vectors(READ_BYTE(i));
+    }
+    if (verbose)
+	fprintf(stderr,"read %d byte%s of security data\n",
+	  (int) security_size,security_size == 1 ? "" : "s");
 }

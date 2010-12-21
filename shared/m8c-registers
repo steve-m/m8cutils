@@ -54,7 +54,18 @@
 0x0e1	INT_MSK1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
 0x0e2	INT_VC
 
+0x0f0	CPU_A		# undocumented
+0x0f3	CPU_X		# undocumented
+0x0f4	CPU_PCL		# undocumented
+0x0f5	CPU_PCH		# undocumented
+0x0f6	CPU_SP		# undocumented
 0x0f7	CPU_F		PgMode[2] _ XIO _ Carry Zero GIE
+0x0f8	CPU_CODE0	# undocumented
+0x0f9	CPU_CODE1	# undocumented
+0x0fa	CPU_CODE2	# undocumented
+
+0x0fe	CPU_SCR1	IRESS _[2] SLIMO ECO_EXW ECO_EX _ IRAMDIS
+0x0ff	CPU_SCR0	GIES _ WDRS PORS Sleep _[2] STOP
 
 0x100	PRT0DM0		# drive mode 0
 0x101	PRT0DM1		# drive mode 1
@@ -89,5 +100,9 @@
 0x11e	PRT7IC0
 0x11f	PRT7IC1
 
-0x1fe	CPU_SCR1	IRESS _[2] SLIMO ECO_EXW ECO_EX _ IRAMDIS
-0x1ff	CPU_SCR0	GIES _ WDRS PORS Sleep _[2] STOP
+0x1e0	OSC_CR0
+0x1e8	IMO_TR
+0x1e9	ILO_TR		_[2] BaseTrim[2] FreqTrim[4]
+0x1ea	BDG_TR		_ AGNDBYP TC[2] V[4]
+
+0x1fa	FLS_PR1

@@ -17,6 +17,7 @@
 #include "interact.h"
 
 #include "vectors.h"
+#include "rt.h"
 #include "prog.h"
 
 
@@ -27,6 +28,8 @@ struct prog_ops *programmers[] = {
     NULL
 };
 
+
+int real_time = 0;
 
 static struct prog_ops *prog = NULL;
 static int initial = 0;
@@ -166,7 +169,7 @@ uint8_t prog_vector(uint32_t v)
 	prog->send_z();
 	start_time();
 	while (!prog->read_bit())
-	    if (delta_time_us() > 100)
+	    if (delta_time_us() > 10) /* 10 us */
 		goto ready;
 	/*
 	 * Don't try to "simplify" this loop. The way it's done makes sure that
@@ -213,6 +216,69 @@ uint32_t do_prog_vectors(uint32_t v,...)
     }
     va_end(ap);
     return result;
+}
+
+
+void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
+{
+    int i;
+    int32_t dt;
+
+    if (verbose > 1)
+	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
+    if (prog->acquire_reset) {
+	prog->acquire_reset(v);
+	return;
+    }
+    if (real_time)
+	realtimize();
+    start_time();
+    if (prog->vector)
+	prog->vector(v);
+    else {
+	/*
+	 * Guess what ? The first 9 bits must make the deadline, not only the
+	 * first 8 !
+	 */
+	for (i = 18; i != 9; i--)
+	    prog->send_bit((v >> i) & 1);
+    }
+    dt = delta_time_us();
+    if (real_time)
+	unrealtime();
+    if (dt > T_XRESINIT) {
+	fprintf(stderr,"Txresinit deadline missed: %ld > %d us\n",
+	  (long) dt,T_XRESINIT);
+	exit(1);
+    }
+    if (!prog->vector)
+	for (i = 0; i != 13; i++)
+	    prog->send_bit(0);
+    if (verbose > 1)
+	fprintf(stderr,"acquisition vector sent in %ld/%d us\n",
+	  (long) dt,T_XRESINIT);
+}
+
+
+#undef OUTPUT_VECTOR
+#define OUTPUT_VECTOR(v) (v)
+
+
+void prog_read_block(uint8_t *data)
+{
+    int i;
+
+    for (i = 0; i != BLOCK_SIZE; i++)
+	data[i] = prog_vector(READ_BYTE(i));
+}
+
+
+void prog_write_block(const uint8_t *data)
+{
+    int i;
+
+    for (i = 0; i != BLOCK_SIZE; i++)
+	 prog_vector(WRITE_BYTE(i,data[i]));
 }
 
 

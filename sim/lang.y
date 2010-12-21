@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "m8c.h"
 #include "interact.h"
 #include "chips.h"
 #include "file.h"
@@ -20,7 +21,6 @@
 #include "sim.h"
 #include "reg.h"
 #include "core.h"
-#include "registers.h"
 #include "lang.h"
 
 

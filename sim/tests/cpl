@@ -1,0 +1,62 @@
+#/bin/sh
+. Common
+
+asm "CPL (input is zero)" <<EOF
+	cpl	a
+	halt
+EOF
+sim <<EOF
+a = 0
+run
+a
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0xff 255
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "CPL (result is zero)" <<EOF
+	cpl	a
+	halt
+EOF
+sim <<EOF
+a = 0xff
+run
+a
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x2 2
+0xd 13
+EOF
+
+asm "CPL (result is non-zero)" <<EOF
+	cpl	a
+	halt
+EOF
+sim <<EOF
+a = 100
+run
+a
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x9b 155
+0x0 0
+0x2 2
+0xd 13
+EOF

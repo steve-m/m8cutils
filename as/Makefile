@@ -32,7 +32,7 @@ LDLIBS += -lfl
 .PHONY:		clean spotless
 
 
-all:		m8cas m8c.inc
+all:		m8cas
 
 m8cas:		$(OBJS) $(LIBDEPS)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
@@ -48,10 +48,6 @@ y.tab.c y.tab.h: m8c.y
 
 y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
-
-m8c.inc:	../shared/m8c-registers ../shared/reg2hdrs.pl
-		$(GEN) perl ../shared/reg2hdrs.pl asm >$@ $< || \
-		  { rm -rf $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -77,12 +73,9 @@ tests:		all
 
 install:	all
 		$(INSTALL) m8cas $(INSTALL_PREFIX)/bin/m8cas
-		$(INSTALL) m8c.inc \
-		  $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
 
 uninstall:
 		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cas
-		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -96,4 +89,4 @@ clean:
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f m8cas m8c.inc
+		rm -f m8cas

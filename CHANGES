@@ -1,3 +1,48 @@
+Version 10 (7-MAR-2006)
+----------
+
+- prog/torture.c: torture-tester for host to target communication
+- prog/drv/watsp.c: oops, comment shouldn't claim anymore that it doesn't work
+- prog/Makefile: prog.o now depends on drv/*.c, as a feeble attempt to force a
+  rebuild when a new driver is added
+- prog/Makefile: don't insist on -Werror when doing dependencies
+- sim/gpio.c:gpio_ice_disconnect: write gpio->dm2 to PRT0DM2, not PRT0DM1
+- sim/gpio.c:gpio_ice_connect: trying to take over the ICE pins is no longer
+  punished with a fatal error (if in interactive mode)
+- sim/lang.l:yyerrorf: still exit on errors if running a script
+- sim/gpio.c:gpio_write_dr: set bits not under ICE control to zero (otherwise,
+  writing to PRT1DR[1] would break contact with the ICE)
+- tests/ref/main.c: added #include for "chips.h"
+- prog/vectors.h: moved SSC-related definitions to shared/ssc.inc
+- prog/cy8c2regs.h: merged into shared/m8c-registers
+- as/Makefile: moved handling of m8c.inc to shared/Makefile
+- sim/: registers.h is now shared/m8c.h
+- prog/drv/{waspic,watsp}.c: removed unused #includes
+- sim/core.c: arguments to FROM_REG_OP were reversed for "TST reg[expr..." 
+  (sim/tests/tst_reg)
+- sim/core.c:TST: unexplicably, did a comparison instead of a bit test
+  (sim/tests/tst_ram, sim/tests/tst_reg)
+- sim/tests/: ASR didn't preserve the MSB (tests/asr)
+- sim/tests/: various files were missing the #!/bin/sh
+- sim/tests/: new test cases asl, asr, cmp, cpl, dec, inc, rlc, rrc, swap,
+  tst_ram, and tst_reg
+- */tests/Common: use 0 if "passed" is not defined, to avoid complaints from
+  "expr"
+- prog/m8cprog.c: if -r and -c were set, m8cprog would try to read a file
+- prog/: added support for retrieving the Flash protection bits (-s) (joint
+  work with Dennis Geurts)
+- prog/ref/README: added a bit of documentation
+- prog/ref/vdecode.pl: made output format nicer and added more constants
+- prog/: added support for switching to real-time priority when sending the
+  first nine bits of Initialize-1 (option -R)
+- prog/proc.c:prog_acquire_reset: new function to acquire the target in reset
+  mode, while checking that the Txresinit deadline is met
+- prog/prog.h: new programmer operation "acquire", to acquire the target
+  without m8cprog trying to enforce correct timing
+- prog/prog.c:prog_vector: reduced wait for SDATA to go H before WAIT-AND-POLL
+  from 100 us to 10 us
+
+
 Version 9 (2-MAR-2006)
 ---------
 

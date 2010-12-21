@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "ADD A,expr (carry in set, out not set)" <<EOF

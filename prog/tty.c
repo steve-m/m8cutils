@@ -211,5 +211,8 @@ void tty_close(void)
 	perror("tcsetattr");
 	exit(1);
     }
-    (void) close(fd);
+    if (close(fd) < 0) {
+	perror("close");
+	exit(1);
+    }
 }

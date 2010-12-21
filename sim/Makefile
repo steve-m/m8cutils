@@ -10,7 +10,12 @@ include ../Common.make
 
 TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       add_c_nc add_sp and_c and_z and_nc and_nz \
+      asl asr \
       call jmp lcall ljmp \
+      cmp cpl dec inc \
+      rlc rrc \
+      swap \
+      tst_ram tst_reg \
       drive_0 drive_1 drive_0r drive_1r drive_z \
       intsw inttake intret \
       gpioint \
@@ -47,19 +52,12 @@ lex.yy.o:	lex.yy.c y.tab.h
 y.tab.c y.tab.h: lang.y
 		$(YACC) $(YYFLAGS) -d lang.y
 
-y.tab.o:	y.tab.c registers.h
+y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
-
-core.o gpio.o int.o y.tab.o: \
-		registers.h
-
-registers.h:	../shared/m8c-registers ../shared/reg2hdrs.pl
-		$(GEN) perl ../shared/reg2hdrs.pl c >$@ $< || \
-		  { rm -rf $@; exit 1; }
 
 default.m8csim:	../shared/m8c-registers ../shared/reg2hdrs.pl
 		$(GEN) perl ../shared/reg2hdrs.pl sim >$@ $< || \
-		  { rm -rf $@; exit 1; }
+		  { rm -f $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -101,7 +99,7 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f y.tab.h y.tab.c lex.yy.c registers.h
+		rm -f y.tab.h y.tab.c lex.yy.c
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean

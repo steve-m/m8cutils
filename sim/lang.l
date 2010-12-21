@@ -228,6 +228,16 @@ $[0-9A-Fa-f]+			{ char *end;
 %%
 
 
+int interactive;
+
+
+void exit_if_script(int status)
+{
+    if (!interactive)
+	exit(status);
+}
+
+
 void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
 {
     va_list ap;
@@ -237,6 +247,7 @@ void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
     va_start(ap,fmt);
     vfprintf(stderr,fmt,ap);
     fputc('\n',stderr);
+    exit_if_script(1);
     longjmp(error_env,0);
 }
 
@@ -253,6 +264,7 @@ int yywrap(void)
 	return 1;
     yyin = next_file;
     next_file = NULL;
+    interactive = isatty(fileno(yyin));
     lineno = 1;
     return 0;
 }

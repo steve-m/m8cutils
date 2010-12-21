@@ -5,7 +5,7 @@
 # Copyright 2006 Werner Almesberger
 #
 
-CFLAGS=-Wall
+CFLAGS=-Wall -I../../shared
 
 .PHONY:		all clean
 
@@ -13,14 +13,14 @@ CFLAGS=-Wall
 all:		an2026a an2026b
 
 an2026a:	main.c an2026a-vec.inc an2026a-map.inc an2026a-data.inc \
-		  ../vectors.h ../cy8c2regs.h Makefile
+		  ../vectors.h Makefile
 		$(CC) $(CFLAGS) -o $@ main.c \
 		  -DDATA_FILE='"an2026a-data.inc"' \
 		  -DMAP_FILE='"an2026a-map.inc"' \
 		  -DVECTOR_FILE='"an2026a-vec.inc"'
 
 an2026b:	main.c an2026b-vec.inc an2026b-map.inc an2026b-data.inc \
-		  ../vectors.h ../cy8c2regs.h Makefile
+		  ../vectors.h Makefile
 		$(CC) $(CFLAGS) -o $@ main.c \
 		  -DDATA_FILE='"an2026b-data.inc"' \
 		  -DMAP_FILE='"an2026b-map.inc"' \

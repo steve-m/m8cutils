@@ -1,0 +1,86 @@
+#!/bin/sh
+. Common
+
+asm "SWAP A,X" <<EOF
+	swap	a,x
+	halt
+EOF
+sim <<EOF
+a = 100
+x = 200
+run
+a
+x
+.
+@
+EOF
+expect <<EOF
+HALT
+0xc8 200
+0x64 100
+0x2 2
+0xe 14
+EOF
+
+asm "SWAP A,[expr]" <<EOF
+	swap	a,[3]
+	halt
+EOF
+sim <<EOF
+a = 100
+[3] = 70
+run
+a
+[3]
+.
+@
+EOF
+expect <<EOF
+HALT
+0x46 70
+0x64 100
+0x3 3
+0x10 16
+EOF
+
+asm "SWAP X,[expr]" <<EOF
+	swap	x,[3]
+	halt
+EOF
+sim <<EOF
+x = 255
+[3] = 70
+run
+x
+[3]
+.
+@
+EOF
+expect <<EOF
+HALT
+0x46 70
+0xff 255
+0x3 3
+0x10 16
+EOF
+
+asm "SWAP A,SP" <<EOF
+	swap	a,sp
+	halt
+EOF
+sim <<EOF
+a = 10
+sp = 40
+run
+a
+sp
+.
+@
+EOF
+expect <<EOF
+HALT
+0x28 40
+0xa 10
+0x2 2
+0xe 14
+EOF

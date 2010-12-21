@@ -15,12 +15,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "m8c.h"
 #include "chips.h"
 #include "disasm.h"
 #include "file.h"
 
 #include "util.h"
-#include "registers.h"
 #include "reg.h"
 #include "sim.h"
 #include "int.h"
@@ -279,7 +279,7 @@ uint8_t sp;
 
 #define ASR(a)			\
     cf = (a) & 1;		\
-    (a) >>= 1;			\
+    (a) = ((a) >> 1) | ((a) & 0x80); \
     zf = !(a)
 
 #define RLC(a)			\
@@ -419,7 +419,7 @@ uint8_t sp;
 
 
 #define TST(a,b) \
-    zf = (a) == (b)
+    zf = !((a) & (b))
 
 
 /* ----- Code execution ---------------------------------------------------- */
@@ -516,17 +516,17 @@ static int m8c_one(void)
 	BIT_OPS_REG(0x43,OR);		/* 0x43-0x44 */
 	BIT_OPS_REG(0x45,XOR);		/* 0x45-0x46 */
 	case 0x47: /* TST [expr],expr *//* 0x47 */
-	    zf = direct[rom[pc]] == rom[pc+1];
+	    zf = !(direct[rom[pc]] & rom[pc+1]);
 	    pc += 2;
 	    break;
 	case 0x48: /* TST [X+expr],expr *//* 0x48 */
-	    zf = indexed[(x+rom[pc]) & 0xff] == rom[pc+1];
+	    zf = !(indexed[(x+rom[pc]) & 0xff] & rom[pc+1]);
 	    pc += 2;
 	    break;
-	FROM_REG_OP(0x49,TST,0,rom[pc+1]); /* 0x49 */
+	FROM_REG_OP(0x49,TST,rom[pc+1],0); /* 0x49 */
 	    pc += 2;
 	    break;
-	FROM_REG_OP(0x4a,TST,x,rom[pc+1]); /* 0x4a */
+	FROM_REG_OP(0x4a,TST,rom[pc+1],x); /* 0x4a */
 	    pc += 2;
 	    break;
 	case 0x4b: /* SWAP A,X */	/* 0x4b */

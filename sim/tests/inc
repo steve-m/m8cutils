@@ -1,0 +1,91 @@
+#/bin/sh
+. Common
+
+asm "INC A (non-zero)" <<EOF
+	inc	a
+	halt
+EOF
+sim <<EOF
+a = 4
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x5 5
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "INC X (into zero)" <<EOF
+	inc	x
+	halt
+EOF
+sim <<EOF
+x = 0xff
+run
+x
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x1 1
+0x1 1
+0x2 2
+0xd 13
+EOF
+
+asm "INC [expr] (out of zero)" <<EOF
+	inc	[7]
+	halt
+EOF
+sim <<EOF
+[7] = 0
+run
+[7]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x1 1
+0x0 0
+0x0 0
+0x3 3
+0x10 16
+EOF
+
+asm "INC [X+expr] (0x7f to 0x80)" <<EOF
+	inc	[x+9]
+	halt
+EOF
+sim <<EOF
+x = 6
+[15] = 0x7f
+run
+[15]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x80 128
+0x0 0
+0x0 0
+0x3 3
+0x11 17
+EOF

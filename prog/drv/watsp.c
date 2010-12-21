@@ -5,11 +5,6 @@
  * Copyright 2006 Werner Almesberger
  */
 
-/*
- * Very experimental and doesn't work yet. The problem seems to be in the
- * circuit (probably far too slow edges), not the control logic.
- */
-
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -17,8 +12,6 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include "vectors.h"
-#include "cy8c2regs.h"
 #include "tty.h"
 #include "prog.h"
 
@@ -55,26 +48,6 @@ static int watsp_open(const char *dev,int voltage)
 	fprintf(stderr,
 	  "warning: 3V operation is not reliable. Trying anyway ...\n");
     fd = tty_open_raw(dev,B19200);
-    
-#if 0
-tty_dtr(0);
-tty_rts(0);
-tty_td(0);
-while (1) {
-    tty_dtr(1);
-fprintf(stderr,"DTR\n");
-    sleep(4);
-    tty_dtr(0);
-    tty_rts(1);
-fprintf(stderr,"RTS\n");
-    sleep(4);
-    tty_rts(0);
-    tty_td(1);
-fprintf(stderr,"TD\n");
-    sleep(4);
-    tty_td(0);
-}
-#endif
     XRES(1);
     SCLK(0);
     Z();

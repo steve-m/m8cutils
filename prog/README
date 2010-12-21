@@ -47,12 +47,16 @@ The programmer can perform the following operations:
   comparison is done before writing the file, so no file will be
   written if the data read differs from the data obtained for
   comparison.
+- retrieve the per-block Flash protection ("security") bits (-s).
+  This is an undocumented operation and is only done if explicitly
+  requested.
 
 As a precaution against accidently overwriting the input file,
 reading cannot be combined with writing. Reading and comparing fail
 when they encounter a read-protected block. This can be changed by
 setting the -z option (in which the case the offending block is
-filled with zeroes or skipped).
+filled with zeroes or skipped). Furthermore, if security data is
+available, this information is used to skip unreadable blocks.
 
 The driver for the programmer hardware is selected with the option
 "-d driver". The name is case-insensitive. A list of available
@@ -66,6 +70,19 @@ with the option "-p port". A default can be provided through the
 environment variable M8CPROG_PORT. If no port is set, the default
 depends on the driver hardware. For hardware attached via a serial
 port, the default is /dev/ttyS0.
+
+For hardware attached via the parallel port, the default is
+/dev/parport0. Note that the kernel must support user-space
+parallel port device drivers (CONFIG_PPDEV) to use programmers
+attached to the parallel port. Programmers requiring advanced
+parallel port capabilities, such as EPP, may also need these
+capabilities in the BIOS setup.
+
+If the driver has to perform timing-critical operations, such as
+sending an initial vector within a deadline, on the host CPU,
+timing may be improved by requesting real-time priority with the
+option -R. This option requires root privileges. Note that a buggy
+driver that busy loops in that function can hang the system.
 
 The name of the chip to program can be specified as a the command
 line argument. The name is case-insensitive. A list of supported
@@ -157,3 +174,47 @@ Bit-banging
 The bit-banging interface is currently completely untested and
 supporting it properly will need some more infrastructure work.
 Please don't try to use it yet.
+
+
+Programmer testing
+------------------
+
+The file torture.c contains a simple tester for communication
+between host and target, through the programmer. It writes
+blocks of pseudo-random data to memory, and then retrieves them
+twice, comparing each time with the original data. Note that no
+write to Flash performed, so this type of testing can be done
+indefinitely.
+
+Bytes inside a block read or write are transferred back-to-back
+(to the extent that the programmer supports this), and a brief
+sequence of zeroes is inserted after each block transfer to allow
+for recovery in case a small number of clock pulses was lost or
+added.
+
+There are the following error patterns:
+
+- the same mismatch in both readback phases:
+  an error occurred while writing.
+
+- mismatch in one of the readback phases or at both, but at
+  different places or with different values:
+  an error occurred while reading.
+
+- there is a large number of corrupt bytes following the first
+  one (e.g., all until the end of the block, or almost as many):
+  a clock pulse (SCLK) was lost or added.
+
+- there are typically only one or two corrupt bytes in a block:
+  SDATA was mis-set or mis-read
+
+Note that for each data byte read or written, one address byte
+is sent to the target, so if corruption occurs in the way to the
+target, it is equally likely to affect the address as it is to
+affect data. Similarly, also the three bits identifying the
+operation can be corrupted.
+
+To build the torture-tester, do "make torture". It is then
+available as "./torture". It accepts the usual programmer
+options. The program loops forever and reports its findings to
+standard error.

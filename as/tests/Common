@@ -16,7 +16,7 @@ reas()
     out=`echo "$asm" | $VALGRIND ../m8cas`
     if [ "$in" = "$out" ]; then
 	echo PASSED 2>&1
-	passed=`expr $passed + 1`
+	passed=`expr ${passed:-0} + 1`
     else
 	echo FAILED "($SCRIPT)" 2>&1
 	echo "$in": "$asm" '->' "$out" 2>&1
@@ -61,5 +61,5 @@ expect()
     }
     echo PASSED 1>&2
     rm -f _out _diff
-    passed=`expr $passed + 1`
+    passed=`expr ${passed:-0} + 1`
 }

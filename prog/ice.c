@@ -47,7 +47,7 @@ static void set_xio(int reg)
 {
     if (reg >> 8 != xio) {
 	xio = !xio;
-	prog_vector(WRITE_REG(REG_CPU_F,xio ? CPU_F_XIO : 0));
+	prog_vector(WRITE_REG(CPU_F,xio ? CPU_F_XIO : 0));
     }
 }
 

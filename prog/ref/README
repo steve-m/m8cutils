@@ -1,0 +1,57 @@
+Vector reference tools
+======================
+
+This directory contains reference vectors and the tools to work
+with them.
+
+The files an2026a.txt and an2026b.txt contain the vectors listed
+in the respective document by Cypress(r). This is a straight copy
+and paste, done from the PDF files using xpdf.
+
+
+an2026a / an2026b
+-----------------
+
+These programs have three modes of operation:
+
+- compare the vectors used by m8cprog with the reference vectors.
+  This mode is selected when an2026a/an2026b is invoked without
+  arguments. The mapping between the vector sets is defined in
+  the files an2026a.map and an2026b.map. If both sets are identical,
+  no output is produced.
+
+- dump and decode the reference vectors. This is selected with the
+  option -d. All reference vectors are send through vdecode.pl (see
+  below) for decoding.
+
+- extract a reference vector by name. The name of the reference
+  vector is passed as argument. Optionally, also the chip name can
+  be specified. If a vector has chip-specific variants, the
+  corresponding one is selected. If no chip name is given, the first
+  variant is printed.
+
+  Example:
+  ./an2026a READ-ID-WORD CY8C21123
+
+  Known bug: some chip names are of the form CY8C21xxx and will only
+  match if exactly the same string is used for the chip argument.
+
+
+vdecode.pl
+----------
+
+vdecode.pl is a decoder for programming vectors. Its input are
+bit strings, either entirely numeric (e.g., 10010000010...), or
+with variable parts replaced by letters (e.g., 10010aaaaaa...).
+vdecode.pl then tries to decode each vector and prints it in a
+human-readable format.
+
+Each decoded vector is prefixed by the bit string it is composed
+from. The bit string can be suppressed with the option -s (short).
+
+Well-known constants are replaced with symbolic names. To obtain
+comments explaining all such substitutions for each vector, use
+the option -e (explain).
+
+Note that output lines will be larger than 80 characters when -e
+is used without -s.

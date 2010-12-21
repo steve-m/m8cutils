@@ -21,7 +21,7 @@ expect <<EOF
 EOF
 
 asm "Assert GPIO interrupt by software (by CPU, not handled)" <<EOF
-#include "../registers.h"
+#include "m8c.inc"
 	or	reg[INT_MSK3],INT_MSK3_ENSWINT
 	mov	a,reg[INT_CLR0]
 	mov	[0],a

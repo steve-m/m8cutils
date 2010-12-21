@@ -2,7 +2,7 @@
 . Common
 
 asm "Assert GPIO interrupt by software (taken and returned)" <<EOF
-#include "../registers.h"
+#include "m8c.inc"
 	or	f,CPU_F_GIE
 	halt
 

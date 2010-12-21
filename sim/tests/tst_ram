@@ -1,0 +1,57 @@
+#!/bin/sh
+. Common
+
+asm "TST [expr],expr (all bits zero)" <<EOF
+	tst	[5],6
+	halt
+EOF
+sim <<EOF
+ram[5] = ~6
+run
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x1 1
+0x4 4
+0x11 17
+EOF
+
+asm "TST [X+expr],expr (some bits zero)" <<EOF
+	tst	[x+4],6
+	halt
+EOF
+sim <<EOF
+x = 3
+ram[7] = ~4
+run
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x4 4
+0x12 18
+EOF
+
+asm "TST [expr],expr (no bits zero)" <<EOF
+	tst	[4],6
+	halt
+EOF
+sim <<EOF
+ram[4] = 0xff
+run
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x4 4
+0x11 17
+EOF

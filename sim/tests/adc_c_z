@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "ADC [X+expr],expr (carry, zero)" <<EOF

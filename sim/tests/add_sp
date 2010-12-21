@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "ADD SP,expr (zero and overflow)" <<EOF

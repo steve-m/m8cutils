@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "AND A,expr (carry remains set)" <<EOF

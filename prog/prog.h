@@ -12,6 +12,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "file.h" /* for BLOCK_SIZE */
+
+
+#define T_XRESINIT	125	/* Time to send first 8 bits (reset mode),
+				   in us */
+#define T_ACQ		3000	/* Time to send INITIALIZE-1 (power-op mode),
+				   in us */
 
 /*
  * "voltage" is 3 or 5, or 0 if unspecified. The use depends on the type of
@@ -37,10 +44,20 @@
  * inside Initialize-1.)
  */
 
+/*
+ * "acquire_reset" differs from "vector" in that it is only called for the
+ * first vector of Initialize-1, and that the programmer hardware or driver
+ * assumes responsibility for the correct timing. If the driver does not
+ * provide "acquire_reset", prog.c will call "vector" or "send_bit" instead,
+ * and compare the execution time for these calls against the Txresinit
+ * deadline.
+ */
 
 struct prog_ops {
     const char *name;
     int (*open)(const char *dev,int voltage);	/* returns voltage, 3 or 5 */
+    uint8_t (*acquire_reset)(uint32_t v);	/* send the first vector for
+						   reset method */
     uint8_t (*vector)(uint32_t v);		/* NULL if bit-banging */
     void (*send_bit)(int bit);			/* unused if vector-based */
     void (*send_z)(void);			/* unused if vector-based */
@@ -54,6 +71,9 @@ extern struct prog_ops *programmers[];
 #define END_OF_VECTORS 0xffffffff
 
 
+extern int real_time; /* try to obtain real-time priority for acquisition */
+
+
 void start_time(void);
 int32_t delta_time_us(void);
 
@@ -62,8 +82,12 @@ int prog_open(const char *dev,const char *programmer,int voltage);
   /* "dev" and "programmer" can be NULL, to use defaults */
 uint8_t prog_vector(uint32_t v);
 uint32_t do_prog_vectors(uint32_t v,...);
+void do_prog_acquire_reset(uint32_t v,uint32_t dummy);
+void prog_read_block(uint8_t *data);
+void prog_write_block(const uint8_t *data);
 void prog_close(void);
 
+#define prog_acquire_reset(v) do_prog_acquire_reset(v END_OF_VECTORS)
 #define prog_vectors(v) do_prog_vectors(v END_OF_VECTORS)
 
 #endif /* !PROG_H */

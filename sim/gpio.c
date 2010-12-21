@@ -10,12 +10,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "m8c.h"
 #include "ice.h"
 
 #include "util.h"
-#include "registers.h"
 #include "reg.h"
 #include "int.h"
+#include "sim.h"
 #include "gpio.h"
 
 
@@ -89,7 +90,7 @@ static void gpio_maybe_interrupt(struct gpio *gpio)
 static uint8_t gpio_read_dr(struct reg *reg)
 {
     struct gpio *gpio = reg->user;
-    uint8_t input,dr,ice;
+    uint8_t input,dr;
 
     input = is_input(gpio);
 //fprintf(stderr,"input 0x%x R0x%x Z0x%x\n",input,gpio->drive_r,gpio->drive_z);
@@ -103,8 +104,7 @@ static uint8_t gpio_read_dr(struct reg *reg)
 	gpio->latch = dr;
 	return dr;
     }
-    ice = ice_read(reg-regs);
-    dr = (dr & ~gpio->ice) | (ice & gpio->ice);
+    dr = (dr & ~gpio->ice) | (ice_read(reg-regs) & gpio->ice);
     gpio->latch = dr;
     return dr;
 }
@@ -115,7 +115,7 @@ static void gpio_write_dr(struct reg *reg,uint8_t value)
     struct gpio *gpio = reg->user;
 
     if (gpio->ice)
-	ice_write(reg-regs,value);
+	ice_write(reg-regs,value & gpio->ice);
     gpio->dr = value;
 }
 
@@ -313,7 +313,8 @@ void gpio_ice_connect(int port,uint8_t set)
     /* @@@ ugly hard-coded setting */
     if (port == 1 && (set & 3)) {
 	fprintf(stderr,"P1[0] and P1[1] are reserved for the ICE\n");
-	exit(1);
+	exit_if_script(1);
+	return;
     }
     gpio->ice |= set;
     ice_write(PRT0DR+4*port,gpio->dr);
@@ -350,7 +351,7 @@ have_ice:
     if ((gpio->dm1 | gpio->ice) != 0xff)
 	ice_write(PRT0DM1+4*port,gpio->dm1 | ~gpio->ice);
     if ((gpio->dm2 | gpio->ice) != 0xff)
-	ice_write(PRT0DM1+4*port,gpio->dm2 | ~gpio->ice);
+	ice_write(PRT0DM2+4*port,gpio->dm2 | ~gpio->ice);
     /*
      * Do PRTxIE first, to avoid interrupts from transient PRTxICx state.
      */

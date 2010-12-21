@@ -11,12 +11,17 @@
 
 #include "chips.h"
 
+
+int block_protection(int block);
+
 void prog_initialize(int may_write,int voltage);
 const struct chip *prog_identify(const struct chip *chip);
 void prog_erase(const struct chip *chip);
 void prog_write_program(const struct chip *chip);
 void prog_write_security(const struct chip *chip);
-void prog_compare_program(const struct chip *chip,int zero);
-void prog_read_program(const struct chip *chip,int zero);
+void prog_compare_program(const struct chip *chip,int zero,int use_security);
+void prog_read_program(const struct chip *chip,int zero,int use_security);
+void prog_compare_security(const struct chip *chip);
+void prog_read_security(const struct chip *chip);
 
 #endif /* !OPS_H */

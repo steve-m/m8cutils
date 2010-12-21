@@ -10,6 +10,7 @@ include ../Common.make
 
 FILES=README Makefile \
       m8c-registers reg2hdrs.pl \
+      ssc.inc \
       file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
       interact.h interact.c
 OBJS=file.o disasm.o chips.o cpp.o interact.o
@@ -19,10 +20,23 @@ OBJS=file.o disasm.o chips.o cpp.o interact.o
 .PHONY:		clean spotless
 
 
-all:		libm8cutils.a
+all:		libm8cutils.a m8c.inc m8c.h ssc.h
 
 libm8cutils.a: $(OBJS)
 		$(AR) cr$(AR_v) $@ $^
+
+m8c.inc:	m8c-registers reg2hdrs.pl
+		$(GEN) perl reg2hdrs.pl asm >$@ $< || \
+		  { rm -f $@; exit 1; }
+
+m8c.h:		m8c-registers reg2hdrs.pl
+		$(GEN) perl reg2hdrs.pl c >$@ $< || \
+		  { rm -f $@; exit 1; }
+
+ssc.h:		ssc.inc
+		$(GEN) (echo '/* MACHINE-GENERATED. DO NOT EDIT ! */'; \
+		  echo; sed 's/\.inc/.h/;s/_INC/_H/' <$<; ) >$@ || \
+		  { rm -f $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -44,9 +58,21 @@ tests:
 
 # ----- Installation ----------------------------------------------------------
 
-install:
+install:	m8c.inc ssc.inc m8c.h ssc.h
+		$(INSTALL) m8c.inc \
+		  $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
+		$(INSTALL) ssc.inc \
+		  $(INSTALL_PREFIX)/share/m8cutils/include/ssc.inc
+		$(INSTALL) m8c.inc \
+		  $(INSTALL_PREFIX)/share/m8cutils/include/m8c.h
+		$(INSTALL) ssc.inc \
+		  $(INSTALL_PREFIX)/share/m8cutils/include/ssc.h
 
 uninstall:
+		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/m8c.inc
+		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/ssc.inc
+		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/m8c.h
+		$(UNINSTALL) $(INSTALL_PREFIX)/share/m8cutils/include/ssc.h
 
 # ----- Distribution ----------------------------------------------------------
 
@@ -59,4 +85,4 @@ clean:
 		rm -f $(OBJS) .depend
 
 spotless:	clean
-		rm -f libm8cutils.a
+		rm -f libm8cutils.a m8c.inc m8c.h ssc.h

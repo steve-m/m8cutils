@@ -1,0 +1,91 @@
+#/bin/sh
+. Common
+
+asm "DEC A (non-zero)" <<EOF
+	dec	a
+	halt
+EOF
+sim <<EOF
+a = 4
+run
+a
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x3 3
+0x0 0
+0x0 0
+0x2 2
+0xd 13
+EOF
+
+asm "DEC X (into zero)" <<EOF
+	dec	x
+	halt
+EOF
+sim <<EOF
+x = 1
+run
+x
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x0 0
+0x1 1
+0x2 2
+0xd 13
+EOF
+
+asm "DEC [expr] (out of zero)" <<EOF
+	dec	[7]
+	halt
+EOF
+sim <<EOF
+[7] = 0
+run
+[7]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0xff 255
+0x1 1
+0x0 0
+0x3 3
+0x10 16
+EOF
+
+asm "DEC [X+expr] (0x80 to 0x7f)" <<EOF
+	dec	[x+9]
+	halt
+EOF
+sim <<EOF
+x = 6
+[15] = 0x80
+run
+[15]
+CPU_F_Carry
+CPU_F_Zero
+.
+@
+EOF
+expect <<EOF
+HALT
+0x7f 127
+0x0 0
+0x0 0
+0x3 3
+0x11 17
+EOF

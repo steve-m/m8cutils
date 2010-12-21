@@ -1,0 +1,116 @@
+#!/bin/sh
+. Common
+
+asm "CMP A,expr (A < expr)" <<EOF
+	cmp	a,0x80
+	halt
+EOF
+sim <<EOF
+a = 0
+run
+a
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x0 0
+0x0 0
+0x1 1
+0x3 3
+0xe 14
+EOF
+
+asm "CMP A,[expr] (A < [expr])" <<EOF
+	cmp	a,[3]
+	halt
+EOF
+sim <<EOF
+a = 7
+[3] = 8
+run
+a
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x7 7
+0x0 0
+0x1 1
+0x3 3
+0x10 16
+EOF
+
+asm "CMP A,[X+expr] (A == [X+expr])" <<EOF
+	cmp	a,[x+1]
+	halt
+EOF
+sim <<EOF
+a = 9
+x = 2
+[3] = 9
+run
+a
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0x9 9
+0x1 1
+0x0 0
+0x3 3
+0x11 17
+EOF
+
+asm "CMP [expr],expr ([expr] > expr)" <<EOF
+	cmp	[5],200
+	halt
+EOF
+sim <<EOF
+[5] = 201
+run
+[5]
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0xc9 201
+0x0 0
+0x0 0
+0x4 4
+0x11 17
+EOF
+
+asm "CMP [X+expr],expr ([expr] > expr)" <<EOF
+	cmp	[x+5],100
+	halt
+EOF
+sim <<EOF
+x = 8
+[13] = 255
+run
+[13]
+CPU_F_Zero
+CPU_F_Carry
+.
+@
+EOF
+expect <<EOF
+HALT
+0xff 255
+0x0 0
+0x0 0
+0x4 4
+0x12 18
+EOF

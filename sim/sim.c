@@ -281,6 +281,7 @@ int main(int argc,char **argv)
 	yyin = find_file(script,".",NULL);
 	next_file = NULL;
     }
+    interactive = isatty(fileno(yyin));
     if (isatty(fileno(next_file ? next_file : yyin)))
 	handle_sigint(sigint_handler);
     using_history();

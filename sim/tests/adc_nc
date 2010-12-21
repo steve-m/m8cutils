@@ -1,3 +1,4 @@
+#!/bin/sh
 . Common
 
 asm "ADC A,expr (carry not set)" <<EOF

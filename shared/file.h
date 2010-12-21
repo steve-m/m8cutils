@@ -13,8 +13,11 @@
 #include <sys/types.h>
 
 
-#define PROGRAM_SIZE	32768
+#ifndef BLOCK_SIZE
 #define BLOCK_SIZE	64
+#endif /*! BLOCK_SIZE */
+
+#define PROGRAM_SIZE	32768
 #define SECURITY_SIZE	(PROGRAM_SIZE/BLOCK_SIZE/4)
 #define PAD_BYTE	0
 

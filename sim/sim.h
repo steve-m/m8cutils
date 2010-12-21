@@ -16,12 +16,15 @@
 /* ----- Items for LEX and YACC -------------------------------------------- */
 
 
+extern FILE *yyin;
+extern FILE *next_file;
+extern int interactive;
+
 int yyparse(void);
 void yyrestart(FILE *file);
 void my_yyrestart(void);
 
-extern FILE *yyin;
-extern FILE *next_file;
+void exit_if_script(int status);
 
 
 /* ----- Regular stuff ----------------------------------------------------- */
