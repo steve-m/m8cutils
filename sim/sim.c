@@ -222,7 +222,7 @@ int main(int argc,char **argv)
 		quiet = 1;
 		break;
 	    case 'V':
-		printf("m8csim from m8cutils version %d\n",VERSION);
+		printf("m8csim from m8cutils version %s\n",VERSION);
 		exit(0);
 	    default:
 		if (!prog_option(c,optarg))

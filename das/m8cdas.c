@@ -79,7 +79,7 @@ int main(int argc,char **argv)
 		timing = 1;
 		break;
 	    case 'V':
-		printf("m8cdas from m8cutils version %d\n",VERSION);
+		printf("m8cdas from m8cutils version %s\n",VERSION);
 		exit(0);
 	    default:
 		usage(*argv);

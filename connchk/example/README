@@ -1,0 +1,208 @@
+Connection checker usage examples
+=================================
+
+The examples in this directory show how connchk detects various external
+components. The basis configuration is a chip with two ports, e.g., a
+CY8C24223A. We connect the components between P0[5] and P0[7], which are
+conveniently located in the upper left edge of the example chip.
+
+
+The bare chip
+-------------
+
+First, we test the bare chip. Let's assume we use a "wadsp" programmer
+to talk ISSP with the chip:
+
+  % connchk -d wadsp bare.env
+  bare.env:8: warning: removing P1[0] and P1[1]
+
+The warning just informs us that P1[0] and P1[1] are reserved for ISSP,
+and have been excluded from testing. To get rid of this warning, one
+could change the "P1" in bare.env to "P1[7:2]".
+
+A progress indicator appears briefly, and there is no other output.
+This means that connchk has not found any problems. If you prefer
+slightly more verbose output, add the option -v:
+
+  % connchk -d wadsp -v bare.env 
+  example/bare.env:8: warning: removing undriven Z
+  example/bare.env:8: warning: removing P1[0] and P1[1]
+  chip identified as CY8C24223 (0x0013), revision (AX) 0x1112
+  14 pins, 58 patterns, 812 tests.
+  Connection check passed.
+
+The first warning informs us that a case where the allowed drive and
+the external configuration were both "Z" (yielding unknown behaviour)
+has been removed. It's usually convenient to just leave such things
+in the configuration, and connchk will take care of them anyway.
+
+Finally, we are informed that connchk has tested 14 pins, that it has
+tried 58 different configurations, and that it has made 812 single-bit
+verifications.
+
+
+P0[5] and P0[7] shorted
+-----------------------
+
+Now let's try something more interesting. We short P0[5] and P0[7].
+Running the same test again, we get
+
+  % connchk -d wadsp bare.env
+  -----v-- ..------  P0[5]
+  P[0]     P[1]     
+  01234567 01234567 
+
+  11111011 ZZ111111
+  RRRRRRRR   RRRRRR
+       ^
+  P0[5]: expected 0, got 1
+
+  Port    PRTxDM2  PRTxDM1  PRTxDM0  PRTxDR
+          01234567 01234567 01234567 01234567
+  0       00000000 11111011 11111011 11111111
+  1       11000000 11111111 00111111 00111111
+
+This tells us that, while exercising P0[5], connchk noticed a problem.
+The upper part of the report shows what connchk has set up, while the
+lower part shows a register dump obtained from the chip. It's normally
+not necessary to wade through this, but it can be useful to clear some
+doubts.
+
+Now we know that P0[5] has a problem, but we don't quite know with
+whom. The option -a lets connchk proceed after detecting the first
+problem, and we eventually see a report that looks like this:
+
+  
+  % connchk -d wadsp -a bare.env
+...
+  -------^ ..------  P0[7]
+  P[0]     P[1]     
+  01234567 01234567 
+  
+  00000001 ZZ000000
+  RRRRRRR    RRRRRR
+       ^
+  P0[5]: expected 0, got 1
+  
+  Port    PRTxDM2  PRTxDM1  PRTxDM0  PRTxDR
+          01234567 01234567 01234567 01234567
+  0       00000000 00000000 00000001 00000101
+  1       11000000 11000000 00000000 00000000
+
+This one shows that P0[5] started acting up while exercising P0[7].
+A strong indication that P0[7] is indeed the culprit.
+
+Note that -a can produce an unpleasantly large amount of output. A more
+convenient analysis mode is described below.
+
+
+Including the short in the environment
+--------------------------------------
+
+If the connection between P0[5] to P0[7] is no accident, we can
+update the description of the environment accordingly. Unfortunately,
+something like
+
+  P0[5,7] allow Z, 0R, 1R external Z, 0R, 1R
+
+doesn't have the desired effect, because it doesn't tell connchk
+under what circumstances the pin is driven with the respective
+signal. Therefore, connchk can only conclude that there is now to
+tell what reading these pins may yields, and thus excludes them
+from testing.
+
+The correct solution is a bit more complex, as shown in short.env.
+For thorough testing, we have to list all possible combinations of
+input/output and high/low. Since connchk processes its input with
+CPP, we can also use macros to express the structure more clearly
+(and to avoid typos), as shown in examples/short2.env
+
+After removing the short, we can also test that short.env detects
+its absence.
+
+
+Using a diode instead
+---------------------
+
+We can now move to more interesting components, e.g., a diode. P0[7]
+shall be the anode, P0[5] the cathode. Neither bare.env nor short.env
+are pleased with the diode, which is of course precisely what is
+supposed to happen. They also detect the diode if it is reversed.
+
+diode.env shows how the diode can be modeled. This configuration is
+a bit simpler than the one for the short, because we only have to
+consider the direction P0[7] to P5[0].
+
+We can see that diode.env detects an absent, shorted, or reversed
+diode.
+
+connchk can produce a graphical overview of the results of its testing.
+This is done with the option -m, e.g., if we insert the diode, we get
+
+  % connchk -d wadsp -m bare.env
+...
+  Foreground = 0, background = 1:
+  FG/BG  P0[0]    P1[0]
+         01234567 01234567
+  (base) -------- ..------
+...
+  P0[4]  -------- ..------
+  P0[5]  -----*-- ..------
+  P0[6]  -------- ..------
+...
+  
+  Foreground = 1, background = 0:
+  FG/BG  P0[0]    P1[0]
+         01234567 01234567
+  (base) -------- ..------
+...
+  P0[6]  -------- ..------
+  P0[7]  -----*-- ..------
+  P1[2]  -------- ..------
+...
+
+"." marks pins excluded in the configuration, "-" means that this
+combination of pins was tested at least once, and "*" marks places
+where an inconsistency was detected. There could also be question marks,
+which indicate tests that were not performed, either because already
+setting up the context for this test failed, or because this combination
+of pins is never active at the same time.
+
+The first table shows the results when driving all pins to a weak "1",
+and then setting one pin at a time to first a weak, then a strong "0".
+As we can see, P0[5] fails this test. Since all other pins are "1",
+P0[7] cannot be identified as its partner in crime at this point.
+
+The second table swaps "0" and "1". This time, the unexpected diode is
+revealed when changing P0[7], so we get a clear indication.
+
+"(base)" shows the results of setting up the context, before walking
+through the pins. The base test can fail if there is a short to a
+supply voltage or if an external component drives the pin.
+
+The base test can also fail if the environment limits the settings for
+a pin to a value that is opposed to the base value, and there is an
+inconsistency. For example, in diode.env, we have one configuration
+where the only allowed value for P0[7] is "1". Thus, when setting up
+the weak "0" background, this one still has to be "1", and consequently
+makes P0[5] (set to "0R") read back "1" instead of the expected "0".
+
+
+Using resistors
+---------------
+
+Finally, we move to a slightly trickier component, the resistor.
+Resistors can be hard to detect, because, during testing, they work
+against some internal pull-up or pull-down, and the resulting
+voltage may or may not clear the respective detection threshold.
+
+For example, a 1 kOhm resistor acts much like a short. Worse yet,
+a 10 kOhm resistor even confuses diode.env.
+
+resistor.env shows an environment that accepts both 1 kOhm and
+10 kOhm resistors. It still detects a short, a diode, and, if we're
+lucky, also the absence of a resistor.
+
+The environment is similar to that in short.env, but to add a bit of
+diversity, the alternatives have been nested. This is equivalent to
+the "flat" version in short.env.

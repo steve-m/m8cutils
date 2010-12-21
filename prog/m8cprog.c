@@ -131,7 +131,7 @@ int main(int argc,char **argv)
 		op_write = 1;
 		break;
 	    case 'V':
-		printf("m8cprog from m8cutils version %d\n",VERSION);
+		printf("m8cprog from m8cutils version %s\n",VERSION);
 		exit(0);
 	    case 'z':
 		zero++;

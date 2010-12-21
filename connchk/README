@@ -1,0 +1,299 @@
+connchk - Connection checker
+============================
+
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+
+Overview
+--------
+
+The connection checker takes a description of the immediate environment
+of the chip, and then performs probes through ISSP to verify that the
+pins indeed behave as expected.
+
+The main purpose of connchk is to detect shorts between pins. connchk
+can only test static properties of the system, i.e., properties that
+are not affected by past changes of the microcontroller's pins.
+
+m8csim can test dynamic properties, but it lacks connchk's capability to
+automatically generate tests based on a description of the system.
+
+Some usage examples can be found in the directory example/
+
+
+Usage
+-----
+
+connchk reads the environment description from the file specified on the
+command line. If no file is specified or if a file's name is "-", it reads
+from standard input. The file is passed through CPP, and the CPP options
+-I, -D, and -U can be used with their usual semantics.
+
+connchk normally displays a progress indicator, which can be disabled with
+the option -q. Note that a short delay is inserted for each pin, so that
+the progress indication looks nicer.
+
+Besides that, connchk is normally silent if no problems are encountered.
+Verbose operation, can be enabled with the option -v. The level of
+verbosity can be increased by repeating this option.
+
+connchk normally stops after finding the first inconsistency. If the
+option -a is set, it proceeds, and reports as many problems as it finds.
+For a graphical overview, a set of maps showing the tests performed and
+their outcome can be produced with the option -m.
+
+There is also a special dry-run mode used for testing and debugging. In
+this mode, connchk does not communicate with the target (thus, no
+programmer must be present), and prints the configurations it would set
+up and test instead.
+
+
+Environment basics
+------------------
+
+connchk needs the following information about the chip's environment:
+
+- the signals the chip is allowed to output
+- the external circuits connected to the chip
+
+For example, if raising a pin to "1" would cause unwanted activation of
+some other part of the circuit, one would have to exclude "1" (and
+possibly also resistive "1") for this pin.
+
+As another example, if a pin is directly connected to ground, it must not
+be driven as "1", but it could still be driven as resistive "1".
+
+The environment description consists of entries that specify a set of
+pins, which settings are allowed for them, and that signals may be
+applied to the pin from the outside.
+
+The set of pins can take any of the following forms:
+
+P0	all the pins of port 0
+P0, P1	a list of pins (in this case, of entire ports)
+P1[2]	a single pin
+P2[3,4]	a list of pins from the same port
+P1[7:5] a group of consecutive pins from the same port
+
+The allowed settings are specified with the keyword ALLOW (which is
+case-insensitive), followed by the comma-separated list of setting,
+e.g.:
+
+allow Z, 0R, 1R, 0, 1
+allow Z, 0R, 0
+
+Possible settings are Z, 0R, 1R, 0, and 1. The "Z" and the "R" are
+case-insensitive.
+
+Finally, the external circuit is described by specifying the
+corresponding setting(s) of an imaginary pin that would face the
+pin being described. For example:
+
+external Z	// an input or unconnected
+external 0	// a direct connection to ground
+external 0, 1R	// an open-collector output, with a pull-up
+
+For example, a bare CY8C21323 without external circuits could be
+described as follows:
+
+P0, P1 allow Z, 0R, 1R, 0, 1 external Z
+
+connchk automatically removes the pins used for ISSP (P1[0] and P1[1]),
+and it also excludes configurations that produce no condition that can
+be tested, e.g.
+
+allow Z external Z
+allow 0R external 1R
+
+Conflicts like "allow 1 external 0" yield a fatal error.
+
+
+Advanced environments
+---------------------
+
+In general, connchk can do better testing if many settings are allowed,
+but only few choices exist for what the external circuit can omit.
+
+Note that the description only needs to contain conditions that can occur
+during the test. For example, if the circuit contains a button that
+connects to ground, one can still use
+
+allow Z, 0R, 1R, 0, 1 external Z
+
+if the button will not be pressed during the test.
+
+If a circuit contains various modes of operation, possibly depending on
+the setting of some pins, the environment can be split into parts
+controlled by #ifdefs, which set the respective values. E.g., if P0[1]
+and P0[3] are connected to each other, the "generic" description
+
+P0[1] allow Z, 0R, 1R external Z, 0R, 1R
+P0[3] allow Z, 0R, 1R external Z, 0R, 1R
+
+does not produce any tests.
+
+However, if we choose a specific configuration, we can do some meaningful
+tests. For example, the following could be used to check the effect of
+P0[1] on P0[3]:
+
+#ifdef SET
+P0[1] allow 0 external Z, 0R, 1R, 0
+P0[3] allow Z, 0R, 1R, 0 external 0
+#else
+P0[1] allow 1 external Z, 0R, 1R, 1
+P0[3] allow Z, 0R, 1R, 1 external 1
+#endif
+
+But connchk can do even better than this: mutually exclusive
+configurations ("alternatives") can be specified by putting them into
+curly braces and separating by vertical bars, i.e.:
+
+{
+    P0[1] allow 0 external Z, 0R, 1R, 0
+    P0[3] allow Z, 0R, 1R, 0 external 0
+|
+    P0[1] allow 1 external Z, 0R, 1R, 1
+    P0[3] allow Z, 0R, 1R, 1 external 1
+}
+
+connchk will now automatically iterate through all possible configurations,
+and perform the corresponding tests. There can be any number of such
+alternatives, each can contain any number of choices, and there can also be
+further alternatives inside a choice.
+
+Note that the number of possible setups increases roughly exponentially
+with the number of alternatives. If connchk gets too slow, the
+configuration should be split into parts that test only a part of the
+circuit each.
+
+Hint: since the list of all possible settings is used quite often, it is
+a good idea to
+
+#define ANY Z, 0R, 1R, 0, 1
+
+and then simply write
+
+allow ANY external Z
+
+
+The tests
+---------
+
+The tests consist of setting all pins to their weakest "0" or "1" setting,
+then setting one pin to the strongest opposite value, and checking that
+reading all ports yields the expected values. This is performed for all
+pins, for both "0" and "1".
+
+Example:
+
+Given the environment
+P0, P1 allow Z, 0R, 1R, 0, 1 external Z
+
+connchk would first set all pins to resistive "0", check that they indeed
+read back as "0", then walk through them, setting one to strong "1", check
+that this pin reads back as "1" and all others read back as "0", etc.
+
+When done, it repeats the same procedure with all pins set to resistive
+"1", and walking though the pins with strong "0".
+
+Furthermore, connchk regularly verifies that it can still communicate with
+the target. This way, it can detect shorts affecting the ISSP pins.
+
+
+Problem reports
+---------------
+
+A problem report may look as follows:
+
+  -------^ ..------  P0[7]
+  P[0]     P[1]     
+  01234567 01234567 
+
+  00000001 ZZ000000
+  RRRRRRR    RRRRRR
+     ^
+  P0[3]: expected 0, got 1
+
+  Port    PRTxDM2  PRTxDM1  PRTxDM0  PRTxDR
+          01234567 01234567 01234567 01234567
+  0       00000000 00000000 00000001 00010001
+  1       11000000 11000000 00000000 00000000
+
+The first line indicates the configuration being tested, i.e., P0[7] was
+set to as strong as possible "1" (indicated by the upward-facing "^"),
+and all others were set to as weak as possible "0" (indicated by the
+neutral "-"). Pins not included in the test are shown as ".".
+
+The following lines show the nominal configuration of the ports, i.e.,
+P1[0] and P1[1] are in their reset state (Z), P0[7] is set to strong "1",
+and all other pins are set to resistive "0".
+
+Below is a description of the inconsistency connchk has detected. In this
+example, it was caused by a diode from P0[7] to P0[3].
+
+Finally, there is a dump of the actual register values obtained from the
+chip.
+
+A short between P1[1] and P1[3], causing loss of communication, would
+look like this:
+
+  -------- ..-^----  P1[3]
+  P[0]     P[1]     
+  01234567 01234567 
+
+  00000000 ZZ010000
+  RRRRRRRR   R RRRR
+  lost communication with the target
+
+When connchk exits, it tries to reset the chip, such that any conflicting
+settings are cleared.
+
+
+Maps
+----
+
+The -m option produces a map of the tests performed and their results.
+There is one map for a background of "0" (i.e., all pins are set to a
+value that should read back as "0", or, if this isn't possible, to
+their lowest allowed setting), and a foreground of "1" (one pin at a
+time is set to a value that should read back as "1"), and one map for
+"0" and "1" swapped. A map looks as follows:
+
+  Foreground = 0, background = 1:
+  FG/BG  P0[0]    P1[0]
+         01234567 01234567
+  (base) -------- ..------
+...
+  P0[4]  -------- ..------
+  P0[5]  -----*-- ..------
+  P0[6]  -------- ..------
+...
+
+The first row ("(base)") shows the result of setting up the background,
+before walking the pins. The following rows show what happens when the
+respective pin becomes the foreground pin.
+
+There are the following indications:
+
+  .  this pin was not included in the configuration
+  -  at least one test has been performed, and no errors were found
+  *  an inconsistency has been detected
+  ?  this combination of pins was not tested, either because the
+     combination was not allowed by the environment definition, or
+     because already setting up the context for this test failed
+
+For an example analysis of a map, see example/README.
+
+
+Known bugs and restrictions
+---------------------------
+
+- parse errors are usually reported one line off
+- this README isn't a pleasant read
+- the semantics of the "defined" and "selected" bit sets are confusing
+- out.c shouldn't hard-code stderr
+- there are no regression tests yet

@@ -60,6 +60,9 @@ This collection consists of the following parts:
   shared/
     Code shared among programs of this project
 
+  connchk/
+    Static ISSP-based connection checker (experimental)
+
   misc/
     Miscellaneous utilities and example programs
 

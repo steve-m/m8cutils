@@ -15,7 +15,7 @@ SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations \
                   -Wno-strict-prototypes
 SLOPPY_LOCALS=-Wno-unused
 CFLAGS_COMMON=-g -I../shared -I../regs -I../libfdr \
-	      -DVERSION=`cat ../VERSION` \
+	      -DVERSION=\"`cat ../VERSION`\" \
 	      -DINSTALL_PREFIX=\"$(INSTALL_PREFIX)\"
 ifeq ($(TEST32),1)
 # 32 bit platforms only ! glibc required !

@@ -184,7 +184,7 @@ int main(int argc,char **argv)
 		cpp_options++;
 		break;
 	    case 'V':
-		printf("m8cas from m8cutils version %d\n",VERSION);
+		printf("m8cas from m8cutils version %s\n",VERSION);
 		exit(0);
 	    default:
 		usage(*argv);

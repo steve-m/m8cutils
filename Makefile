@@ -14,9 +14,9 @@ DIRS=shared regs libfdr das as
 NONBUILD_DIRS=
 
 ifeq ($(BUILD_LIBPROG),1)
-    DIRS += prog
+    DIRS += prog connchk
 else
-    NONBUILD_DIRS += prog
+    NONBUILD_DIRS += prog connchk
 endif
 
 DIRS += sim misc

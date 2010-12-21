@@ -1,3 +1,9 @@
+Version 21 (xx-DEC-2006)
+----------
+
+- connchk/: new static connection checker, based on ISSP
+- Common.make: VERSION is now a string, not a number
+
 Version 20 (5-DEC-2006)
 ----------
 
