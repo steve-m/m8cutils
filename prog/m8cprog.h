@@ -10,8 +10,9 @@
 #define M8CPROG_H
 
 
-#define OUTPUT_WIDTH 79
+#define DEFAULT_OUTPUT_WIDTH 79
 
 extern int verbose;
+extern int output_width;
 
 #endif /* !M8CPROG_H */

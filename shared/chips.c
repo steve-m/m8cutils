@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "m8cprog.h"
-#include "vectors.h"
 #include "chips.h"
 
 
@@ -47,13 +45,13 @@ const struct chip chips[] = {
 };
 
 
-void chip_list(FILE *file)
+void chip_list(FILE *file,int width)
 {
     const struct chip *c;
     int col = 0;
 
     for (c = chips; c->name; c++) {
-	if (strlen(c->name)+col+10 > OUTPUT_WIDTH) {
+	if (strlen(c->name)+col+10 > width) {
 	    putc('\n',file);
 	    col = 0;
 	}

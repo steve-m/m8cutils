@@ -5,6 +5,7 @@ U1		PIC16LF88, or similar (see below)
 Q1, Q2		Generic NPN transistor, e.g. BC337
 R1, R2		1k, any tolerance
 R3, R4		10k, any tolerance
+R5, R6, R7	100 Ohm, any tolerance
 CONN1		100 mil header, 5 pins
 CONN2		DB9 connector, female
 

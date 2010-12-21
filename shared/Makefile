@@ -9,8 +9,8 @@ include ../Common.make
 
 
 FILES=README Makefile \
-      file.h file.c disasm.h disasm.c
-OBJS=file.o disasm.o
+      file.h file.c disasm.h disasm.c chips.h chips.c
+OBJS=file.o disasm.o chips.o
 
 
 .PHONY:		all dep depend tests filelist clean spotless
@@ -19,7 +19,7 @@ OBJS=file.o disasm.o
 all:		libm8cutils.a
 
 libm8cutils.a: $(OBJS)
-		$(AR) crv $@ $^
+		$(AR) cr$(AR_v) $@ $^
 
 # ----- Dependencies ----------------------------------------------------------
 

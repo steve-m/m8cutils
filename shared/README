@@ -14,13 +14,15 @@ one programm in this project:
 - file: reading and writing of program data in binary, "ROM", and
   Intel HEX format
 - disasm: (non-symbolic) single-instruction disassembler
+- chips: chip characteristics database
 
 Note: there are regression tests here. The respective tests are
 distributed as follows:
 
-- file input: ../dasm (partially, need to check error handling)
+- file input: ../das (partially, need to check error handling)
 - file output: none yet
-- disassembly: ../dasm
+- disassembly: ../das
+- chips: none yet
 
 
 File formats

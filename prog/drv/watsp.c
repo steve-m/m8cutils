@@ -27,11 +27,11 @@
  * Programmer connections:
  *
  *              Voltage
- *              +       -
- * DTR  out     Active  Reset           reset
- * CTS  in      !SDATA  SDATA (0V)      data
- * RTS  out     SDATA   !SDATA/Z        data
- * TD   out     SCLK    !SCLK           clock
+ *              +        -
+ * DTR  out     Active   Reset     reset
+ * CTS  in      !SDATA   SDATA     data
+ * RTS  out     !SDATA/Z SDATA     data
+ * TD   out     !SCLK    SCLK      clock
  */
 
 /*
@@ -39,8 +39,8 @@
  */
 
 #define XRES(on)	tty_dtr(!on)
-#define SDATA(on)	tty_rts(on)
-#define SCLK(on)	tty_td(on)
+#define SDATA(on)	tty_rts(!on)
+#define SCLK(on)	tty_td(!on)
 #define	SDATA_IN()	(!tty_cts())
 #define Z()		SDATA(0)
 
@@ -53,6 +53,9 @@ static int watsp_open(const char *dev,int voltage)
 {
     if (!voltage)
 	return 0;
+    if (voltage == 3)
+	fprintf(stderr,
+	  "warning: 3V operation is not reliable. Trying anyway ...\n");
     fd = tty_open_raw(dev,B19200);
     
 #if 0
@@ -90,7 +93,6 @@ static void watsp_send_bit(int bit)
     }
     SDATA(bit);
     SCLK(1);
-    SCLK(1);
     SCLK(0);
 }
 
@@ -98,8 +100,6 @@ static void watsp_send_bit(int bit)
 static void watsp_send_z(void)
 {
     Z();
-usleep(10);
-    SCLK(1);
     SCLK(1);
     SCLK(0);
 }
@@ -107,7 +107,6 @@ usleep(10);
 
 static int watsp_read_bit(void)
 {
-    usleep(20);
     return SDATA_IN();
 }
 

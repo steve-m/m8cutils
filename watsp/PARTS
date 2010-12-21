@@ -1,0 +1,15 @@
+Components
+==========
+
+U1		74HC04 or similar(see below)
+D1		generic small signal diode, e.g., 1N4148
+C1		100 nF, ceramic, any tolerance
+R1, R2, R3	10k, any tolerance
+R4, R5, R7	100 Ohm, any tolerance
+R6		1k, any tolerance
+CONN1		DB9 connector, female
+CONN2		100 mil header, 5 pins
+
+If only 5V operation is desired (which is all that works at the
+moment anyway), a 74HCT04 can be used as well. A 74HC14 may yield
+better noise tolerance.

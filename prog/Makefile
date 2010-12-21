@@ -10,13 +10,13 @@ include ../Common.make
 
 DRIVERS=waspic watsp
 FILES=README Makefile \
-      m8cprog.h m8cprog.c cy8c2regs.h vectors.h chips.h chips.c \
+      m8cprog.h m8cprog.c cy8c2regs.h vectors.h \
       tty.h tty.c prog.h prog.c \
       ref/Makefile ref/main.c \
       ref/vectorconv.pl ref/vdecode.pl ref/mapconv.pl \
       ref/an2026a.txt ref/an2026a.map ref/an2026b.txt ref/an2026b.map \
       $(DRIVERS:%=drv/%.c)
-OBJS=m8cprog.o chips.o tty.o prog.o $(DRIVERS:%=drv/%.o)
+OBJS=m8cprog.o tty.o prog.o $(DRIVERS:%=drv/%.o)
 
 CFLAGS += -I$(shell pwd) \
           -DPROGRAMMERS_DECL="$(DRIVERS:%=extern struct prog_ops %_ops;)" \

@@ -1,3 +1,17 @@
+Version 5 (22-FEB-2006)
+--------
+
+- m8cprog: verified that READ_REG(REG_CPU_X) indeed reads CPU register X
+- "make" now prints terse message (to obtain the full command text, set V=1)
+- waspic/waspic.asm: the first vector now ends in 000 instead of 111 (which was
+  incorrect, but didn't seem to have any effect)
+- waspic/: added protective resistors to SDATA, SCLK, and XRES
+- watsp/: new simple bit-banging programmer for the serial port
+- m8cprog: terminal width is now determined at run-time
+- m8cprog/vectors.h: moved chip IDs to chips.h
+- m8cprog/chips.[ch]: moved to shared/
+- das/tests/input: a reference to m8cdasm escaped the great renaming
+
 Version 4 (20-FEB-2006)
 --------
 

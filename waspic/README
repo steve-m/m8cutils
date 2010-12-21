@@ -9,13 +9,14 @@ license is included in the file ../COPYING.GPLv2.
 
 The files containing hardware schematics or layouts in this directory
 are distributed under the terms of an augmented version of the GNU
-General Public License (GPL), which is described in the file COPYING.
+General Public License (GPL), which is described in the file
+../COPYING.HW
 The original GPL, which is included by reference, is in the file
 ../COPYING.GPLv2.
 
 
 This is a very basic serial programmer for CY8C2xxxx chips. The
-control software for it is in the directory ../cy8c2prog
+control software for it is in the directory ../prog
 
 This programmer consists of a PIC that receives one vector at a time
 over the serial port. Vectors are encoded in one, two, or three
@@ -41,8 +42,7 @@ The circuit
 
 The example circuit is very basic. It doesn't support power-on mode,
 requires the target to supply power, and doesn't sense target
-voltage. For simplicity, I've omitted protective resistors between
-the PIC and the target for now.
+voltage.
 
 The schematic was produced with gschem from the gEDA project, see
 http://www.geda.seul.org/
@@ -51,7 +51,7 @@ http://www.geda.seul.org/
 The layout
 ----------
 
-That just uses the non-SMT components I had at hand. All of them are
+It just uses the non-SMT components I had at hand. All of them are
 extremely common, with the possible exception of the PIC. If using a
 different type of PIC, you may have to change the layout to handle
 different pin arrangements. 

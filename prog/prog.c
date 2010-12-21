@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "m8cprog.h"
 #include "vectors.h"
@@ -28,6 +29,38 @@ struct prog_ops *programmers[] = {
 
 static struct prog_ops *prog = NULL;
 static int initial = 0;
+static struct timeval t0;
+
+
+void start_time(void)
+{
+    if (gettimeofday(&t0,NULL) < 0) {
+	perror("gettimeofday");
+	exit(1);
+    }
+}
+
+
+/*
+ * Return up to one second. Delays > 1s are indicated as 1s.
+ */
+
+int32_t delta_time_us(void)
+{
+    struct timeval t1;
+
+    if (gettimeofday(&t1,NULL) < 0) {
+	perror("gettimeofday");
+	exit(1);
+    }
+    t1.tv_sec -= t0.tv_sec;
+    t1.tv_usec -= t0.tv_usec;
+    if (t1.tv_usec < 0) {
+	t1.tv_sec--;
+	t1.tv_usec += 1000000;
+    }
+    return t1.tv_sec ? 1000000 : t1.tv_usec;
+}
 
 
 void prog_list(FILE *file)
@@ -36,7 +69,7 @@ void prog_list(FILE *file)
     int col = 0;
 
     for (walk = programmers; *walk ; walk++) {
-	if (strlen((*walk)->name)+col+2 > OUTPUT_WIDTH) {
+	if (strlen((*walk)->name)+col+2 > output_width) {
 	    putc('\n',file);
 	    col = 0;
 	}
@@ -73,6 +106,7 @@ int prog_open(const char *dev,const char *programmer,int voltage)
 
 uint8_t prog_vector(uint32_t v)
 {
+    static int first = 1;
     int value = 0;
     int i;
 
@@ -105,6 +139,7 @@ uint8_t prog_vector(uint32_t v)
 	    prog->send_bit((v >> i) & 1);
 	for (i = 0; i != 3; i++)
 	    prog->send_bit(1);
+	first = 0;
     }
     else {
 	for (i = 18; i >= 8; i--)
@@ -122,8 +157,33 @@ uint8_t prog_vector(uint32_t v)
     }
     if (IS_SSC(v)) {
 	prog->send_z();
-	usleep(100);
-	while (prog->read_bit());
+	start_time();
+	while (!prog->read_bit())
+	    if (delta_time_us() > 100)
+		goto ready;
+	/*
+	 * Don't try to "simplify" this loop. The way it's done makes sure that
+	 * we don't race between timeout and external event. If we were to take
+	 * the time sample _after_ reading from the port, a scheduling delay
+	 * added after doing the I/O could make us time out even though the
+	 * signal just arrived.
+	 *
+	 * The loop above is correct, though: if we've waited long enough, it's
+	 * always safe to proceed. (We may still have some other problem, but
+	 * that would be some catastrophic failure we don't try to handle
+	 * here.)
+	 */
+	while (1) {
+	    int timeout = delta_time_us() > 100000; /* 100 ms */
+
+	    if (!prog->read_bit())
+		break;
+	    if (timeout) {
+		fprintf(stderr,"timed out in WAIT-AND-POLL\n");
+		exit(1);
+	    }
+	}
+ready:
 	for (i = 0; i != 40; i++)
 	    prog->send_bit(0);
     }

@@ -21,7 +21,7 @@ CFLAGS=-g -O $(CFLAGS_WARN)
 all:		libfdr.a
 
 libfdr.a:	$(OBJS)
-		$(AR) crv $@ $^
+		$(AR) cr$(AR_v) $@ $^
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -47,7 +47,7 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f $(OBJS) .depend
+		rm -f $(OBJS)
 
 spotless:	clean
-		rm -f libfdr.a
+		rm -f libfdr.a .depend

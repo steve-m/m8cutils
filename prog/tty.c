@@ -16,7 +16,6 @@
 #include <sys/select.h>
 #include <sys/ioctl.h>
 
-
 #include "m8cprog.h"
 #include "tty.h"
 

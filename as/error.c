@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "jrb.h"
 
 #include "util.h"

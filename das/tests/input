@@ -16,7 +16,7 @@ EOF
 expect "Read a ROM file (upper case)" <<EOF
 MOV A,[0xF8]
 EOF
-echo "51 F8" | m8cdasm -s
+echo "51 F8" | m8cdas -s
 
 expect "Read a ROM file (no whitespace)" <<EOF
 ADD SP,0x20

@@ -4,24 +4,24 @@ cy8c2utils "to do" list
 cy8c2prog
 ---------
 
-- don't set trailing 3 bits in first vector
 - support selection of reset vs. power-on mode
-- check bit-banging code
-- query terminal settings to determine terminal width (OUTPUT_WIDTH)
 - add real-time support and deadline measurements (for bit-banging)
 - generalize interface device support to USB, etc.
 - check that the Intel hex format is properly implemented
 - don't require voltage if we're reading and the target supplies power
 - add regression tests
-- validate the silicon revision procedure
 
 waspic
 ------
 
-- add protective resistors to SDATA, SCLK, and XRES
 - check the checksum in communication with the host
 - add a voltage reference and measure VDD
 - add possibility to provide power to the target
+
+watsp
+-----
+
+- try to make it work at 3V
 
 share/file
 ----------
@@ -33,6 +33,7 @@ m8cdas
 ------
 
 - regression tests need to check file input error handling
+- scrap this and do it in binutils instead
 
 m8cas
 -----
@@ -40,3 +41,4 @@ m8cas
 - tests: output formats
 - tests: extensions
 - tests: escape characters in string
+- scrap this and do it in binutils instead

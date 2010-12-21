@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "jrb.h"
 
 #include "util.h"

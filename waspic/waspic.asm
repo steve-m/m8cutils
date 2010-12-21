@@ -3,7 +3,7 @@
 ; WASPIC - Werner's slow PIC-based programmer
 ;
 ; Written 2006 by Werner Almesberger
-; Copyright 2006 by Werner Almesberger
+; Copyright 2006 Werner Almesberger
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -46,10 +46,11 @@ config	= config & _INTRC_IO
 
 
 	cblock	0x20
-byte0
+byte0				; messages are up to three bytes long
 byte1
 byte2
-vec
+vec				; eight bits of vector to send
+tail				; three bit to send as "tail" of writes
 tmp
 tmp2
 	endc
@@ -185,10 +186,13 @@ rx2w:
 	movlw	8
 	call	send
 
-	movlw	7		; send three ones
+	movf	tail,W		; send tail of vector
 	movwf	vec
 	movlw	3
 	call	send
+
+	movlw	7		; tail of writes is 111 after first vector
+	movwf	tail
 
 	in			; make SDATA an input
 
@@ -295,6 +299,7 @@ reset:
 	bsf	STATUS,RP0
 	bsf	SDATA
 	bcf	STATUS,RP0
+	clrf	tail
 	return
 
 ; receive one byte from the serial port

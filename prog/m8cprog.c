@@ -11,16 +11,20 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+
 #include "file.h"
+#include "chips.h"
 
 #include "m8cprog.h"
 #include "vectors.h"
-#include "chips.h"
 #include "tty.h"
 #include "prog.h"
 
 
 int verbose = 0;
+int output_width = DEFAULT_OUTPUT_WIDTH;
 
 static int quiet = 0;
 
@@ -31,7 +35,7 @@ static void progress(const char *label,int n,int end)
 
     if (quiet || verbose > 1)
 	return;
-    left = OUTPUT_WIDTH-strlen(label)-1;
+    left = output_width-strlen(label)-1;
     hash = left*((n+0.0)/end);
     fprintf(stderr,"\r%s ",label);
     for (i = 0; i != hash; i++)
@@ -42,7 +46,7 @@ static void progress(const char *label,int n,int end)
 static void progress_clear(void)
 {
     if (!quiet && verbose <= 1)
-	fprintf(stderr,"\r%*s\r",OUTPUT_WIDTH,"");
+	fprintf(stderr,"\r%*s\r",output_width,"");
 }
 
 
@@ -312,6 +316,24 @@ static void do_read(const struct chip *chip,int zero)
 }
 
 
+static void set_output_width(int fd)
+{
+    struct winsize winsz;
+
+    if (ioctl(fd,TIOCGWINSZ,&winsz) < 0) {
+	if (errno != ENOTTY) {
+	    perror("ioctl(TIOCGWINSZ)");
+	    exit(1);
+	}
+	quiet = 1;
+    }
+    else {
+	output_width =
+	  winsz.ws_col > 1 ? winsz.ws_col-1 : DEFAULT_OUTPUT_WIDTH;
+    }
+}
+
+
 static void usage(const char *name)
 {
     fprintf(stderr,
@@ -359,6 +381,8 @@ int main(int argc,char **argv)
     int op_erase = 0,op_compare = 0,op_read = 0,op_write = 0;
     int c;
 
+    set_output_width(2);
+
     env = getenv("M8CPROG_PORT");
     if (env)
 	port = env;
@@ -399,10 +423,11 @@ int main(int argc,char **argv)
 		hex = 1;
 		break;
 	    case 'l':
+		set_output_width(1);
 		printf("supported programmers:\n");
 		prog_list(stdout);
 		printf("\nsupported chips:\n");
-		chip_list(stdout);
+		chip_list(stdout,output_width);
 		exit(0);
 	    case 'p':
 		port = optarg;

@@ -28,8 +28,8 @@ libfdr/ (Red-black trees)
   The files in as/libfdr/ are distributed under the GNU Lesser General
   Public License. See the file libfdr/LICENSE for details.
 
-libfdr/Makefile and as/m8c.l have additional copyright holders. Please
-refer directly to the respective file for details.
+Common.make, libfdr/Makefile, and as/m8c.l have additional copyright
+holders. Please refer directly to the respective file for details.
 
 
 Overview
@@ -55,6 +55,10 @@ This collection consists of the following parts:
   waspic/
     A simple PIC-based programmer that communicates via RS-232C
 
+  watsp/
+    An even simpler bit-banging programmer that connects to the
+    RS-232C port
+
   shared/
     Code shared among programs of this project
 
@@ -72,6 +76,12 @@ There is no "make install" yet. The resulting executables are:
 - disassembler: dasm/m8cdas
 - programmer (host side): prog/m8cprog
 - programmer (firmware): waspic/waspic.hex
+
+By default, "make" output is terse, making it easy to see what is
+done, but now showing how. You can enable full output, e.g., to
+debug build problems, by putting V=1 on the command line when
+invoking "make", e.g.,
+% make V=1 all
 
 
 Testing

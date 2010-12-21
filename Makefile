@@ -7,7 +7,7 @@
 
 DIR=m8c
 NAME=m8cutils
-DIRS=shared libfdr das as prog waspic
+DIRS=shared libfdr das as prog waspic watsp
 
 SF_ACCOUNT=almesber@m8cutils.sourceforge.net
 SF_DIR=/home/groups/m/m8/m8cutils/htdocs         

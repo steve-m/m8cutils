@@ -54,6 +54,9 @@ extern struct prog_ops *programmers[];
 #define END_OF_VECTORS 0xffffffff
 
 
+void start_time(void);
+int32_t delta_time_us(void);
+
 void prog_list(FILE *file);
 int prog_open(const char *dev,const char *programmer,int voltage);
   /* warning: "dev" can be NULL */

@@ -1,0 +1,54 @@
+Werner's trivial serial programmer
+==================================
+
+Copyright 2006 Werner Almesberger
+
+The files containing hardware schematics or layouts in this directory
+are distributed under the terms of an augmented version of the GNU
+General Public License (GPL), which is described in the file
+../COPYING.HW
+The original GPL, which is included by reference, is in the file
+../COPYING.GPLv2.
+
+
+This is a very basic big-banging programmer for CY8C2xxxx chips. It
+connects to the serial port. At the moment, it only operates reliably
+at 5V. 
+
+The control software for it is in the directory ../prog
+
+
+The circuit
+-----------
+
+The example circuit is very basic. It doesn't support power-on mode,
+requires the target to supply power, and doesn't sense target
+voltage. Note that we run very fast signals over the serial port.
+Therefore, all cables should be kept as short as possible (i.e.,
+centimeters, not meters).
+
+If operating at 5V, a 74HC or 74HCT chip can be used. At 3V, 74HC
+is recommended, even though experiments show similar performance for
+74HCT. Communication is unreliable at 3V, and several attempts may
+be needed before programming is successful.
+
+The basic principle is to use the clamping diodes of the logic chip
+to bring the RS-232C signals within range. The 10k resistors limit
+the current through the clamping diodes. The logic chip also
+improves the speed of the signal edges.
+
+SDATA is bi-directional. Since we have no lines left to implement a
+proper tri-state output driver for it, we use a "wired or" with D1
+and a pull-down resistor.
+
+The schematic was produced with gschem from the gEDA project, see
+http://www.geda.seul.org/
+
+
+The layout
+----------
+
+It just uses the non-SMT components I had at hand. All of them are
+extremely common.
+
+The layout was produced with PCB, see http://pcb.sourceforge.net/
