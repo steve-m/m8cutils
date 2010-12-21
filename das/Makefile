@@ -12,7 +12,7 @@ TESTS=adc add and asl asr call cmp cpl dec halt inc index \
       jacc jc jmp jnc jnz jz lcall ljmp mov mvi nop or pop push \
       ret reti rlc romx rrc sub sbb swap ssc tst xor \
       exceed output input pc \
-      sym_rom sym_ram
+      sym_rom sym_ram sym_redef
 FILES=README Makefile \
       m8cdas.c \
       tests/Common $(TESTS:%=tests/%)

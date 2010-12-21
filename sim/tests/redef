@@ -1,0 +1,41 @@
+#!/bin/sh
+. Common
+
+asm "Print re-definable label (forwards)" <<EOF
+.1:	mov	a,0
+.1:	mov	a,0
+.1:	mov	a,0
+EOF
+sim <<EOF
+. = 2
+.1f
+EOF
+expect <<EOF
+0x4 4
+EOF
+
+asm "Print re-definable label (backwards, exact)" <<EOF
+.1:	mov	a,0
+.1:	mov	a,0
+.1:	mov	a,0
+EOF
+sim <<EOF
+. = 2
+.1b
+EOF
+expect <<EOF
+0x2 2
+EOF
+
+asm "Print re-definable label (backwards, plus one)" <<EOF
+.1:	mov	a,0
+.1:	mov	a,0
+.1:	mov	a,0
+EOF
+sim <<EOF
+. = 3
+.1b
+EOF
+expect <<EOF
+0x2 2
+EOF

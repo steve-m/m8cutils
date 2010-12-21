@@ -1,0 +1,36 @@
+#!/bin/sh
+. Common
+
+asm "Re-definable label: incremental update (backward reference)" -e <<EOF
+.0:	equ	1
+.0:	equ	.0b+2
+.0:	equ	.0b+4
+	db	.0b
+EOF
+expect <<EOF
+07
+EOF
+
+asm "Re-definable label: incremental update (forward reference)" -e <<EOF
+	db	.0f
+.0:	equ	.0f+16
+.0:	equ	.0f+4
+.0:	equ	1
+EOF
+expect <<EOF
+15
+EOF
+
+asm "Re-definable label: one-line loop (backward reference)" -e <<EOF
+.0:	jmp	.0b
+EOF
+expect <<EOF
+8F FF
+EOF
+
+asm_fail "Re-definable label: cannot reference itself" -e <<EOF
+.0:	equ	.0b
+EOF
+expect <<EOF
+<stdin>:1: no previous definition of ".0"
+EOF

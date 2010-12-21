@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <ctype.h>
 
 
 #define SYM_ATTR_ROM	0x0001
@@ -24,10 +25,24 @@
 #define SYM_ATTR_ANY	0x003f
 
 
+static inline int sym_is_redefinable(const char *name)
+{
+    return name[0] == '.' && isdigit(name[1]);
+}
+
+
 void sym_read_file(FILE *file);
 void sym_read_file_by_name(const char *name);
 
-const uint32_t *sym_by_name(const char *name,int attr_mask,int *attr);
+/*
+ * sym_by_name: "dir" specifies the direction relative to "pc":
+ * -1: backwards
+ *  0: return first match
+ *  1: forwards
+ */
+
+const uint32_t *sym_by_name(const char *name,int attr_mask,int *attr,
+  uint16_t pc,int dir);
 const char *sym_by_value(uint32_t value,int attr_mask,int *attr);
 
 #endif /* !SYMMAP_H */

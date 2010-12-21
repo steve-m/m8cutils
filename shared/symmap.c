@@ -48,6 +48,15 @@ static int comp_name(const void *a,const void *b)
 }
 
 
+static int comp_name_value(const void *a,const void *b)
+{
+    int res;
+
+    res = comp_name(a,b);
+    return res ? res : comp_value(a,b);
+}
+
+
 void sym_read_file(FILE *file)
 {
     char buf[MAX_LINE];
@@ -116,7 +125,7 @@ void sym_read_file(FILE *file)
     }
     for (i = 0; i != entries; i++)
 	by_name[i] = by_value[i] = map+i;
-    qsort(by_name,entries,sizeof(struct symbol *),comp_name);
+    qsort(by_name,entries,sizeof(struct symbol *),comp_name_value);
     qsort(by_value,entries,sizeof(struct symbol *),comp_value);
 }
 
@@ -142,7 +151,7 @@ void sym_read_file_by_name(const char *name)
 
 static const struct symbol *find_symbol(const struct symbol *key,
   const struct symbol **base,int (*comp)(const void *a,const void *b),
-  int attr_mask,int *attr)
+  int attr_mask,int *attr,uint16_t pc,int dir)
 {
     const struct symbol **hit;
     const struct symbol *found = NULL;
@@ -152,9 +161,13 @@ static const struct symbol *find_symbol(const struct symbol *key,
 	return NULL;
     while (hit != base && !(*comp)(&key,hit-1))
 	hit--;
-    while (hit != base+entries && !(*comp)(&key,hit)) {
+    for (; hit != base+entries && !(*comp)(&key,hit); hit++)
 	if ((*hit)->attr & attr_mask) {
-	    if (found) {
+	    if (dir == 1 && (*hit)->value <= pc)
+		continue;
+	    if (dir == -1 && (*hit)->value > pc)
+		break;
+	    if (found && dir != -1) {
 		if (attr)
 		    *attr |= SYM_ATTR_MORE;
 		return found;
@@ -162,20 +175,21 @@ static const struct symbol *find_symbol(const struct symbol *key,
 	    found = *hit;
 	    if (attr)
 		*attr = found->attr;
+	    if (dir == 1)
+		break;
 	}
-	hit++;
-    }
     return found;
 }
 
 
-const uint32_t *sym_by_name(const char *name,int attr_mask,int *attr)
+const uint32_t *sym_by_name(const char *name,int attr_mask,int *attr,
+  uint16_t pc,int dir)
 {
     struct symbol key;
     const struct symbol *symbol;
 
     key.name = name;
-    symbol = find_symbol(&key,by_name,comp_name,attr_mask,attr);
+    symbol = find_symbol(&key,by_name,comp_name,attr_mask,attr,pc,dir);
     return symbol ? &symbol->value : NULL;
 }
 
@@ -186,6 +200,6 @@ const char *sym_by_value(uint32_t value,int attr_mask,int *attr)
     const struct symbol *symbol;
 
     key.value = value;
-    symbol = find_symbol(&key,by_value,comp_value,attr_mask,attr);
-    return symbol ? symbol->name: NULL;
+    symbol = find_symbol(&key,by_value,comp_value,attr_mask,attr,0,0);
+    return symbol ? symbol->name : NULL;
 }

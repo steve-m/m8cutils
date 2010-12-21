@@ -1,3 +1,21 @@
+Version 22 (31-DEC-2006)
+----------
+
+- as/tests/{case,macro}: added tests for case-sensitivity and use of macro name
+- as/m8c.y: when using EQU, m8cas didn't complain about re-definable labels
+  being an extension (updated as/tests/redef_ext)
+- as/README: clarified use of re-definable labels in EQU
+- as/{m8c.y,id.[hc]}: a re-definable label set by EQU is not visible when
+  parsing the expression it is set to (as/tests/redef_same)
+- as/{m8c.y,id.[hc]}: EQU cleans up re-usable labels only after parsing the
+  expression (as/tests/reuse_same)
+- as/{id.h,id.c,op.c}: recursive definition were not detected and crashed m8cas
+  (as/tests/rec_def)
+- shared/{disasm.c,symmap.[hc]}: added support for re-definable labels
+- das/tests/sym_redef: added tests for redefinable labels
+- sim/: added support for re-definable labels (sim/tests/redef,
+  sim/tests/redef_err)
+
 Version 21 (18-DEC-2006)
 ----------
 

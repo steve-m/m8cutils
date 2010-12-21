@@ -12,8 +12,8 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "util.h"
 #include "symmap.h"
-
 #include "disasm.h"
 
 
@@ -94,20 +94,31 @@ const char m8c_bytes[256] = {
   ((pc+(ref)+((off) & 0x800 ? 0xf000 : 0)+(off)) & 0xffff)
 
 
-#define J12(m,r) P(2,#m "\t%s",label(PC12(((c[0] & 0xf) << 8) | c[1],r)));
-#define J16(m)	P(3,#m "\t%s",label(c[1] << 8 | c[2]));
+#define J12(m,r) P(2,#m "\t%s",label(pc,PC12(((c[0] & 0xf) << 8) | c[1],r)));
+#define J16(m)	P(3,#m "\t%s",label(pc,c[1] << 8 | c[2]));
 
 
-static const char *label(uint16_t addr)
+static const char *label(uint16_t pc,uint16_t addr)
 {
     static char buf[7];
+    char *tmp = NULL;
+    int tmp_size = 0,len;
     const char *sym;
 
     sym = sym_by_value(addr,SYM_ATTR_ROM,NULL);
-    if (sym)
+    if (!sym) {
+	sprintf(buf,"0x%04X",addr);
+	return buf;
+    }
+    if (!sym_is_redefinable(sym))
 	return sym;
-    sprintf(buf,"0x%04X",addr);
-    return buf;
+    len = strlen(sym);
+    if (len+1 >= tmp_size) {
+	tmp = realloc_type(tmp,len+2);
+	tmp_size = len+2;
+    }
+    sprintf(tmp,"%s%c",sym,addr <= pc ? 'b' : 'f');
+    return tmp;
 }
 
 
@@ -124,7 +135,7 @@ static const char *ram(uint8_t addr)
     const char *sym;
 
     sym = sym_by_value(addr,SYM_ATTR_RAM,NULL);
-    if (sym)
+    if (sym && !sym_is_redefinable(sym))
 	return sym;
     /*
      * We alternate between two buffers, so that we can handle up to two

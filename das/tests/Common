@@ -52,7 +52,7 @@ m8cdas_fail()
 
 asdas_sym()
 {
-    ../../as/m8cas -m _map | ../m8cdas -m _map -s "$@" >_out || {
+    ../../as/m8cas $M8CAS_OPTS -m _map | ../m8cdas -m _map -s "$@" >_out || {
 	echo FAILED "($SCRIPT)" 1>&2
 	rm -f _ref _out _map
 	exit 1

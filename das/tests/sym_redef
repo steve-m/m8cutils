@@ -1,0 +1,58 @@
+#!/bin/sh
+. Common
+
+expect "Re-definable symbol for ROM address, backwards" <<EOF
+.1:
+NOP
+.1:
+NOP
+JMP	.1b
+.1:
+NOP
+EOF
+M8CAS_OPTS=-e asdas_sym <<EOF
+.1:
+	nop
+.1:
+	nop
+	jmp	.1b
+.1:
+NOP
+EOF
+
+expect "Re-definable symbol for ROM address, forwards" <<EOF
+.1:
+NOP
+JMP	.1f
+.1:
+NOP
+.1:
+NOP
+EOF
+M8CAS_OPTS=-e asdas_sym <<EOF
+.1:
+	nop
+	jmp	.1f
+.1:
+	nop
+.1:
+NOP
+EOF
+
+expect "Re-definable symbol for RAM address (absolute)" <<EOF
+MOV	A,[0x00]
+EOF
+M8CAS_OPTS=-e asdas_sym <<EOF
+	mov	a,[.1f]
+	area	data(ram)
+.1:	blk	1
+EOF
+
+expect "Re-definable symbol for RAM address (relative)" <<EOF
+MOV	A,[X+0x00]	; .1
+EOF
+M8CAS_OPTS=-e asdas_sym <<EOF
+	mov	a,[x+.1f]
+	area	data(ram)
+.1:	blk	1
+EOF

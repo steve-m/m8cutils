@@ -258,8 +258,17 @@ uint32_t evaluate(const struct op *op)
 	    value = &op->u.id->alias->values;
 	else
 	    value = op->u2.value;
-	if (*value)
-	    return evaluate((*value)->value);
+	if (*value) {
+	    uint32_t res;
+
+	    if ((*value)->evaluating)
+		lerrorf(&(*value)->loc,"recursive definition of \"%s\"",
+		  op->u.id->name);
+	    (*value)->evaluating = 1;
+	    res = evaluate((*value)->value);
+	    (*value)->evaluating = 0;
+	    return res;
+	}
 	lerrorf(&op->loc,"undefined label \"%s\"",op->u.id->name);
     }
     return op->fn(evaluate(op->u.a),op->u2.b ? evaluate(op->u2.b) : 0);

@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+asm_fail "Recursive definition of label" <<EOF
+foo:	equ	bar
+bar:	equ	foo
+
+	db	foo
+EOF
+expect <<EOF
+<stdin>:4: recursive definition of "bar"
+EOF

@@ -219,6 +219,14 @@ $[0-9A-Fa-f]+			{ char *end;
 				  return NEW_ID; }
 \.[A-Za-z_][0-9A-Za-z_]*	{ yylval.id = id_new(yytext);
 				  return NEW_ID; }
+\.[0-9][0-9A-Za-z_]*[bB]	{ strchr(yytext,0)[-1] = 0;
+				  yylval.id = id_new(yytext);
+				  return BACKWARDS; }
+\.[0-9][0-9A-Za-z_]*[Ff]	{ strchr(yytext,0)[-1] = 0;
+				  yylval.id = id_new(yytext);
+				  return FORWARDS; }
+\.[0-9][0-9A-Za-z_]*		{ yyerror("reference to re-definable label "
+				    "must end with B or F"); }
 
 \"(\\[^\n\t]|[^\\"\n\t])*\"     { char *s;
 				  *strrchr(yytext,'"') = 0;

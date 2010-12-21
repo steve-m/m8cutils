@@ -194,7 +194,7 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 
 %token	<num>	NUMBER PORT
 %token	<str>	STRING
-%token	<id>	NEW_ID OLD_ID
+%token	<id>	NEW_ID OLD_ID BACKWARDS FORWARDS
 
 %type	<lval>	lvalue
 
@@ -818,19 +818,54 @@ primary_expression:
 	    const uint32_t *value;
 	    int attr;
 
-	    value = sym_by_name($1->name,SYM_ATTR_ANY,&attr);
+	    value = sym_by_name($1->name,SYM_ATTR_ANY,&attr,0,0);
 	    if (!value)
 		yyerrorf("no symbol \"%s\"",$1->name);
 	    if (attr & SYM_ATTR_MORE)
 		yyerrorf("symbol \"%s\" is not unique",$1->name);
 	    $$ = *value;
 	}
+    | BACKWARDS
+	{
+	    const uint32_t *value;
+
+	    value = sym_by_name($1->name,SYM_ATTR_ANY,NULL,pc,-1);
+	    if (!value)
+		yyerrorf("no symbol \"%s\"",$1->name);
+	    $$ = *value;
+	}
+    | FORWARDS
+	{
+	    const uint32_t *value;
+
+	    value = sym_by_name($1->name,SYM_ATTR_ANY,NULL,pc,1);
+	    if (!value)
+		yyerrorf("no symbol \"%s\"",$1->name);
+	    $$ = *value;
+	}
     | STRING
 	{
 	    const uint32_t *value;
-	    int attr;
+	    int dir = 0,attr;
 
-	    value = sym_by_name($1,SYM_ATTR_ANY,&attr);
+	    if (sym_is_redefinable($1)) {
+		char *last = strchr($1,0)-1;
+
+		switch (*last) {
+		    case 'b':
+		    case 'B':
+			dir = -1;
+			break;
+		    case 'f':
+		    case 'F':
+			dir = 1;
+			break;
+		    default:
+			yyerror("reference to re-definable label must end "
+			  "with B or F");
+		}
+	    }
+	    value = sym_by_name($1,SYM_ATTR_ANY,&attr,pc,dir);
 	    if (!value)
 		yyerrorf("no symbol \"%s\"",$1);
 	    if (attr & SYM_ATTR_MORE)

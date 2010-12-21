@@ -31,6 +31,7 @@ struct value {
     const struct area *area; /* area in which the label is defined (NULL if
 			   this is an assignment) */
     struct loc loc;	/* location of definition */
+    int evaluating;	/* catch recursive definitions */
     struct value *next;
 };
 
@@ -38,6 +39,7 @@ struct id {
     char *name;		/* jrb_insert_str doesn't want this to be "const" :-(*/
     struct value *values; /* NULL if none */
     struct value **prev_value; /* pointer to current value, or NULL */
+    struct value **pprev_value; /* one further back, for EQU */
     struct value **next_value; /* location where pointer to next value is put */
     int global;		/* label is global */
     int used;		/* label has been referenced (this is only good for
@@ -49,7 +51,12 @@ struct id {
 };
 
 
+extern int in_equ; /* re-definable labels are treated differently in EQU */
+
+
 struct id *make_id(char *name);
+struct value *declare(struct id *id,const struct area *area,int redefine);
+void define(const struct id *id,struct value *val,struct op *value);
 void assign(struct id *id,struct op *value,const struct area *area,
   int redefine);
 void export(struct id *id);

@@ -14,3 +14,10 @@ EOF
 expect <<EOF
 <stdin>:1: re-definable labels are a non-standard extension
 EOF
+
+asm_fail "Re-definable label are an extension (use with EQU)" <<EOF
+.1:	equ	0
+EOF
+expect <<EOF
+<stdin>:1: re-definable labels are a non-standard extension
+EOF

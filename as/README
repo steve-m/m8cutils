@@ -152,6 +152,13 @@ assembler:
   whose name begins with a dot and a digit is not removed by other labels, is
   accessed by appending the direction of the definition ("b" for backwards, "f"
   for forwards) to the name, and can be redefined
+- the label immediately preceding EQU is treated specially: if local or global,
+  it only triggers removal of re-usable after processing the expression. If
+  re-definable, it will be ignored in the expression (i.e., if the expression
+  references this label, only a prior or later definition is used, but not the
+  one preceding the EQU). All this applies only to the label immediately before
+  EQU. If there are multiple labels, all but the last are treated in the usual
+  way.
 - the special variable @ contains the cumulative number of CPU cycles since the
   beginning of the program. Note that this information is static and does not
   take into account loops, branches, or code that is not produced by a mnemonic

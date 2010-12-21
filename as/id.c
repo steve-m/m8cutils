@@ -38,6 +38,8 @@ static struct file_scope {
 } *file_scopes = NULL,*file_scope = NULL,**last_scope = &file_scopes;
 
 
+int in_equ;
+
 static JRB global;
 static JRB non_reusable;
 static JRB reusable;
@@ -62,7 +64,7 @@ struct id *make_id(char *name)
     id = alloc_type(struct id);
     id->name = stralloc(name);
     id->values = NULL;
-    id->prev_value = NULL;
+    id->prev_value = id->pprev_value = NULL;
     id->next_value = &id->values;
     id->global = id->used = 0;
     id->alias = old;
@@ -109,26 +111,41 @@ static void scrap_reusable(int all)
 }
 
 
-void assign(struct id *id,struct op *value,const struct area *area,
-  int redefine)
+struct value *declare(struct id *id,const struct area *area,int redefine)
 {
     struct value *val;
 
-    if (*id->name != '.')
-	scrap_reusable(0);
     if (id->alias && id->global)
 	id = id->alias;
     if (id->values && !redefine)
 	lerrorf(&current_loc,"redefining \"%s\" (first definition at %s:%d)",
 	  id->name,get_file(&id->values->loc),get_line(&id->values->loc));
-    val= alloc_type(struct value);
-    val->value = value;
+    val = alloc_type(struct value);
+    val->value = NULL;
     val->area = area;
     val->loc = current_loc;
+    val->evaluating = 0;
     val->next = NULL;
     *id->next_value = val;
+    id->pprev_value = id->prev_value;
     id->prev_value = id->next_value;
     id->next_value = &val->next;
+    return val;
+}
+
+
+void define(const struct id *id,struct value *val,struct op *value)
+{
+    if (*id->name != '.')
+	scrap_reusable(0);
+    val->value = value;
+}
+
+
+void assign(struct id *id,struct op *value,const struct area *area,
+  int redefine)
+{
+    define(id,declare(id,area,redefine),value);
 }
 
 
@@ -151,15 +168,18 @@ void export(struct id *id)
 
 struct value **id_resolve(struct id *id,int direction)
 {
+    struct value **prev;
+
     if (id->alias && id->global)
 	id = id->alias;
     switch (direction) {
 	case 0:
 	    return &id->values;
 	case -1:
-	    if (!id->prev_value)
+	    prev = in_equ ? id->pprev_value : id->prev_value;
+	    if (!prev)
 		yyerrorf("no previous definition of \"%s\"",id->name);
-	    return id->prev_value;
+	    return prev;
 	case 1:
 	    return id->next_value;
 	default:

@@ -1,0 +1,80 @@
+#!/bin/sh
+. Common
+
+asm_fail "Local labels are case-sensitive" <<EOF
+foo:
+	jmp	foo
+	jmp	FOO
+EOF
+expect <<EOF
+<stdin>:3: undefined label "FOO"
+EOF
+
+asm_fail "Global labels are case-sensitive" <<EOF
+foo::
+	jmp	foo
+	jmp	FOO
+EOF
+expect <<EOF
+<stdin>:3: undefined label "FOO"
+EOF
+
+asm_fail "Re-usable labels are case-sensitive" <<EOF
+.foo:
+	jmp	.foo
+	jmp	.FOO
+EOF
+expect <<EOF
+<stdin>:3: undefined label ".FOO"
+EOF
+
+asm_fail "Re-definable labels are case-sensitive" -e <<EOF
+.0foo:
+	jmp	.0foob
+	jmp	.0FOOB
+EOF
+expect <<EOF
+<stdin>:3: no previous definition of ".0FOO"
+EOF
+
+asm "Mnemonics are not case-sensitive" <<EOF
+	nop
+	Nop
+	NOP
+EOF
+expect <<EOF
+40 40 40
+EOF
+
+asm "Register selector is not case-sensitive" <<EOF
+	mov	a,reg[0]
+	mov	a,Reg[0]
+	mov	a,REG[0]
+EOF
+expect <<EOF
+5D 00 5D 00 5D 00
+EOF
+
+asm "Register names are not case-sensitive" <<EOF
+	inc	a
+	inc	A
+	inc	x
+	inc	X
+	xor	f,0
+	xor	F,0
+EOF
+expect <<EOF
+74 74 75 75 72 00 72 00
+EOF
+
+asm_fail "Macro names are case-sensitive" <<EOF
+	macro	foo
+	nop
+	endm
+
+	foo
+	Foo
+EOF
+expect <<EOF
+<stdin>:6: unrecognized mnemonic "Foo"
+EOF

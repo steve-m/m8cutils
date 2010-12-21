@@ -50,6 +50,7 @@ static struct loc start_loc;
     const char *str;
     struct id *id;
     struct op *op;
+    struct value *value;
 };
 
 
@@ -141,9 +142,14 @@ label:
 	{
 	    assign($1,$2,NULL,0);
 	}
-    | REDEFINABLE label_directive
+    | REDEFINABLE
 	{
-	    assign($1,$2,NULL,1);
+	    extensions("re-definable labels");
+	    $<value>$ = declare($1,NULL,1);
+	}
+      label_directive
+	{
+	    define($1,$<value>2,$3);
 	}
     ;
 
@@ -708,9 +714,14 @@ register_indexed:
 
 
 label_directive:
-    TOK_EQU expression
+    TOK_EQU
 	{
-	    $$ = $2;
+	    in_equ = 1;
+	}
+       expression
+	{
+	    in_equ = 0;
+	    $$ = $3;
 	}
     ;
 

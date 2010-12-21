@@ -1,0 +1,54 @@
+#!/bin/sh
+. Common
+
+asm "No re-definable label (forwards)" <<EOF
+.1:	mov	a,0
+.1:	mov	a,0
+	mov	a,0
+EOF
+sim_fail <<EOF
+. = 2
+.1f
+EOF
+expect <<EOF
+2: no symbol ".1"
+EOF
+
+asm "No re-definable label (backwards)" <<EOF
+	mov	a,0
+	mov	a,0
+.1:	mov	a,0
+EOF
+sim_fail <<EOF
+. = 2
+.1b
+EOF
+expect <<EOF
+2: no symbol ".1"
+EOF
+
+asm "Re-definable label without direction (bare)" <<EOF
+.1:	mov	a,0
+	mov	a,0
+.1:	mov	a,0
+EOF
+sim_fail <<EOF
+. = 2
+.1
+EOF
+expect <<EOF
+2: reference to re-definable label must end with B or F
+EOF
+
+asm "Re-definable label without direction (quoted)" <<EOF
+.1:	mov	a,0
+	mov	a,0
+.1:	mov	a,0
+EOF
+sim_fail <<EOF
+. = 2
+".1"
+EOF
+expect <<EOF
+2: reference to re-definable label must end with B or F
+EOF

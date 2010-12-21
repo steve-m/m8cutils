@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+
+asm "Reusable label can be referenced in EQU defining non-reusable label" <<EOF
+.foo:	equ	2
+bar:	equ	.foo
+	db	bar
+EOF
+expect <<EOF
+02
+EOF

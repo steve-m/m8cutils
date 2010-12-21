@@ -185,3 +185,15 @@ EOF
 expect <<EOF
 8F FF
 EOF
+
+asm "MACRO: macro name can be used as argument or label" <<EOF
+	macro	foo
+	mov	a,foo
+	endm
+
+	foo
+foo:	equ	1
+EOF
+expect <<EOF
+50 01
+EOF
