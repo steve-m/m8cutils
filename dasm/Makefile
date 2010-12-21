@@ -41,7 +41,7 @@ endif
 
 tests:		all
 		passed=0 && cd tests && for n in $(TESTS); do \
-		  . ./$$n; done; \
+		  SCRIPT=$$n . ./$$n; done; \
 		  echo "Passed all $$passed tests" 2>&1
 
 # ----- Distribution ----------------------------------------------------------

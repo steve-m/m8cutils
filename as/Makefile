@@ -14,7 +14,8 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       mvi \
       reuse_bf reuse_fb reuse_undef reuse_before reuse_after \
       reuse_global reuse_export \
-      asciz blk blkw db ds dw dwl equ export org
+      asciz blk blkw db ds dw dwl equ export org \
+      comment
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
       util.h error.h error.c id.h id.c op.h op.c code.h code.c \
@@ -60,7 +61,7 @@ endif
 
 tests:		all
 		passed=0 && cd tests && for n in $(TESTS); do \
-		  . ./$$n; done; \
+		  SCRIPT=$$n . ./$$n; done; \
 		  echo "Passed all $$passed tests" 2>&1
 
 # ----- Distribution ----------------------------------------------------------

@@ -18,7 +18,7 @@ reas()
 	echo PASSED 2>&1
 	passed=`expr $passed + 1`
     else
-	echo FAILED 2>&1
+	echo FAILED "($SCRIPT)" 2>&1
 	echo "$in": "$asm" '->' "$out" 2>&1
 	exit
     fi
@@ -30,7 +30,7 @@ asm()
     echo -n "$1: " 1>&2
     shift
     ../m8cas "$@" >_out || {
-	echo FAILED 1>&2
+	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
 	rm -f _out
 	exit 1
@@ -43,7 +43,7 @@ asm_fail()
     echo -n "$1: " 1>&2
     shift
     ../m8cas "$@" >_out 2>&1 && {
-	echo FAILED 1>&2
+	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
 	rm -f _out
 	exit 1
@@ -54,7 +54,7 @@ asm_fail()
 expect()
 {
     diff -u - _out >_diff || {
-	echo FAILED 1>&2
+	echo FAILED "($SCRIPT)" 1>&2
 	cat _diff 1>&2
 	rm -f _out _diff
 	exit 1

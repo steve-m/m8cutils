@@ -16,6 +16,7 @@
 
 
 struct loc current_loc;
+int allow_extensions = 0;
 
 
 static JRB file_names;
@@ -54,13 +55,13 @@ void __attribute__((noreturn)) lerrorf(const struct loc *loc,const char *fmt,
 }
 
 
-void __attribute__((noreturn)) extension(const char *name)
+void __attribute__((noreturn)) no_extension(const char *name)
 {
     lerrorf(&current_loc,"%s is a non-standard extension",name);
 }
 
 
-void __attribute__((noreturn)) extensions(const char *name)
+void __attribute__((noreturn)) no_extensions(const char *name)
 {
     lerrorf(&current_loc,"%s are a non-standard extension",name);
 }

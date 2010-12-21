@@ -221,6 +221,8 @@ $[0-9A-Fa-f]+			{ char *end;
 
 [\t ]*               
 \n				current_loc.line++;
+;[^\n]*\n			current_loc.line++;
+"//"[^\n]*\n			current_loc.line++;
 
 ^#\ [0-9]+\ \"[^"]*\"(\ [0-9]+)*\n {
 				  char *start = strchr(yytext,'"')+1;

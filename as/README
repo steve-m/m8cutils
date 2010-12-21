@@ -23,11 +23,27 @@ Overview
 
 This is a single-pass assembler for the M8C assembly language. It can
 currently only generate absolute code and thus does not require a
-linker. Instead of implementing its own preprocessor, it uses
+linker. Instead of implementing its own preprocessor, it uses CPP.
+(For compatibility, CPP is only enabled if 
+
 
 Usage
 -----
 
+m8cas reads the file specified on the command line. If no file it
+specified or if its name is "-", it reads from standard input.
+
+The assembler language either closely follows the specification in the
+assembly language user guide (see below), or you can enable various
+extensions, including the use of the C pre-processor (CPP), with the
+option -e.
+
+If using CPP, the CPP options -I, -D, and -U are recognized with their
+usual semantics.
+
+The output is written to standard output or the file specified with
+the option -o. By the default, the output is in ROM format, which can
+be overridden with the options -h (Intel HEX) and -b (raw binary).
 
 
 Compatibility

@@ -1,0 +1,39 @@
+#!/bin/sh
+. Common
+
+asm "Comment with // (no extensions)" <<EOF
+	nop
+	// halt
+	ret
+EOF
+expect <<EOF
+40 7F
+EOF
+
+asm "Comment with // (with extensions)" -e <<EOF
+	ssc
+	// halt
+	reti
+EOF
+expect <<EOF
+00 7E
+EOF
+
+asm "Comment with ; (no extensions)" <<EOF
+	push a
+	; push x
+	pop a
+EOF
+expect <<EOF
+08 18
+EOF
+
+asm "Comment with /* ... */ (with extensions)" -e <<EOF
+	nop
+	/* halt
+	ssc */
+	ret
+EOF
+expect <<EOF
+40 7F
+EOF

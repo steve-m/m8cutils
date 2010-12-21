@@ -1,4 +1,4 @@
-Version 2 (xx-FEB-2006)
+Version 2 (17-FEB-2006)
 --------
 
 - prog/cy8c2prog.c: programmer can now also be invoked without any operation,
@@ -12,7 +12,8 @@ Version 2 (xx-FEB-2006)
   supported
 - Makefile: didn't stop on errors in subdirectories
 - libfdr/: added red-black trees by James S. Plank
-- as/: added an assembler (experimental and untested)
+- as/: added an assembler (experimental and largely tested)
+- dasm/tests/Common: regression tests now print the script name on failure
 
 Version 1 (15-FEB-2006)
 ---------
