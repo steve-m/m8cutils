@@ -15,9 +15,9 @@ asm()
 {
     echo -n "$1: " 1>&2
     shift
-    ../../as/m8cas -e -I../../shared "$@" >_rom || {
+    ../../as/m8cas -e -m _map -I../../shared "$@" >_rom || {
 	echo FAILED "($SCRIPT)" 1>&2
-	rm -f _rom
+	rm -f _rom _map
 	exit 1
     }
 }
@@ -25,10 +25,10 @@ asm()
 
 sim()
 {
-    $VALGRIND ../m8csim -I.. -q "$@" $M8CSIM_CHIP _rom >_out 2>&1 || {
+    $VALGRIND ../m8csim -m _map -I.. -q "$@" $M8CSIM_CHIP _rom >_out 2>&1 || {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out 1>&2
-	rm -f _out
+	rm -f _out _map
 	exit 1
     }
 }
@@ -36,10 +36,10 @@ sim()
 
 sim_fail()
 {
-    ../m8csim -I.. -q "$@" $M8CSIM_CHIP _rom >_out 2>&1 && {
+    ../m8csim -m _map -I.. -q "$@" $M8CSIM_CHIP _rom >_out 2>&1 && {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out 1>&2
-	rm -f _out
+	rm -f _out _map
 	exit 1
     }
 }
@@ -61,6 +61,6 @@ expect()
 	exit 1
     }
     echo PASSED 1>&2
-    rm -f _rom _out _diff
+    rm -f _rom _out _diff _map
     passed=`expr ${passed:-0} + 1`
 }

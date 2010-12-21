@@ -6,5 +6,5 @@ asm_fail "Reusable global label" <<EOF
 	nop
 EOF
 expect <<EOF
-<stdin>:1: syntax error
+<stdin>:1: a reusable label cannot be global
 EOF

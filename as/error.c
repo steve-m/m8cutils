@@ -25,7 +25,12 @@ static JRB file_names;
 
 void set_file(char *name)
 {
-    if (!jrb_find_str(file_names,name)) {
+    JRB entry;
+
+    entry = jrb_find_str(file_names,name);
+    if (entry)
+	name = jval_v(jrb_val(entry));
+    else {
 	name = stralloc(name);
 	jrb_insert_str(file_names,name,new_jval_v(name));
     }

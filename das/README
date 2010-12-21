@@ -39,6 +39,9 @@ the decoded instruction is printed. With the option -t, the
 instruction timing (in CPU cycles) is printed before the decoded
 instruction.
 
+If a symbol file is loaded with the option -m, symbolic names will
+be used in the disassembled code.
+
 Example:
 
 % m8cdas prog.hex

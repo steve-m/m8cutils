@@ -136,7 +136,7 @@ static void run_cpp(const char *name,int fd,int close_fd)
 	perror("dup2");
 	exit(1);
     }
-    for (arg = (char **) cpp_argv+2; *arg; arg++)
+    for (arg = (char **) cpp_argv+1; *arg; arg++)
 	free(*arg);
     free(cpp_argv);
 }

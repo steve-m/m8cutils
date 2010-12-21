@@ -1,0 +1,17 @@
+#!/bin/sh
+. Common
+
+sym "Symbol file, local label (text)" <<EOF
+	nop
+foo:	nop
+EOF
+expect -w <<EOF
+ROM  0001  L  foo  text <stdin>:2
+EOF
+
+sym "Symbol file, local EQU" <<EOF
+bar:	equ	123
+EOF
+expect -w <<EOF
+EQU 007B  L  bar  -  <stdin>:2
+EOF

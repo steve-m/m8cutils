@@ -126,7 +126,7 @@ int main(int argc,char **argv)
 		usage(*argv);
     voltage = prog_open_cli();
     prog_initialize(0,voltage);
-    chip = prog_identify(NULL);
+    chip = prog_identify(NULL,0);
     get_time(&t0);
     ta = t0;
     while (1) {

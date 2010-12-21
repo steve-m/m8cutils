@@ -63,14 +63,11 @@ dist:		$(FILES)
 		ln -sf . $(DIR)
 		tar cfz $(DISTFILE) $(FILES:%=$(DIR)/%)
 
-obsolete:	dist
-		scp $(DISTFILE) host:/home/httpd/almesberger/misc/cy8c2/
-
 upload:
 		@echo -n "md5sum " && \
 		  md5sum $(DISTFILE) | sed 's/ .*//'
 		@echo -n "sha1sum " && \
 		  sha1sum $(DISTFILE) | sed 's/ .*//'
 		scp $(DISTFILE) $(SF_UPLOAD)               
-		scp CHANGES $(SF_UPLOAD)
-		ssh $(SF_ACCOUNT) $(SF_DIR)/release.sh $(SF_DIR) $(VERSION)
+		scp CHANGES $(SF_UPLOAD)/UTILS_CHANGES
+		ssh $(SF_ACCOUNT) $(SF_DIR)/release.sh $(SF_DIR)

@@ -21,7 +21,8 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       intsw inttake intret \
       gpioint gpiointcfg \
       addrop printf sleep \
-      bugs7 bugs8
+      bugs7 bugs8 \
+      symbols
 FILES=README Makefile \
       lang.l lang.y lang.h id.h id.c \
       util.h reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
@@ -34,7 +35,7 @@ CFLAGS += -I../prog
 # don't use += because libprog may need symbols from libm8cutils, so we need to
 # put -lprog before the old $(LDLIBS).
 LDLIBS := -lfl -L../prog -lprog $(LDLIBS) -lreadline -lcurses
-
+LIBDEP += ../prog/libprog.a
 
 .PHONY:		all dep depend testlist tests install uninstall filelist
 .PHONY:		clean spotless
@@ -58,7 +59,7 @@ y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
 
 default.m8csim:	../shared/m8c-registers ../shared/reg2hdrs.pl
-		$(GEN) perl ../shared/reg2hdrs.pl sim >$@ $< || \
+		$(GEN) $(CPP) - <$< | perl ../shared/reg2hdrs.pl sim >$@ || \
 		  { rm -f $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------

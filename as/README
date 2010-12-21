@@ -36,6 +36,25 @@ The output is written to standard output or the file specified with
 the option -o. By the default, the output is in ROM format, which can
 be overridden with the options -h (Intel HEX) and -b (raw binary).
 
+An optional symbol map is written to the file specified with the -m
+option. Each line of the symbol map contains the following fields:
+
+- the address space of the symbol (RAM for ROM labels, EQU for
+  assignments)
+- the hexadecimal value of the symbol. ROM labels are padded to four
+  digits, RAM labels are padded to three digits, assigned values are
+  padded to four digits, except if they are larger than 0xFFFF, in which
+  case they are padded to eight digits.
+- "L" for a local, "G" for a global symbol
+- the full name of the symbol, including the leading dot of a reusable
+  label
+- the area in which the symbol was defined, "-" if the symbol is not a
+  label
+- the source code location where the symbol was defined
+
+Fields are separated by one or more spaces. The symbol file is sorted
+alphabetically by the full symbol names.
+
 
 Compatibility
 -------------

@@ -151,7 +151,7 @@ int main(int argc,char **argv)
     if (verbose)
 	fprintf(stderr,"selected %dV operation\n",voltage);
     prog_initialize(op_erase || op_write,voltage);
-    chip = prog_identify(chip);
+    chip = prog_identify(chip,1);
     if (op_write || op_compare)
 	if (program_size > chip->banks*chip->blocks*BLOCK_SIZE) {
 	    fprintf(stderr,

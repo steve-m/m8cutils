@@ -39,6 +39,9 @@ Binary mode can be forced with the option -b. If the program file name argument
 is omitted, no program is loaded. Note that standard input can only provide
 either the script or the program, but not both.
 
+If a symbol file is loaded with the option -m, symbolic names are used in the
+disassembled code, and symbols can be entered instead of numbers.
+
 The use of a DIY ICE is discussed below.
 
 
@@ -87,6 +90,9 @@ language are the usual forms known from C, and the semicolon from m8cas.
   The names of CPU registers and the memory type prefixes are case-insensitive.
   Register and RAM addresses span the entire address range and are not affected
   by the current I/O bank or RAM page.
+
+  If a symbol map is loaded, symbolic names can be used as addresses and
+  values.
 
 - As a temporary extension, also direct accesses can be made through the ICE:
 

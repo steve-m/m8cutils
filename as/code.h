@@ -33,6 +33,7 @@ struct area {
 extern int *pc;
 extern int next_pc;
 extern const struct area *text;
+extern struct area *current_area;
 
 
 void advance_pc(int n);

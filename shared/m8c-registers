@@ -31,10 +31,41 @@
 0x01e	PRT7GS
 0x01f	PRT7DM2
 
+0x060	AMX_IN		ACI3[2] { P0_0 P0_2 P0_4 P0_6 }
+			ACI2[2] { P0_1 P0_3 P0_5 P0_7 }
+			ACI1[2] { P0_0 P0_2 P0_4 P0_6 }
+			ACI0[2] { P0_1 P0_3 P0_5 P0_7 }
+0x061	AMUX_CFG	BCol1Mux ACol0Mux INTCAP[2]
+			MUXCLK[3] { Off VC1 VC2 Row0BC ColClk0 ColClk1 } EN
+0x062	PWR_CR		_[2] HIGH[3] { NoPWM 1 2 4 8 16 }
+			LOW[2] { 0 1 2 3 } PWMEN
+
+0x064	CMP_CR0		COMP3 COMP2 COMP1 COMP0 AINT3 AINT2 AINT1 AINT0
+0x066	CMP_CR1		CLDIS3 CLDIS2 CLDIS1 CLDIS0 _[2] CLK1X1 CLK1X0
+0x068	ADC0_CR		CMPST LOREN SHEN _ CBSRC AUTO _ ADCEN
+0x069	ADC1_CR		CMPST LOREN SHEN _ CBSRC AUTO _ ADCEN
+
 0x06c	TMP_DR0
 0x06d	TMP_DR1
 0x06e	TMP_DR2
 0x06f	TMP_DR3
+
+0x072	ACE00CR1	_ CompBus
+			NMux[3] { ACE01 VBG Switch5_7 MuxBus FB ASE10 ASE11
+			  PortInputs }
+			PMux[3] { _ PortInputs ACE01 VBG ASE10 ASE11
+			  Switch1_4 MuxBus }
+0x076	ACE01CR1	_ CompBus
+			NMux[3] { ACE00 VBG Switch5_7 MuxBus FB ASE11 ASE10
+			  PortInputs }
+			PMux[3] { VTEMP PortInputs ACE00 VBG ASE11 ASE10
+			  Switch1_4 MuxBus }
+
+0x073	ACE00CR2	_[6] FullRange PWR
+0x077	ACE01CR2	_[6] FullRange PWR
+
+0x080	ASE00CR0	FVal _[7]
+0x084	ASE01CR0	FVal _[7]
 
 0x0d0	CUR_PP		_[5] PageBits[3]
 0x0d1	STK_PP		_[5] PageBits[3]
@@ -45,14 +76,20 @@
 0x0da	INT_CLR0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
 0x0db	INT_CLR1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
 0x0dc	INT_CLR2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
-0x0dc	INT_CLR2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1 Endpoint0 StartOfFrame BusReset
+0x0dc	INT_CLR2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1
+			Endpoint0 StartOfFrame BusReset
 0x0dd	INT_CLR3	_[7] I2C
 0x0de	INT_MSK3	ENSWINT _[6] I2C
 0x0df	INT_MSK2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
-0x0df	INT_MSK2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1 Endpoint0 StartOfFrame BusReset
+0x0df	INT_MSK2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1
+			Endpoint0 StartOfFrame BusReset
 0x0e0	INT_MSK0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
 0x0e1	INT_MSK1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
 0x0e2	INT_VC
+
+0x0e6	DEC_CR0		IGEN[4] { _ ACol0 ACol1 _ ACol2 _ _ _ ACol3 }
+			ICLKS0 DCOL[2] { ACol0 ACol1 ACol2 ACol3 } DCLKS0
+0x0e7	DEC_CR1		ECNT IDEC ICLKS3 ICLKS2 ICLKS1 DCLKS3 DCLKS2 DCLK1
 
 0x0f0	CPU_A		# undocumented
 0x0f3	CPU_X		# undocumented
@@ -100,9 +137,42 @@
 0x11e	PRT7IC0
 0x11f	PRT7IC1
 
-0x1e0	OSC_CR0
+0x162	ABF_CR0		ACol1Mux ACol2Mux ABUF1EN ABUF2EN ABUF0EN ABUF3EN
+			Bypass PWR
+0x163	AMD_CR0		_ AMOD2[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+			AMOD0[4] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 _ _ _ _ Comp0Single Comp1Single }
+0x164	CMP_GO_EN	GOO5 GOO1
+			SEL1[2] { CompBus ColClk CompSingle ColClkGated }
+			GOO4 GOO0
+			SEL0[2] { CompBus ColClk ADC_PWM ColClkGated }
+0x166	AMD_CR1		_ AMOD0[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+			AMOD1[4] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 _ _ _ _ Comp0Single Comp1Single }
+
+#define LUT		FALSE A_AND_B A_AND_NOT_B A NOT_A_AND_B B \
+			  A_XOR_B A_OR_B A_NOR_B A_XNOR_B NOT_B A_OR_NOT_B \
+			  NOT_A NOT_A_OR_B A_NAND_B TRUE
+
+0x167	ALT_CR0		LUT1[4] { LUT } LUT0[4] { LUT }
+0x168	ALT_CR1		LUT3[4] { LUT } LUT2[4] { LUT }
+0x16b	CLK_CR3		_ SYS1 DIVCLK1[2] { 1 2 4 8 }
+			_ SYS0 DIVCLK0[2] { 1 2 4 8 }
+
+0x1dd	OSC_GO_EN	SLPINT VC3 VC2 VC1 SYSCLKX2 SYSCLK CLK24M CLK32K
+0x1de	OSC_CR4		_[6] VC3Input[2] { SYSCLK VC1 VC2 SYSCLKX2 }
+0x1df	OSC_CR3		VC3Div[8]
+0x1e0	OSC_CR0		32kSelect PLL_Mode NoBuzz
+			Sleep[2] { 64 512 4096 32768 }
+			CPU_Speed[3] { 8 4 2 1 16 32 128 256 }
+0x1e1	OSC_CR1		VC1Div[4] VC2Div[4]
+0x1e2	OSC_CR2		PLLGAIN _[4] EXTCLKEN IMODIS SYSCLKX2DIS
 0x1e3	VLT_CR		SMP _[1] PORLEV[2] LVDTBEN VM[3]
 0x1e4	VLT_CMP		_[4] NoWrite PUMP LVD PPOR
+0x1e5	ADC0_TR		CAPVAL[8]
+0x1e6	ADC1_TR		CAPVAL[8]
 0x1e8	IMO_TR
 0x1e9	ILO_TR		_[2] BaseTrim[2] FreqTrim[4]
 0x1ea	BDG_TR		_ AGNDBYP TC[2] V[4]

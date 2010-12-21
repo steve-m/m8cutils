@@ -9,7 +9,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
+
+#include "symmap.h"
 
 #include "disasm.h"
 
@@ -65,34 +68,94 @@ const char m8c_bytes[256] = {
 
 #define U_A(m)		P(1,#m "\tA");
 #define U_X(m)		P(1,#m "\tX");
-#define U_SD_M(m)	P(2,#m "\t[0x%02X]",c[1]);
-#define U_SI_M(m)	P(2,#m "\t[X+0x%02X]",c[1]);
+#define U_SD_M(m)	P(2,#m "\t[%s]",ram(c[1]));
+#define U_SI_M(m)	P(2,#m "\t[X+0x%02X]%s",c[1],opt_ram(c[1]));
 
-#define SD_A_M(m)	P(2,#m "\tA,[0x%02X]",c[1]);
-#define SI_A_M(m)	P(2,#m "\tA,[X+0x%02X]",c[1]);
+#define SD_A_M(m)	P(2,#m "\tA,[%s]",ram(c[1]));
+#define SI_A_M(m)	P(2,#m "\tA,[X+0x%02X]%s",c[1],opt_ram(c[1]));
 #define SD_A_R(m)	P(2,#m "\tA,REG[0x%02X]",c[1]);
 #define SI_A_R(m)	P(2,#m "\tA,REG[X+0x%02X]",c[1]);
-#define DD_A_M(m)	P(2,#m "\t[0x%02X],A",c[1]);
-#define DI_A_M(m)	P(2,#m "\t[X+0x%02X],A",c[1]);
+#define DD_A_M(m)	P(2,#m "\t[%s],A",ram(c[1]));
+#define DI_A_M(m)	P(2,#m "\t[X+0x%02X],A%s",c[1],opt_ram(c[1]));
 #define DD_A_R(m)	P(2,#m "\tREG[0x%02X],A",c[1]);
 #define DI_A_R(m)	P(2,#m "\tREG[X+0x%02X],A",c[1]);
-#define SD_X_M(m)	P(2,#m "\tX,[0x%02X]",c[1]);
-#define SI_X_M(m)	P(2,#m "\tX,[X+0x%02X]",c[1]);
-#define DD_X_M(m)	P(2,#m "\t[0x%02X],X",c[1]);
-#define DI_X_M(m)	P(2,#m "\t[X+0x%02X],X",c[1]);
-#define DD_SI_M(m)	P(3,#m "\t[0x%02X],0x%02X",c[1],c[2]);
-#define DI_SI_M(m)	P(3,#m "\t[X+0x%02X],0x%02X",c[1],c[2]);
+#define SD_X_M(m)	P(2,#m "\tX,[%s]",ram(c[1]));
+#define SI_X_M(m)	P(2,#m "\tX,[X+0x%02X]%s",c[1],opt_ram(c[1]));
+#define DD_X_M(m)	P(2,#m "\t[%s],X",ram(c[1]));
+#define DI_X_M(m)	P(2,#m "\t[X+0x%02X],X%s",c[1],opt_ram(c[1]));
+#define DD_SI_M(m)	P(3,#m "\t[%s],0x%02X",ram(c[1]),c[2]);
+#define DI_SI_M(m)	P(3,#m "\t[X+0x%02X],0x%02X%s",c[1],c[2],opt_ram(c[1]));
 #define DD_SI_R(m)	P(3,#m "\tREG[0x%02X],0x%02X",c[1],c[2]);
 #define DI_SI_R(m)	P(3,#m "\tREG[X+0x%02X],0x%02X",c[1],c[2]);
-#define DD_SD_M(m)	P(3,#m "\t[0x%02X],[0x%02X]",c[1],c[2]);
+#define DD_SD_M(m)	P(3,#m "\t[%s],[%s]",ram(c[1]),ram(c[2]));
 
 
 #define PC12(off,ref) \
   ((pc+(ref)+((off) & 0x800 ? 0xf000 : 0)+(off)) & 0xffff)
 
 
-#define J12(m,r)	P(2,#m "\t0x%04X",PC12(((c[0] & 0xf) << 8) | c[1],r));
-#define J16(m)		P(3,#m "\t0x%02X%02X",c[1],c[2]);
+#define J12(m,r) P(2,#m "\t%s",label(PC12(((c[0] & 0xf) << 8) | c[1],r)));
+#define J16(m)	P(3,#m "\t%s",label(c[1] << 8 | c[2]));
+
+
+static const char *label(uint16_t addr)
+{
+    static char buf[7];
+    const char *sym;
+
+    sym = sym_by_value(addr,SYM_ATTR_ROM,NULL);
+    if (sym)
+	return sym;
+    sprintf(buf,"0x%04X",addr);
+    return buf;
+}
+
+
+/*
+ * @@@ We should also look for values in other banks. Furthermore, the user of
+ * the disassembler should be able to indicate the current banking setup, e.g.,
+ * in the case of simulation.
+ */
+
+static const char *ram(uint8_t addr)
+{
+    static char buf[2][5];
+    static int buf_sel = 0;
+    const char *sym;
+
+    sym = sym_by_value(addr,SYM_ATTR_RAM,NULL);
+    if (sym)
+	return sym;
+    /*
+     * We alternate between two buffers, so that we can handle up to two
+     * pending invocations of "ram", as in "mov [foo],[bar]".
+     */
+    buf_sel = !buf_sel;
+    sprintf(buf[buf_sel],"0x%02X",addr);
+    return buf[buf_sel];
+}
+
+
+static const char *opt_ram(uint8_t addr)
+{
+    static char *buf = NULL;
+    const char *sym;
+
+    if (buf) {
+	free(buf);
+	buf = NULL;
+    }
+    sym = sym_by_value(addr,SYM_ATTR_RAM,NULL);
+    if (!sym)
+	return "";
+    buf = malloc(strlen(sym)+4);
+    if (!buf) {
+	perror("malloc");
+	exit(1);
+    }
+    sprintf(buf,"\t; %s",sym);
+    return buf;
+}
 
 
 static void finish(ssize_t wrote,size_t buf_size)

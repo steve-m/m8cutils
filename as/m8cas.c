@@ -23,15 +23,44 @@
 int yyparse(void);
 
 
+static void write_symbols(const char *symbols)
+{
+    FILE *file;
+
+    if (!strcmp(symbols,"-"))
+	file = stdout;
+    else {
+	file = fopen(symbols,"w");
+	if (!file) {
+	    perror(symbols);
+	    exit(1);
+	}
+    }
+    write_ids(file);
+    /* assume "write_ids" doesn't do any other system calls */
+    if (ferror(file)) {
+	perror(symbols);
+	exit(1);
+    }
+    if (file != stdout)
+	if (fclose(file) == EOF) {
+	    perror(symbols);
+	    exit(1);
+	}
+}
+
+
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-b|-h] [-e] [-o output_file] [cpp_option ...] [file]\n"
+"usage: %s [-b|-h] [-e] [-o output_file] [-m symbol_file]\n"
+"             [cpp_option ...] [file]\n"
 "usage: %s -V\n\n"
 "  -b             produce binary output (default: ROM)\n"
 "  -e             enable language extensions (including CPP)\n"
 "  -h             produce Intel HEX output (default: ROM)\n"
 "  -o output_file write output to the specified file (default: stdout)\n"
+"  -m symbol_file write a symbol map to the specified file\n"
 "  -V             only print the version number and exit\n"
 "  cpp_option     -Idir, -Dname[=value], or -Uname\n"
 "  file           input file (default: stdin)\n",
@@ -44,13 +73,14 @@ int main(int argc,char **argv)
 {
     int cpp_options = 0,binary = 0,hex = 0;
     const char *output = NULL;
+    const char *symbols = NULL;
     char *input;
     int c;
 
     error_init();
     id_init();
     code_init();
-    while ((c = getopt(argc,argv,"behD:I:o:U:V")) != EOF) {
+    while ((c = getopt(argc,argv,"behD:I:m:o:U:V")) != EOF) {
 	char opt[] = "-?";
 
     	switch (c) {
@@ -68,6 +98,9 @@ int main(int argc,char **argv)
 		if (output)
 		    usage(*argv);
 		output = optarg;
+		break;
+	    case 'm':
+		symbols = optarg;
 		break;
 	    case 'D':
 	    case 'I':
@@ -120,6 +153,8 @@ int main(int argc,char **argv)
     if (allow_extensions)
 	reap_cpp();
     resolve();
+    if (symbols)
+	write_symbols(symbols);
     program_size = text->highest_pc;
     id_cleanup();
     code_cleanup();

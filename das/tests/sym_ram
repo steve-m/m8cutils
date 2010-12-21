@@ -1,0 +1,53 @@
+#!/bin/sh
+. Common
+
+expect "Local symbol for RAM address" <<EOF
+MOV	A,[foo]
+EOF
+asdas_sym <<EOF
+	mov	a,[foo]
+	area	data(ram)
+	blk	10
+foo:	blk	1
+EOF
+
+expect "Global symbol for RAM address" <<EOF
+MOV	X,[bar]
+EOF
+asdas_sym <<EOF
+	mov	x,[bar]
+	area	data(ram)
+	blk	8
+bar:	blk	1
+EOF
+
+expect "Symbol and MOV [...],[...]" <<EOF
+MOV	[foo],[bar]
+EOF
+asdas_sym <<EOF
+	mov	[foo],[bar]
+	area	data(ram)
+	blk	4
+foo:	blk	4
+bar:	blk	4
+EOF
+
+expect "Symbol for indexed RAM address" <<EOF
+MOV	A,[X+0x03]	; bar
+EOF
+asdas_sym <<EOF
+	mov	a,[x+bar]
+	area	data(ram)
+	blk	3
+bar:	blk	2
+EOF
+
+expect "No symbol for RAM address" <<EOF
+MOV	A,[0x0B]
+EOF
+asdas_sym <<EOF
+	mov	a,[foo+1]
+	area	data(ram)
+	blk	10
+foo:	blk	2
+EOF

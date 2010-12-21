@@ -30,7 +30,7 @@ int *pc; /* must call set_area before doing anything else */
 int next_pc = 0;
 
 const struct area *text;
-static struct area *current_area;
+struct area *current_area;
 
 
 static JRB areas;

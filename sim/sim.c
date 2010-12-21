@@ -19,12 +19,14 @@
 #include <readline/history.h>
 
 #include "interact.h"
+#include "symmap.h"
 #include "file.h"
 #include "chips.h"
 
 #include "ops.h"
 #include "prog.h"
 #include "cli.h"
+#include "ice.h"
 
 #include "reg.h"
 #include "core.h"
@@ -135,7 +137,7 @@ static void usage(const char *name)
 {
     fprintf(stderr,
 "usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-e interval]\n"
-"              [-I directory] [-f script] [chip] [program]\n"
+"              [-m symbol_file] [-I directory] [-f script] [chip] [program]\n"
 "       %s -l\n"
 "       %s -V\n\n"
 "  -b                program is a binary (overrides auto-detection)\n"
@@ -146,6 +148,7 @@ static void usage(const char *name)
 "  -i                use a DIY ICE\n"
 "  -I directory      look for input files also in the specified directory\n"
 "  -l                list supported chips\n"
+"  -m symbol_file    load the symbol map from the specified file\n"
 "  -n                do not include default.m8csim\n"
 "  -q                quiet operation, only output the bare minimum\n"
 "  -V                only print the version number and exit\n"
@@ -166,6 +169,7 @@ int main(int argc,char **argv)
     const char *script = NULL;
     const char *program_file = NULL;
     const char *include_dir = NULL;
+    const char *symbols = NULL;
     int binary = 0,include_default = 1,voltage = 0;
     int c;
 
@@ -177,7 +181,7 @@ int main(int argc,char **argv)
      *
      * Available: acghjkmoruwxyz
      */
-    while ((c = getopt(argc,argv,"be:f:iI:nqV" PROG_OPTIONS)) != EOF)
+    while ((c = getopt(argc,argv,"be:f:iI:m:nqV" PROG_OPTIONS)) != EOF)
 	switch (c) {
 	    char *end;
 
@@ -197,6 +201,9 @@ int main(int argc,char **argv)
 		break;
 	    case 'I':
 		include_dir = optarg;
+		break;
+	    case 'm':
+		symbols = optarg;
 		break;
 	    case 'n':
 		include_default = 0;
@@ -241,17 +248,24 @@ int main(int argc,char **argv)
         return 1;
     }
 
-    if (program_file) {
+    /*
+     * We separate read_file from set_program such that the common "file not
+     * found" error can happen before we try anything more complex, such as
+     * talking to the programmer.
+     */
+    if (program_file)
 	read_file(program_file ? program_file : "-",binary);
-	set_program(program,program_size);
-    }
-
+    if (symbols)
+	sym_read_file_by_name(symbols);
     if (ice) {
 	voltage = prog_open_cli();
 	prog_initialize(0,voltage);
-	chip = prog_identify(chip);
+	chip = prog_identify(chip,0);
+	ice_init();
 	atexit(prog_close);
     }
+    if (program_file)
+	set_program(program,program_size);
 
     m8c_init();
     int_init();

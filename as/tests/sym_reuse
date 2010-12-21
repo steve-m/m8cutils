@@ -1,0 +1,46 @@
+#!/bin/sh
+. Common
+
+sym "Symbol file, visible reusable label" <<EOF
+	nop
+.foo:	nop
+EOF
+expect -w <<EOF
+ROM  0001  L  .foo  text <stdin>:2
+EOF
+
+sym "Symbol file, hidden reusable label" <<EOF
+	nop
+.foo:	nop
+bar:	halt
+EOF
+expect -w <<EOF
+ROM  0001  L  .foo  text <stdin>:2
+ROM  0002  L  bar   text <stdin>:3
+EOF
+
+sym "Symbol file, hidden vs. visible reusable label" <<EOF
+	nop
+.foo:	nop
+bar:	nop
+.blah:	halt
+EOF
+expect -w <<EOF
+ROM  0003  L  .blah  text <stdin>:4
+ROM  0001  L  .foo   text <stdin>:2
+ROM  0002  L  bar    text <stdin>:3
+EOF
+
+sym "Symbol file, hidden vs. hidden reusable label" <<EOF
+	nop
+.foo:	nop
+bar:	nop
+.blah:	nop
+done:	halt
+EOF
+expect -w <<EOF
+ROM  0003  L  .blah  text <stdin>:4
+ROM  0001  L  .foo   text <stdin>:2
+ROM  0002  L  bar    text <stdin>:3
+ROM  0004  L  done    text <stdin>:5
+EOF

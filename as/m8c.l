@@ -183,6 +183,7 @@ $[0-9A-Fa-f]+			{ char *end;
 \.?[a-zA-Z_][a-zA-Z_0-9]*:	{ *strchr(yytext,':') = 0;
 				  yylval.id = make_id(yytext);
 				  return LOCAL; }
+\.[a-zA-Z_][a-zA-Z_0-9]*::	yyerror("a reusable label cannot be global");
 [a-zA-Z_][a-zA-Z_0-9]*::	{ *strchr(yytext,':') = 0;
 				  yylval.id = make_id(yytext);
 				  return GLOBAL; }

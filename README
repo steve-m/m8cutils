@@ -32,6 +32,9 @@ Common.make, libfdr/Makefile, as/m8c.l, and prog/rt.[ch] are distributed
 under version 2 of the GPL, but have additional copyright holders.
 Please refer directly to the respective file for details.
 
+The following are contributed files and are copyrighted by their
+respective copyright holders: prog/drv/ecb_ar91.[ch]
+
 
 Overview
 --------

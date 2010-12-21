@@ -203,9 +203,17 @@ $[0-9A-Fa-f]+			{ char *end;
 				  return NUMBER; }
 
 [A-Za-z_][0-9A-Za-z_]*		{ yylval.id = id_lookup(yytext);
-				  if (yylval.id)
-				    return yylval.id->new ? NEW_ID : OLD_ID;
+				  if (yylval.id) {
+				    if (yylval.id->new)
+					return NEW_ID;
+				    if (yylval.id->reg != 0xffff)
+					return OLD_ID;
+				    yylval.num = yylval.id->field;
+				    return NUMBER;
+				  }
 				  yylval.id = id_new(yytext);
+				  return NEW_ID; }
+\.[A-Za-z_][0-9A-Za-z_]*	{ yylval.id = id_new(yytext);
 				  return NEW_ID; }
 
 \"(\\[^\n\t]|[^\\"\n\t])*\"     { char *s;

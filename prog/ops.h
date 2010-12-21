@@ -15,7 +15,7 @@
 int block_protection(int block);
 
 void prog_initialize(int may_write,int voltage);
-const struct chip *prog_identify(const struct chip *chip);
+const struct chip *prog_identify(const struct chip *chip,int raise_cpuclk);
 void prog_erase(const struct chip *chip);
 void prog_write_program(const struct chip *chip);
 void prog_write_security(const struct chip *chip);

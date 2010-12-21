@@ -38,9 +38,11 @@ void set_file(char *name);
 void __attribute__((noreturn)) vlerrorf(const struct loc *loc,const char *fmt,
   va_list ap);
 void __attribute__((noreturn)) lerrorf(const struct loc *loc,const char *fmt,
-  ...);
+  ...)
+  __attribute__((format(printf,2,3)));
 void __attribute__((noreturn)) yyerror(const char *s);
-void __attribute__((noreturn)) yyerrorf(const char *fmt,...);
+void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
+  __attribute__((format(printf,1,2)));
 void __attribute__((noreturn)) no_extension(const char *name);
 void __attribute__((noreturn)) no_extensions(const char *name);
 #define extension(name) (allow_extensions ? 0 : (no_extension(name), 0))

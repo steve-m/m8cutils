@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "m8c.h"
+
 #include "vectors.h"
 #include "chips.h"
 #include "prog.h"
@@ -22,24 +24,77 @@
 
 
 static int xio = 0;
+static uint8_t f,pcl,pch,code0,code1,code2;
 
 
-const struct chip *ice_open(const char *dev,const char *programmer,
-  const char *chip_name,int voltage)
+/*
+ * The clocks (probably just the IMO) are stopped after each ISSP access.
+ * Executing some code revives them. Note: this seems very similar to sleep,
+ * but unfortunately, it can't be cleared by just playing with the Sleep bit in
+ * CPU_SCR0.
+ */
+
+static void prepare_start(void)
 {
-    const struct chip *chip;
-
-    if (chip_name) {
-	chip = chip_by_name(chip_name);
-        if (!chip) {
-	    fprintf(stderr,"chip \"%s\" is not known\n",chip_name);
-	    exit(1);
-	}
+    if (pch != 0)
+	prog_vector(WRITE_REG(CPU_PCH,0));
+    if (pcl != 3)
+    if (code0 != OP_HALT || code1 != OP_NOP || code2 != OP_NOP) {
+	if (f & CPU_F_XIO)
+	    prog_vector(WRITE_REG(CPU_F,f & ~CPU_F_XIO));
+	if (code0 != OP_HALT)
+	    prog_vector(WRITE_REG(CPU_CODE0,OP_HALT));
+	if (code1 != OP_NOP)
+	    prog_vector(WRITE_REG(CPU_CODE1,OP_NOP));
+	if (code2 != OP_NOP)
+	    prog_vector(WRITE_REG(CPU_CODE2,OP_NOP));
+	if (f & CPU_F_XIO)
+	    prog_vector(WRITE_REG(CPU_F,f));
     }
-    voltage = prog_open(dev,programmer,voltage);
-    prog_initialize(0,voltage);
-    return prog_identify(chip);
-    
+}
+
+
+static void start_clock(void)
+{
+    prog_vector(WRITE_REG(CPU_PCL,3));
+    prog_vector(EXEC_VECTOR_VALUE);
+    prog_vector(ZERO_VECTOR);
+}
+
+
+static void set_shadows(void)
+{
+    if (pch != 0)
+	prog_vector(WRITE_REG(CPU_PCH,pch));
+    /* it's safer not to try to predict the value of CPU_PCL */
+    prog_vector(WRITE_REG(CPU_PCL,pcl));
+    if (code0 != OP_HALT || code1 != OP_NOP || code2 != OP_NOP) {
+	if (f & CPU_F_XIO)
+	    prog_vector(WRITE_REG(CPU_F,f & ~CPU_F_XIO));
+	if (code0 != OP_HALT)
+	    prog_vector(WRITE_REG(CPU_CODE0,code0));
+	if (code1 != OP_NOP)
+	    prog_vector(WRITE_REG(CPU_CODE1,code1));
+	if (code2 != OP_NOP)
+	    prog_vector(WRITE_REG(CPU_CODE2,code2));
+	if (f & CPU_F_XIO)
+	    prog_vector(WRITE_REG(CPU_F,f));
+    }
+}
+
+
+static void fetch_shadows(void)
+{
+    f = prog_vector(READ_REG(CPU_F));
+    if (f & CPU_F_XIO)
+	prog_vector(WRITE_REG(CPU_F,f & ~CPU_F_XIO));
+    pch = prog_vector(READ_REG(CPU_PCH));
+    pcl = prog_vector(READ_REG(CPU_PCL));
+    code0 = prog_vector(READ_REG(CPU_CODE0));
+    code1 = prog_vector(READ_REG(CPU_CODE1));
+    code2 = prog_vector(READ_REG(CPU_CODE2));
+    if (f & CPU_F_XIO)
+	prog_vector(WRITE_REG(CPU_F,f));
 }
 
 
@@ -52,21 +107,78 @@ static void set_xio(int reg)
 }
 
 
+void ice_init(void)
+{
+    f = prog_vector(READ_REG(CPU_F));
+    fetch_shadows();
+    prepare_start();
+    start_clock();
+}
+
+
 uint8_t ice_read(int reg)
 {
-    set_xio(reg);
-    return prog_vector(READ_REG(reg & 0xff));
+    uint8_t value;
+
+    switch (reg) {
+	case CPU_PCH:
+	case CPU_PCH | 0x100:
+	    return pch;
+	case CPU_PCL:
+	case CPU_PCL | 0x100:
+	    return pcl;
+	case CPU_CODE0:
+	    return code0;
+	case CPU_CODE1:
+	    return code1;
+	case CPU_CODE2:
+	    return code2;
+	default:
+	    set_xio(reg);
+	    value = prog_vector(READ_REG(reg & 0xff));
+	    start_clock();
+	    return value;
+    }
 }
 
 
 void ice_write(int reg,uint8_t value)
 {
-    set_xio(reg);
-    prog_vector(WRITE_REG(reg & 0xff,value));
-}
-
-
-void ice_close(void)
-{
-    prog_close();
+    switch (reg) {
+	case CPU_PCH:
+	case CPU_PCH | 0x100:
+	    pch = value;
+	    break;
+	case CPU_PCL:
+	case CPU_PCL | 0x100:
+	    pcl = value;
+	    break;
+	case CPU_CODE0:
+	    code0 = value;
+	    break;
+	case CPU_CODE1:
+	    code1 = value;
+	    break;
+	case CPU_CODE2:
+	    code2 = value;
+	    break;
+	case CPU_SCR0:
+	    if (value == MAGIC_EXEC) {
+		set_shadows();
+		if (code0 == OP_SSC)
+		    prog_vector(EXEC_VECTOR_SSC_VALUE);
+		else {
+		    prog_vector(EXEC_VECTOR_VALUE);
+		    prog_vector(ZERO_VECTOR);
+		}
+		fetch_shadows();
+		prepare_start();
+		break;
+	    }
+	    /* fall through */
+	default:
+	    set_xio(reg);
+	    prog_vector(WRITE_REG(reg & 0xff,value));
+    }
+    start_clock();
 }

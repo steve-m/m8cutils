@@ -1,0 +1,44 @@
+#!/bin/sh
+. Common
+
+expect "Local symbol for ROM address" <<EOF
+NOP
+loop:
+JMP	loop
+EOF
+asdas_sym <<EOF
+	nop
+loop:	jmp	loop
+EOF
+
+expect "Global symbol for ROM address" <<EOF
+NOP
+loop::
+JMP	loop
+EOF
+asdas_sym <<EOF
+	nop
+loop::	jmp	loop
+EOF
+
+expect "Reusable symbol for ROM address" <<EOF
+NOP
+.loop:
+JMP	.loop
+EOF
+asdas_sym <<EOF
+	nop
+.loop:	jmp	.loop
+EOF
+
+expect "No symbol for ROM address" <<EOF
+NOP
+loop:
+NOP
+JMP	0x0002
+EOF
+asdas_sym <<EOF
+	nop
+loop:	nop
+	jmp	loop+1
+EOF

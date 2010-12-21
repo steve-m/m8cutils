@@ -14,11 +14,8 @@
 #include "chips.h"
 
 
-const struct chip *ice_open(const char *dev,const char *programmer,
-  const char *chip_name,int voltage);
-  /* warning: "dev" and "chip" can be NULL */
+void ice_init(void);
 void ice_write(int reg,uint8_t value);
 uint8_t ice_read(int reg);
-void ice_close(void);
 
 #endif /* !ICE_H */

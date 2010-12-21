@@ -13,17 +13,19 @@
 #include <string.h>
 
 #include "disasm.h"
+#include "symmap.h"
 #include "file.h"
 
 
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-p initial_pc] [-s|-t] [-b] [file]\n"
-"       %s [-p initial_pc] [-s|-t] -e byte ...\n"
+"usage: %s [-p initial_pc] [-s|-t] [-m symbol_file] [-b] [file]\n"
+"       %s [-p initial_pc] [-s|-t] [-m symbol_file] -e byte ...\n"
 "       %s -V\n\n"
 "  -b             override file type detection and force binary mode\n"
 "  -e             use the following bytes as code\n"
+"  -m symbol_file load the symbol map from the specified file\n"
 "  -p initial_pc  set the initial PC to this value, accepts hexadecimal\n"
 "                 with leading \"0x\" (default: 0)\n"
 "  -s             short output, do not include PC and code\n"
@@ -42,17 +44,21 @@ int main(int argc,char **argv)
     uint8_t code[PROGRAM_SIZE+2]; /* space to disassemble beyond EOF */
     char buf[MAX_DISASM_LINE];
     unsigned long pc = 0,pos = 0;
+    const char *symbols = NULL;
     char *end;
     int from_file = 1,hex = 1,timing = 0,binary = 0;
     int c;
 
-    while ((c = getopt(argc,argv,"bep:stV")) != EOF)
+    while ((c = getopt(argc,argv,"bem:p:stV")) != EOF)
 	switch (c) {
 	    case 'b':
 		binary = 1;
 		break;
 	    case 'e':
 		from_file = 0;
+		break;
+	    case 'm':
+		symbols = optarg;
 		break;
 	    case 'p':
 		pc = strtoul(optarg,&end,0);
@@ -111,9 +117,17 @@ int main(int argc,char **argv)
 	program_size = argc-optind;
     }
     code[program_size] = code[program_size+1] = 0;
-    while (pos < program_size) {
-	int size,i;
 
+    if (symbols)
+	sym_read_file_by_name(symbols);
+
+    while (pos < program_size) {
+	int size,i,attr;
+	const char *sym;
+
+	sym = sym_by_value(pc+pos,SYM_ATTR_ROM,&attr);
+	if (sym)
+	    printf("%s:%s\n",sym,attr & SYM_ATTR_GLOBAL ? ":" : "");
 	size = m8c_disassemble(pc+pos,code+pos,buf,sizeof(buf));
 	if (hex) {
 	    if (printf("%04lX ",(pc+pos) & 0xffff) < 0)

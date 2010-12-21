@@ -38,6 +38,19 @@ asm()
 }
 
 
+sym()
+{
+    echo -n "$1: " 1>&2
+    shift
+    $VALGRIND ../m8cas -m _out "$@" >/dev/null || {
+	echo FAILED "($SCRIPT)" 1>&2
+	cat _out
+	rm -f _out
+	exit 1
+    }
+}
+
+
 asm_fail()
 {
     echo -n "$1: " 1>&2
@@ -53,7 +66,7 @@ asm_fail()
 
 expect()
 {
-    diff -u - _out >_diff || {
+    diff -u - "$@" _out >_diff || {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _diff 1>&2
 	rm -f _out _diff

@@ -1,5 +1,5 @@
 /*
- * file.h - File I/O for the CY8C2 Utilities
+ * file.h - File I/O for the M8C Utilities
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger

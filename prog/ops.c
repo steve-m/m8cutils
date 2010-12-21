@@ -78,11 +78,14 @@ void prog_initialize(int may_write,int voltage)
 }
 
 
-const struct chip *prog_identify(const struct chip *chip)
+const struct chip *prog_identify(const struct chip *chip,int raise_cpuclk)
 {
     uint16_t id;
 
-    prog_vectors(ID_SETUP);
+    if (raise_cpuclk)
+	prog_vectors(ID_SETUP);		/* AN2026 uses this */
+    else
+	prog_vectors(ID_SETUP_3MHz);	/* works better for the ICE */
     id = prog_vectors(READ_ID_WORD);
     if (!chip) {
 	chip = chip_by_id(id);

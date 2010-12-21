@@ -12,8 +12,8 @@ FILES=README Makefile \
       m8c-registers reg2hdrs.pl \
       ssc.inc \
       file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
-      interact.h interact.c
-OBJS=file.o disasm.o chips.o cpp.o interact.o
+      interact.h interact.c symmap.h symmap.c
+OBJS=file.o disasm.o chips.o cpp.o interact.o symmap.o
 
 
 .PHONY:		all dep depend testlist tests install uninstall filelist
@@ -26,11 +26,11 @@ libm8cutils.a: $(OBJS)
 		$(AR) cr$(AR_v) $@ $^
 
 m8c.inc:	m8c-registers reg2hdrs.pl
-		$(GEN) perl reg2hdrs.pl asm >$@ $< || \
+		$(GEN) $(CPP) - <$< | perl reg2hdrs.pl asm >$@ || \
 		  { rm -f $@; exit 1; }
 
 m8c.h:		m8c-registers reg2hdrs.pl
-		$(GEN) perl reg2hdrs.pl c >$@ $< || \
+		$(GEN) $(CPP) - <$< | perl reg2hdrs.pl c >$@ || \
 		  { rm -f $@; exit 1; }
 
 ssc.h:		ssc.inc

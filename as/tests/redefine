@@ -1,0 +1,28 @@
+#!/bin/sh
+. Common
+
+asm_fail "Try to redefine local symbol" <<EOF
+	nop
+foo:	halt
+foo:	ret
+EOF
+expect <<EOF
+<stdin>:3: redefining "foo" (first definition at <stdin>:2)
+EOF
+
+asm_fail "Try to redefine local with global symbol" <<EOF
+bar:	nop
+	halt
+bar::	ret
+EOF
+expect <<EOF
+<stdin>:3: redefining "bar" (first definition at <stdin>:1)
+EOF
+
+asm_fail "Try to redefine reusable symbol" <<EOF
+.bar:	nop
+.bar:	ret
+EOF
+expect <<EOF
+<stdin>:2: redefining ".bar" (first definition at <stdin>:1)
+EOF

@@ -1,0 +1,60 @@
+#!/bin/sh
+. Common
+
+asm "Use a local RAM symbol" <<EOF
+	area	data(ram)
+	blk	2
+foo:	blk	2
+EOF
+sim <<EOF
+foo
+EOF
+expect <<EOF
+0x2 2
+EOF
+
+asm "Use a global ROM symbol" <<EOF
+	mov	[1],[2]
+bar:	halt
+EOF
+sim <<EOF
+bar
+EOF
+expect <<EOF
+0x3 3
+EOF
+
+asm "Use a reusable ROM symbol" <<EOF
+	nop
+.foo:	halt
+EOF
+sim <<EOF
+.foo
+EOF
+expect <<EOF
+0x1 1
+EOF
+
+asm "Try to use an unknown symbol" <<EOF
+	nop
+.bar:	halt
+EOF
+sim_fail <<EOF
+bar
+EOF
+expect <<EOF
+1: no symbol "bar"
+EOF
+
+asm "Try to use a non-unique symbol" <<EOF
+	nop
+.bar:	nop
+foo:	nop
+.bar:	halt
+EOF
+sim_fail <<EOF
+.bar
+EOF
+expect <<EOF
+1: symbol ".bar" is not unique
+EOF

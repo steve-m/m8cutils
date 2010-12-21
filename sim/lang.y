@@ -15,6 +15,8 @@
 #include "m8c.h"
 #include "interact.h"
 #include "chips.h"
+#include "disasm.h"
+#include "symmap.h"
 #include "file.h"
 
 #include "util.h"
@@ -31,10 +33,23 @@ static uint32_t now = 0;
 
 static void status(void)
 {
-    if (!quiet)
-	printf("%04x: A=%02x F=%02x (PgMode=%d XIO=%d Carry=%d "
-	  "Zero=%d GIE=%d) X=%02x SP=%02x\n",
-	  pc,a,f,pgmode,xio,cf,zf,gie,x,sp);
+    char buf[MAX_DISASM_LINE];
+    const char *sym;
+    int size,i,attr;
+
+    if (quiet)
+	return;
+    printf("%04x: A=%02x F=%02x (PgMode=%d XIO=%d Carry=%d "
+      "Zero=%d GIE=%d) X=%02x SP=%02x\n",
+      pc,a,f,pgmode,xio,cf,zf,gie,x,sp);
+    sym = sym_by_value(pc,SYM_ATTR_ROM,&attr);
+    if (sym)
+	printf("%s:%s\n",sym,attr & SYM_ATTR_GLOBAL ? ":" : "");
+    size = m8c_disassemble(pc,rom+pc,buf,sizeof(buf));
+    printf("%04X ",pc);
+    for (i = 0; i != size; i++)
+	printf(" %02X",rom[pc+i]);
+    printf("\t%s\n",buf);
 }
 
 
@@ -349,6 +364,10 @@ define:
     | TOK_DEFINE NEW_ID register_or_id byte_mask
 	{
 	    id_field($2,$3,$4);
+	}
+    | TOK_DEFINE NEW_ID NUMBER
+	{
+	    id_value($2,$3);
 	}
     ;
 
@@ -752,5 +771,17 @@ primary_expression:
     | '(' expression ')'
 	{
 	    $$ = $2;
+	}
+    | NEW_ID
+	{
+	    const uint32_t *value;
+	    int attr;
+
+	    value = sym_by_name($1->name,SYM_ATTR_ANY,&attr);
+	    if (!value)
+		yyerrorf("no symbol \"%s\"",$1->name);
+	    if (attr & SYM_ATTR_MORE)
+		yyerrorf("symbol \"%s\" is not unique",$1->name);
+	    $$ = *value;
 	}
     ;

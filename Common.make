@@ -32,6 +32,8 @@ YYFLAGS=-v
 INSTALL=install -D
 UNINSTALL=rm -f
 
+CPP := $(CPP)	# make sure changing CC won't affect CPP
+
 CC_normal	:= $(CC)
 LD_normal	:= $(LD)
 AR_normal	:= $(AR)

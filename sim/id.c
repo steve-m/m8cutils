@@ -29,15 +29,14 @@ struct id *id_lookup(const char *name)
 
 struct id *id_new(const char *name)
 {
-    char *s;
     struct id *id;
 
     if (id_lookup(name))
 	abort();
-    s = stralloc(name);
     id = alloc_type(struct id);
+    id->name = stralloc(name);
     id->new = 1;
-    jrb_insert_str(ids,s,new_jval_v(id));
+    jrb_insert_str(ids,(char *) id->name,new_jval_v(id));
     return id;
 }
 
@@ -55,6 +54,14 @@ void id_field(struct id *id,uint16_t reg,uint8_t mask)
     id->new = 0;
     id->reg = reg;
     id->field = mask;
+}
+
+
+void id_value(struct id *id,uint8_t value)
+{
+    id->new = 0;
+    id->reg = 0xffff;
+    id->field = value;
 }
 
 

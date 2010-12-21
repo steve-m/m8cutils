@@ -187,12 +187,15 @@
   VECTOR_PTROP_PREAMBLE(0x80) \
   VECTOR_SSC(SSC_EraseAll)
 
-#define ID_SETUP \
-  WRITE_REG(CPU_F,CPU_F_XIO) \
-  WRITE_REG(OSC_CR0 & 0xff,2) \
+#define ID_SETUP_3MHz \
   VECTOR_PTROP_PREAMBLE(0x80) \
   WRITE_MEM(BLOCKID,0) \
   VECTOR_SSC(SSC_TableRead)
+
+#define ID_SETUP \
+  WRITE_REG(CPU_F,CPU_F_XIO) \
+  WRITE_REG(OSC_CR0 & 0xff,2) \
+  ID_SETUP_3MHz
 
 #define SECURE(clock,delay) \
   WRITE_MEM(CLOCK,clock) \

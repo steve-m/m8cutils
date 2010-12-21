@@ -92,10 +92,12 @@ label:
 	{
 	    assign($1,number_op(*pc));
 	    $1->global = 1;
+	    $1->area = current_area;
 	}
     | LOCAL
 	{
 	    assign($1,number_op(*pc));
+	    $1->area = current_area;
 	}
     | GLOBAL label_directive
 	{

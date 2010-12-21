@@ -16,38 +16,74 @@ sub pad
 }
 
 
-$mode = shift(@ARGV);
-while (<>) {
-    s/#.*//;
-    next if /^\s*$/;
+sub process
+{
+    $line =~ s/#.*//;
+    return if $line =~ /^\s*$/;
     die "syntax error "
-      unless /^0x([0-9a-fA-F]+)\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
+      unless $line =~ /^0x([0-9a-fA-F]+)\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
     $name = $2;
     die "duplicate definition of $name"
       if defined $reg{$name} && $reg{$name} != hex $1;
     $reg{$name} = hex $1;
-    next unless length $';
+    return unless length $';
     $bits = 8;
     @f = ();
-    for (split(/\s+/,$')) {
-	die "$name: field syntax error"
-	  unless /(_|[A-Za-z][A-Za-z0-9_]*)(\[(\d+)\])?/;
+    $line = $';
+    while (1) {
+	last unless $line =~
+	  /^(_|[A-Za-z0-9_]+)(\[(\d+)\])?(\s*{\s*(([A-Za-z0-9_]+\s*)*)})?\s*/;
+	$line = $';
 	$size = defined $2 ? $3 : 1;
 	die "$name: exceeding byte" if $size > $bits;
 	$bits -= $size;
 	next if $1 eq "_";
+	@fv = ();
+	$values = $5;
 	if ($mode eq "sim") {
-	    unshift(@f,"define\t".&pad("  ".$name."_".$1,3).
+	    push(@fv,"define\t".&pad("  ".$name."_".$1,3).
 	      sprintf("%s[%d:%d]\n",$name,$bits+$size-1,$bits));
 	}
 	else {
-	    unshift(@f,"#define\t".&pad("  ".$name."_".$1,3).
+	    push(@fv,"#define\t".&pad("  ".$name."_".$1,3).
 	      sprintf("0x%02x\n",((1 << $size)-1) << $bits));
 	}
+	$n = 0;
+	for (split(/\s+/,$values)) {
+	    next if $_ eq "";
+	    die "${name}_$1 overflow on $_" if $n == 1 << $size;
+	    if ($_ ne "_") {
+		if ($mode eq "sim") {
+		    push(@fv,"define\t".&pad("    ".$name."_".$1."_".$_,4).
+		      sprintf("0x%x\n",$n));
+		}
+		else {
+		    push(@fv,"#define\t".&pad("  ".$name."_".$1."_".$_,4).
+		      sprintf("0x%x\n",$n << $bits));
+		}
+	    }
+	    $n++;
+	}
+	unshift(@f,@fv);
     }
+    die "$name: field syntax error" if $line !~ /^\s*$/;
     die "$name: $bits bits left in byte" if $bits;
     $fields{$name} .= join("",@f);
 }
+
+
+$mode = shift(@ARGV);
+while (<>) {
+    if (/^\s/) {
+	$line .= $_;
+	next;
+    }
+    else {
+	&process;
+	$line = $_;
+    }
+}
+&process;
 
 if ($mode eq "sim") {
     $name = "DEFAULT_M8CSIM";

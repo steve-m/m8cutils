@@ -37,9 +37,11 @@ extern int ice;
 extern jmp_buf error_env;
 
 
-void exception(const char *msg,...);
+void exception(const char *msg,...)
+  __attribute__((format(printf,1,2)));
 
-void __attribute__((noreturn)) yyerrorf(const char *fmt,...);
+void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
+  __attribute__((format(printf,1,2)));
 void __attribute__((noreturn)) yyerror(const char *s);
 
 #endif /* !SIM_H */

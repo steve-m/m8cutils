@@ -24,8 +24,9 @@
  */
 
 struct id {
+    const char *name;
     int new;		/* 1 if new (see above) */
-    uint16_t reg;	/* register number */
+    uint16_t reg;	/* register number, 0xffff if value */
     uint8_t field;	/* field mask, 0 if register */
 };
 
@@ -35,6 +36,7 @@ struct id *id_new(const char *name);
 
 void id_reg(struct id *id,uint16_t reg);
 void id_field(struct id *id,uint16_t reg,uint8_t mask);
+void id_value(struct id *id,uint8_t value);
 
 void id_init(void);
 
