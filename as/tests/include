@@ -1,0 +1,74 @@
+#!/bin/sh
+. Common
+
+file_noas "INCLUDE: file exists" <<EOF
+	db	1
+EOF
+asm <<EOF
+	db	0
+	include "_file_0"
+	db	2
+EOF
+expect <<EOF
+00 01 02
+EOF
+
+asm_fail "INCLUDE: file does not exist" <<EOF
+	include "__no_such_file__"
+EOF
+expect <<EOF
+<stdin>:1: __no_such_file__: No such file or directory
+EOF
+
+file_noas "INCLUDE: IF 1 INCLUDE ENDIF" <<EOF
+	db	1
+EOF
+asm <<EOF
+	if	1
+	db	0
+	include "_file_0"
+	db	2
+	endif
+EOF
+expect <<EOF
+00 01 02
+EOF
+
+asm "INCLUDE: IF 0 INCLUDE ENDIF" <<EOF
+	db	0
+	if	0
+	include "__no_such_file__"
+	endif
+	db	1
+EOF
+expect <<EOF
+00 01
+EOF
+
+file_noas "INCLUDE: nested includes" <<EOF
+	db	1
+	include	"_file_1"
+	db	2
+EOF
+file_noas <<EOF
+	db	3
+EOF
+asm <<EOF
+	db	4
+	include "_file_0"
+	db	5
+EOF
+expect <<EOF
+04 01 03 02 05
+EOF
+
+file_noas "INCLUDE: error in included file" <<EOF
+	foo
+EOF
+asm_fail <<EOF
+	include "_file_0"
+EOF
+expect <<EOF
+_file_0:1: unrecognized mnemonic "foo"
+EOF
+

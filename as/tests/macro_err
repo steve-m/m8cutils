@@ -1,0 +1,110 @@
+#!/bin/sh
+. Common
+
+asm_fail "MACRO: duplicate macro" <<EOF
+	macro	foo
+	nop
+	endm
+
+	macro	foo
+	halt
+	endm
+EOF
+expect <<EOF
+<stdin>:5: duplicate macro "foo"
+EOF
+
+asm_fail "MACRO: unknown macro" <<EOF
+	macro	foo
+	nop
+	endm
+
+	bar
+EOF
+expect <<EOF
+<stdin>:5: unrecognized mnemonic "bar"
+EOF
+
+asm_fail "MACRO: newline before last argument" <<EOF
+	macro	foo
+	db	@0,@1
+	nop	/* without this, we get "db 1," followed by "2" */
+	endm
+
+	foo	1,
+		2
+EOF
+edit s/parse/syntax/
+expect <<EOF
+<stdin>:3: syntax error
+EOF
+
+asm_fail "MACRO: not enough arguments" <<EOF
+	macro	foo
+	db	@1,@0
+	endm
+
+	foo	0
+EOF
+expect <<EOF
+<stdin>:6: EOF in macro arguments
+EOF
+
+asm_fail "MACRO: extra arguments with newline" <<EOF
+	macro	foo
+	db	@0
+	endm
+
+	foo	0,1,
+		2,3
+EOF
+edit s/parse/syntax/
+expect <<EOF
+<stdin>:6: syntax error
+EOF
+
+asm_fail "MACRO: infinite recursion" <<EOF
+	macro	foo
+	foo
+	endm
+
+	foo
+EOF
+expect <<EOF
+<stdin>:2: exceeded maximum depth of includes or macro expansions (300)
+EOF
+
+asm_fail "MACRO: unterminated macro" <<EOF
+	macro	foo
+	nop
+EOF
+expect <<EOF
+<stdin>:3: unterminated macro
+EOF
+
+asm_fail "MACRO: macro within macro" <<EOF
+	macro	foo
+	nop
+	macro	bar
+	halt
+	endm
+	endm
+EOF
+expect <<EOF
+<stdin>:3: macros cannot define new macros
+EOF
+
+asm_fail "MACRO: @0 outside macro (without -e)" <<EOF
+	db	@0
+EOF
+expect <<EOF
+<stdin>:1: cycle counting is a non-standard extension
+EOF
+
+asm_fail "MACRO: @0 outside macro (with -e)" -e <<EOF
+	db	@0
+EOF
+edit s/parse/syntax/
+expect <<EOF
+<stdin>:1: syntax error
+EOF

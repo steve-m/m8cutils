@@ -19,6 +19,8 @@
 #include "cpp.h"
 
 #include "error-as.h"
+#include "id.h"
+#include "input.h"
 #include "code.h"
 
 
@@ -110,6 +112,7 @@ static void do_file(char *name)
     id_begin_file();
     (void) yyparse();
     id_end_file();
+    remove_macros();
     if (allow_extensions)
 	reap_cpp();
 }

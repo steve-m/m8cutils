@@ -1,0 +1,15 @@
+#include "../models.m8cbscan"
+
+
+#define DIODE_REV DIODE
+#define DIODE_R_REV DIODE_R
+
+#ifdef SINGLE
+  #define NC(A) \
+    A allow ANY external Z
+  SINGLE(A)
+#else
+  #define NC(A,B) \
+    A, B allow ANY external Z
+  DUAL(A,B)
+#endif

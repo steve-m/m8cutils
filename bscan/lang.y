@@ -55,6 +55,19 @@ static void compatibility(uint8_t *a,uint8_t e)
 }
 
 
+static uint8_t compatible(uint8_t set)
+{
+    uint8_t res;
+
+    res = VALUE_0 | VALUE_0R | VALUE_Z | VALUE_1R | VALUE_1;
+    if (set & VALUE_0)
+	res &= ~VALUE_1;
+    if (set & VALUE_1)
+	res &= ~VALUE_0;
+    return res;
+}
+
+
 %}
 
 
@@ -184,6 +197,14 @@ port:
 	{
 	    $$ = $3 << ($1*8);
 	}
+    | '(' ')'
+	{
+	    $$ = 0;
+	}
+    | '(' ports ')'
+	{
+	    $$ = $2;
+	}
     ;
 
 bits:
@@ -210,6 +231,14 @@ bit_range:
 		yyerror("upper bit below lower bit in [upper:lower]");
 	    $$ = ((2 << $1)-1) & ~((1 << $3)-1);
 	}
+    | '(' ')'
+	{
+	    $$ = 0;
+	}
+    | '(' bits ')'
+	{
+	    $$ = $2;
+	}
     ;
 
 settings:
@@ -218,6 +247,16 @@ settings:
 	    $$.allow = $2;
 	    $$.external = $4;
 	    compatibility(&$$.allow,$$.external);
+	}
+    | ALLOW values
+	{
+	    $$.allow = $2;
+	    $$.external = compatible($2);
+	}
+    | EXTERNAL values
+	{
+	    $$.allow = compatible($2);
+	    $$.external = $2;
 	}
     ;
 
@@ -250,5 +289,13 @@ value:
 	    if ($1 > 1)
 		yyerror("value must be 0 or 1");
 	    $$ = $1 ? VALUE_1R : VALUE_0R;
+	}
+    | '(' ')'
+	{
+	    $$ = 0;
+	}
+    | '(' values ')'
+	{
+	    $$ = $2;
 	}
     ;

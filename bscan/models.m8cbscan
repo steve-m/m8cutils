@@ -20,23 +20,12 @@
 #define ANY	0, 0R, Z, 1R, 1
 
 
-/* ----- COMPATIBLE - Set of values compatible with drive ------------------ */
-
-
-#define __COMPATIBLE_0	0, 0R, Z, 1R
-#define __COMPATIBLE_0R	ANY
-#define __COMPATIBLE_Z	ANY
-#define __COMPATIBLE_1R	ANY
-#define __COMPATIBLE_1	0R, Z, 1R, 1
-#define COMPATIBLE(d)	__COMPATIBLE_##d
-
-
 /* ----- Component helper macros ------------------------------------------- */
 
 
 #define __EFFECT(a,b,a_v,b_v) \
-    a allow a_v external COMPATIBLE(a_v) \
-    b allow COMPATIBLE(b_v) external b_v
+    a allow a_v \
+    b external b_v
 
 
 /* ----- GND - Direct connection to digital ground ------------------------- */
@@ -71,6 +60,22 @@
 #define PULL_UP(p) VDD_R(p)
 
 
+/* ----- DIODE_R_DOWN - Diode with series resistor connected to ground ----- */
+
+
+#define DIODE_R_DOWN(p) \
+    { p allow 0, 0R, Z external Z | \
+      p allow 1R, 1 external 0R }
+
+
+/* ----- DIODE_R_UP - Diode with series resistor connected to positive ----- */
+
+
+#define DIODE_R_UP(p) \
+    { p allow 1, 1R, Z external Z | \
+      p allow 0R, 0 external 1R }
+
+
 /* ----- WIRE - 0 Ohm bridge ----------------------------------------------- */
 
 
@@ -89,11 +94,9 @@
 
 
 #define __R_DIRECTED(a,b) \
-    { __EFFECT(a,b,0,0R) | \
-      __EFFECT(a,b,0R,0R) | \
+    { __EFFECT(a,b,(0,0R),0R) | \
       __EFFECT(a,b,Z,Z) | \
-      __EFFECT(a,b,1R,1R) | \
-      __EFFECT(a,b,1,1R) }
+      __EFFECT(a,b,(1R,1),1R) }
 
 #define RESISTOR(a,b) \
     { __R_DIRECTED(a,b) | __R_DIRECTED(b,a) }
@@ -103,18 +106,14 @@
 
 
 #define __DIODE_ANODE(a,c) \
-    { __EFFECT(a,c,0,Z) | \
-      __EFFECT(a,c,0R,Z) | \
-      __EFFECT(a,c,Z,Z) | \
+    { __EFFECT(a,c,(0,0R,Z),Z) | \
       __EFFECT(a,c,1R,1R) | \
       __EFFECT(a,c,1,1) }
 
 #define __DIODE_CATHODE(c,a) \
    { __EFFECT(c,a,0,0) | \
      __EFFECT(c,a,0R,0R) | \
-     __EFFECT(c,a,Z,Z) | \
-     __EFFECT(c,a,1R,Z) | \
-     __EFFECT(c,a,1,Z) }
+     __EFFECT(c,a,(Z,1R,1),Z) }
 
 #define DIODE(a,c) \
     { __DIODE_ANODE(a,c) | __DIODE_CATHODE(c,a) }
@@ -124,18 +123,12 @@
 
 
 #define __DIODE_R_ANODE(a,c) \
-    { __EFFECT(a,c,0,Z) | \
-      __EFFECT(a,c,0R,Z) | \
-      __EFFECT(a,c,Z,Z) | \
-      __EFFECT(a,c,1R,1R) | \
-      __EFFECT(a,c,1,1R) }
+    { __EFFECT(a,c,(0,0R,Z),Z) | \
+      __EFFECT(a,c,(1R,1),1R) }
 
 #define __DIODE_R_CATHODE(c,a) \
-   { __EFFECT(c,a,0,0R) | \
-     __EFFECT(c,a,0R,0R) | \
-     __EFFECT(c,a,Z,Z) | \
-     __EFFECT(c,a,1R,Z) | \
-     __EFFECT(c,a,1,Z) }
+   { __EFFECT(c,a,(0,0R),0R) | \
+     __EFFECT(c,a,(Z,1R,1),Z) }
 
 #define DIODE_R(a,c) \
     { __DIODE_R_ANODE(a,c) | __DIODE_R_CATHODE(c,a) }

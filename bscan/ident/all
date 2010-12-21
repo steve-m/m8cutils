@@ -1,18 +1,143 @@
 #!/bin/sh
+#
+# all - Run automated probes
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+#
+# P0[7] - P0[5]	 Diode
+# P0[7] - P0[3]  1k
+# P0[7] - P0[1]  10k
+# P0[3] - P0[5]  Diode + 1k
+# P0[1] - P0[5]  Diode + 10k
+#
+# P1[3]		 GND
+# P1[5]		 Diode+R to GND
+# P1[7]		 1k to GND
+# P2[1]		 10k to GND
+#
+# P0[6]		 Vdd
+# P0[4]		 Diode+R to Vdd
+# P0[2]		 1k to Vdd
+# P0[0]		 10k to Vdd
+#
+# P1[2] - P1[4]	 Wire
+# P1[4] - P1[6]	 Open
+#
+# P1[2]		 Not connected
+#
+
 C()
 {
-    if ../m8cbscan -q -d wadsp "$@" 2>/dev/null; then
+    ../m8cbscan -q -t "$@" env >/dev/null || exit
+    if ../m8cbscan -q -d wadsp -R "$@" env 2>/dev/null; then
+#    if ../m8cbscan -q -d wadsp -t -v "$@" env >/dev/null; then
 	printf "%-40s: %s\\n" "$*" YES
     else
 	printf "%-40s: %s\\n" "$*" NO
     fi
 }
-C bare.env
-C -DSINGLE=GND single.env
-C -DSINGLE=VDD single.env
-C -DSINGLE=PULL_UP single.env
-C -DSINGLE=PULL_DOWN single.env
-C -DDUAL=WIRE dual.env
-C -DDUAL=RESISTOR dual.env
-C -DDUAL=DIODE dual.env
-C -DDUAL=DIODE_R dual.env
+
+N()
+{
+    echo "$*"
+}
+
+single()
+{
+    pin=$1
+    shift
+    for n in $*; do
+	C -DSINGLE=$n -DA=$pin
+    done
+}
+
+dual()
+{
+    from=$1
+    to=$2
+    shift 2
+    for n in $*; do
+	C -DDUAL=$n -DA=$from -DB=$to
+    done
+}
+
+S()
+{
+    single $1 NC GND VDD PULL_DOWN PULL_UP DIODE_R_DOWN DIODE_R_UP
+#    dual $1 P1[6] WIRE RESISTOR DIODE DIODE_R
+#    dual P1[6] $1 DIODE_REV DIODE_R_REV
+}
+
+D()
+{
+#    single $1 GND VDD PULL_DOWN PULL_UP DIODE_R_DOWN DIODE_R_UP
+    dual $1 $2 NC WIRE RESISTOR DIODE DIODE_R
+}
+
+
+{
+    N "Not connected"
+    S P1[6]
+
+    N "Shorted to GND"
+    S P1[3]
+
+    N "Shorted to Vdd"
+    S P0[6]
+
+    N "1k Ohm pull-down to GND"
+    S P1[7]
+
+    N "10k Ohm pull-down to GND"
+    S P2[1]
+
+    N "1k Ohm pull-up to Vdd"
+    S P0[2]
+
+    N "10k Ohm pull-up to Vdd"
+    S P0[0]
+
+    N "Diode and 330 Ohm, to GND"
+    S P1[5]
+
+    N "Diode and 330 Ohm, to Vdd"
+    S P0[4]
+} | tee _single
+
+{
+    N "Not connected"
+    D P1[4] P1[6]
+
+    N "Wire"
+    D P1[2] P1[4]
+
+    N "1 kOhm"
+    D P0[7] P0[3]
+
+    N "10 kOhm"
+    D P0[7] P0[1]
+
+    N "Diode, forward"
+    D P0[7] P0[5]
+
+    N "Diode, reversed"
+    D P0[5] P0[7]
+
+    N "Diode and 1 kOhm, forward"
+    D P0[3] P0[5]
+
+    N "Diode and 1 kOhm, reversed"
+    D P0[5] P0[3]
+
+    N "Diode and 10 kOhm, forward"
+    D P0[1] P0[5]
+
+    N "Diode and 10 kOhm, reversed"
+    D P0[5] P0[1]
+} | tee _dual
+
+./fmt.pl _single
+./fmt.pl _dual

@@ -1,0 +1,56 @@
+#!/bin/sh
+. Common
+
+asm "MACRO: nested macros without arguments" <<EOF
+	macro	foo
+	db	1
+	db	2
+	endm
+
+	macro	bar
+	foo
+	db	3
+	foo
+	endm
+
+	bar
+EOF
+expect <<EOF
+01 02 03 01 02
+EOF
+
+asm "MACRO: nested macros, constant arguments for inner" <<EOF
+	macro	foo
+	db	@0
+	db	@1
+	endm
+
+	macro	bar
+	foo	1,2
+	db	3
+	foo	4,5
+	endm
+
+	bar
+EOF
+expect <<EOF
+01 02 03 04 05
+EOF
+
+asm "MACRO: nested macros, variable arguments for inner" <<EOF
+	macro	foo
+	db	@0
+	db	@1
+	endm
+
+	macro	bar
+	foo	@0,@1
+	db	3
+	foo	@0,@1
+	endm
+
+	bar	1,2
+EOF
+expect <<EOF
+01 02 03 01 02
+EOF

@@ -123,7 +123,6 @@ Missing features
 - - - - - - - -
 
 - DSU: not yet implemented
-- INCLUDE: not yet implemented - use CPP's file inclusion
 - .LITERAL, .ENDLITERAL, .SECTION, .ENDSECTION: ignored
 
 

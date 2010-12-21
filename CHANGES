@@ -4,14 +4,18 @@ Version 21 (xx-DEC-2006)
 - m8cbscan/: new static connection checker that performs a boundary scan
   through ISSP
 - Common.make: VERSION is now a string, not a number
-- as/: added support for IF ... ELSE ... ENDIF (as/tests/if, as/tests/if_nest,
-  as/tests/if_la, as/tests/if_err)
-- as/: added support for MACRO ... ENDM
-(as/tests/macro, as/tests/sep_macro; updated as/tests/sep_cpp)
 - as/tests/Common: added function "edit" to run sed on _out
+- as/tests/Common: added function files_noas to add a file without putting it
+  on the command line of m8cas
 - Common.make: set YACC to "bison -y" to gain access to extension "YYEMPTY"
   (updated as/tests/redef_undef)
 - shared/error.c:set_file: convert empty file names to "<stdin>"
+- as/: added support for IF ... ELSE ... ENDIF (as/tests/if, as/tests/if_nest,
+  as/tests/if_la, as/tests/if_err)
+- as/: added support for MACRO ... ENDM (as/tests/macro, as/tests/macro_nest,
+  as/tests/macro_sep, as/tests/macro_if, as/tests/macro_err; updated
+  as/tests/sep_cpp)
+- as/: added support for INCLUDE (as/tests/include)
 
 Version 20 (5-DEC-2006)
 ----------

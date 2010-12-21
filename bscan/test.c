@@ -168,26 +168,50 @@ static void remove_useless(void)
 }
 
 
-static int setup(int current_strong)
+static int setup_gentle(void)
 {
-    int i,work = 0;
+    int i,work = 1;
 
     for (i = 0; i != MAX_PINS; i++) {
 	if (!((selected >> i) & 1))
 	    values[i] = VALUE_Z;
 	else {
 	    if (current_high) {
-		if (weak_low(i))
-		    work = 1;
+		if (!gentle_low(i))
+		    work = 0;
 	    }
 	    else {
-		if (weak_high(i))
-		    work = 1;
+		if (!gentle_high(i))
+		    work = 0;
 	    }
 	}
     }
+    return work;
+}
+
+
+static int setup(int current_strong)
+{
+    int i,work = 1;
+
+    for (i = 0; i != MAX_PINS; i++) {
+	if (!((selected >> i) & 1))
+	    values[i] = VALUE_Z;
+	else {
+	    if (current_high) {
+		if (!weak_low(i))
+		    work = 0;
+	    }
+	    else {
+		if (!weak_high(i))
+		    work = 0;
+	    }
+	}
+    }
+    if (!work)
+	return 0;
     if (current_bit == -1)
-	return work;
+	return 1;
     if (current_high)
 	return current_strong ?
 	  strong_high(current_bit) : weak_high(current_bit);
@@ -201,9 +225,23 @@ static int setup(int current_strong)
  * Set all pins to weakly oppose the single pin we're about to test, then check
  * that they indeed read back correctly. Failure to do so indicates shorts to
  * GND, Vdd, or outputs of external components.
+ *
+ * We do this in two steps: first, we use "gentle" mode, to see if there are
+ * any really bad shorts. If this works (provided it wasn't too gentle, and we
+ * could not obtain any testable configurations), we proceed with "weak", which
+ * tries to be as close to a the external drive (according to the model) as
+ * possible.
  */
 
-static int check_base(void)
+
+static int check_base_gentle(void)
+{
+    assert(current_bit == -1);
+    return setup_gentle() ? post() : 1;
+}
+
+
+static int check_base_weak(void)
 {
     assert(current_bit == -1);
     return setup(0) ? post() : 1;
@@ -328,14 +366,15 @@ int do_tests(void)
 
     for (current_high = 0; current_high != 2; current_high++) {
 	current_bit = -1;
-	if (iterate(check_base))
-	    for (current_bit = 0; current_bit != MAX_PINS; current_bit++)
-		if ((defined >> current_bit) & 1) {
-		    if (!quiet)
-			current(current_bit,current_high);
-		    if (iterate(check_weak))
-			iterate(check_strong);
-		}
+	if (iterate(check_base_gentle))
+	    if (iterate(check_base_weak))
+		for (current_bit = 0; current_bit != MAX_PINS; current_bit++)
+		    if ((defined >> current_bit) & 1) {
+			if (!quiet)
+			    current(current_bit,current_high);
+			if (iterate(check_weak))
+			    iterate(check_strong);
+		    }
     }
 
     return finish();

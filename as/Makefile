@@ -27,10 +27,12 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       dundef \
       prot_all prot_hole prot_short prot_comment \
       redef_before redef_after redef_syntax redef_undef redef_mix redef_ext \
-      if if_nest if_la if_err
+      if if_nest if_la if_err \
+      macro macro_nest macro_if macro_sep macro_err \
+      include
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
-      error-as.h error-as.c id.h id.c macro.h op.h op.c code.h code.c \
+      error-as.h error-as.c id.h id.c input.h op.h op.c code.h code.c \
       tests/Common $(TESTS:%=tests/%)
 OBJS=lex.yy.o y.tab.o m8cas.o error-as.o id.o op.o code.o
 

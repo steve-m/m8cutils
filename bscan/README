@@ -111,6 +111,19 @@ allow 0R external 1R
 
 Conflicts like "allow 1 external 0" yield a fatal error.
 
+If either the "allow" or the "external" clause is omitted, the set of
+values compatible with the respective other clause is used.
+
+All lists, i.e., list of ports, lists of bits, and lists of values,
+can be enclosed in parentheses, and their elements can in turn be lists.
+The empty list, "()" is also allowed. The purpose of this is to allow
+for lists to be passed as macro arguments. Example:
+
+#define UNCONNECTED(pins) \
+    pins allow 0, 0R, Z, 1, 1R external Z
+
+UNCONNECTED((P0,P1[7:2]))
+
 
 Advanced environments
 ---------------------

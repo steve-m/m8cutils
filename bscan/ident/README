@@ -5,29 +5,52 @@ components attached to a test target.
 The script "all" executes all these models, and reports whether
 they are congruous with the measured behaviour or not.
 
+There are the results obtained with a CY8C29466, operating at 5V:
 
-				bare  PULL_DOWN   RESISTOR
-				| GND | PULL_UP   | DIODE
-				| | VDD |       WIRE| DIODE_R
-				| | | | |       | | | |
-Nothing (bare chip)		Y . . . .	. . . .
-P0[7] shorted to GND		. Y . . .	. . . .
-P0[7] shorted to VDD		. . Y . .	. . . .
-P0[7] 1k Ohm pull-down to GND   . Y . Y .	. . . .
-P0[7] 10k Ohm pull-down to GND	. Y . Y .	. . . .
-P0[7] 1 kOhm pull-up to VDD	. . Y . Y	. . . .
-P0[7] 10 kOhm pull-up to VDD	. . Y . Y	. . . .
-Wire between P0[5] and P0[7]   	. . . . .	Y . . .
-1 kOhm between P0[5] and P0[7]	. . . . .	Y Y . .
-10 kOhm between P0[5] and P0[7]	. . . . .	. Y . .
-Diode from P0[7] to P0[5]	. . . . .	. . Y Y
-Diode from P0[5] to P0[7]	. . . . .	. . . .
-Diode and 330 Ohm, forward	. . . . .	. . . Y
-Diode and 330 Ohm, reversed	. . . . .	. Y . .
+Single pin:
 
+                             NC              PULL_UP
+                             |   GND         |   DIODE_R_DOWN
+                             |   |   VDD     |   |   DIODE_R_UP
+                             |   |   |   PULL_DOWN   |
+                             |   |   |   |   |   |   |
+Not connected                Y   .   .   Y   Y   Y   Y
+Shorted to GND               .   Y   .   .   .   .   .
+Shorted to Vdd               .   .   Y   .   .   .   .
+1k Ohm pull-down to GND      .   Y   .   Y   .   Y   .
+10k Ohm pull-down to GND     Y   .   .   Y   .   Y   Y
+1k Ohm pull-up to Vdd        .   .   Y   .   Y   .   Y
+10k Ohm pull-up to Vdd       .   .   Y   .   Y   .   Y
+Diode and 330 Ohm, to GND    Y   .   .   Y   .   Y   Y
+Diode and 330 Ohm, to Vdd    .   .   Y   .   Y   .   Y
+
+
+Pair of pins:
+
+                               NC          DIODE
+                               |   WIRE    |   DIODE_R
+                               |   |   RESISTOR|
+                               |   |   |   |   |
+Not connected                  Y   .   .   .   .
+Wire                           .   Y   .   .   .
+1 kOhm                         .   Y   Y   .   .
+10 kOhm                        .   .   Y   .   .
+Diode, forward                 .   .   Y   Y   Y
+Diode, reversed                .   .   .   .   .
+Diode and 1 kOhm, forward      .   .   .   Y   Y
+Diode and 1 kOhm, reversed     .   .   .   .   .
+Diode and 10 kOhm, forward     .   .   Y   .   Y
+Diode and 10 kOhm, reversed    .   .   .   .   .
 
 Note that some of the false positives could be avoided by forcing
 m8cbscan to also try configurations where strong drives are expected
 to collide (e.g., "1" into GND). Also note that such collisions can
 happen during regular testing, if the model and the actual circuit
 differ.
+
+Also note that some results are essentially non-deterministic and may
+even depend on parasitic effects, e.g., anything based on interpreting
+the signal on a pin driven to Z from both sides (i.e., because the
+circuit attached to the pin does not correspond to the model), will
+basically only capture interferences and parasitic capacitances, and
+may thus yield different results when repeated.

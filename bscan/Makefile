@@ -11,11 +11,11 @@ include ../Common.make
 TESTS=
 FILES=README Makefile \
       bscan.c lang.l lang.y port.h port.c value.h value.c out.h out.c \
+      test.h test.c \
       models.m8cbscan \
       example/README example/bare.env example/short.env example/short2.env \
       example/resistor.env example/diode.env \
-      ident/README ident/all ident/bare.env ident/single.env ident/dual.env \
-      test.h test.c \
+      ident/README ident/all ident/fmt.pl ident/env \
       tests/Common $(TESTS:%=tests/%)
 OBJS=lex.yy.o y.tab.o bscan.o port.o value.o out.o test.o
 

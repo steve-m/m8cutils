@@ -28,6 +28,8 @@ extern uint8_t allow[MAX_PINS];	   /* allowed pin configurations */
 extern uint8_t external[MAX_PINS]; /* possible external drives */
 
 
+int gentle_low(int bit);
+int gentle_high(int bit);
 int weak_low(int bit);
 int weak_high(int bit);
 int strong_low(int bit);

@@ -1,0 +1,119 @@
+#!/bin/sh
+. Common
+
+asm "IF true MACRO ENDM ELSE MACRO ENDM ENDIF" <<EOF
+    if 	1
+	macro	foo
+	db	1
+	endm
+    else
+	macro	foo
+	db	2
+	endm
+    endif
+    foo foo
+EOF
+expect <<EOF
+01 01
+EOF
+
+asm "IF false MACRO ENDM ELSE MACRO ENDM ENDIF" <<EOF
+    if 	0
+	macro	foo
+	db	1
+	endm
+    else
+	macro	foo
+	db	2
+	endm
+    endif
+    foo foo
+EOF
+expect <<EOF
+02 02
+EOF
+
+asm "MACRO IF true ELSE ENDIF ENDM" <<EOF
+	macro	foo
+	if 	1
+	db	1
+	else
+	db	2
+	endif
+	endm
+	foo foo
+EOF
+expect <<EOF
+01 01
+EOF
+
+asm "MACRO IF false ELSE ENDIF ENDM" <<EOF
+	macro	foo
+	if 	0
+	db	1
+	else
+	db	2
+	endif
+	endm
+	foo foo
+EOF
+expect <<EOF
+02 02
+EOF
+
+asm "MACRO IF context ELSE ENDIF ENDM" -e <<EOF
+	macro	foo
+	if 	.0b
+	db	1
+	else
+	db	2
+	endif
+	endm
+
+.0:	equ	0
+	foo
+.0:	equ	1
+	foo
+EOF
+expect <<EOF
+02 01
+EOF
+
+asm "Recursive macro" <<EOF
+	macro	fac
+	if	@0
+	db	@0
+	fac	@0-1
+	endif
+	endm
+	fac	5
+EOF
+expect <<EOF
+05 04 03 02 01
+EOF
+
+asm "MACRO ENDIF ENDM MACRO IF ENDM" <<EOF
+	macro	foo
+	db	1
+	endif
+	db	2
+	endm
+
+	macro	bar
+	db	3
+	if	@0
+	db	4
+	endm
+
+	bar	0
+	foo
+
+	db	100
+	endif	// "foo" is not expanded
+
+	bar	1
+	foo
+EOF
+expect <<EOF
+03 03 04 01 02
+EOF

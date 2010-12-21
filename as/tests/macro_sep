@@ -1,0 +1,15 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, macros do not cross files" <<EOF
+	macro	foo
+	db	@1,@0
+	endm
+	foo	1,2
+EOF
+asm_fail -e <<EOF
+	foo	3,4
+EOF
+expect <<EOF
+<stdin>:1: unrecognized mnemonic "foo"
+EOF

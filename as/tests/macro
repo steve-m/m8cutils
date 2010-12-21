@@ -1,0 +1,138 @@
+#!/bin/sh
+. Common
+
+asm "MACRO: no arguments" <<EOF
+	macro	foo
+	db	01
+	db	02
+	endm
+
+	foo
+	foo
+EOF
+expect <<EOF
+01 02 01 02
+EOF
+
+asm "MACRO: empty body" <<EOF
+	macro	foo
+	endm
+
+	db	1
+	foo
+	foo
+	db	2
+
+EOF
+expect <<EOF
+01 02
+EOF
+
+asm "MACRO: one argument" <<EOF
+	macro	foo
+	db	@0
+	db	@0
+	endm
+
+	foo	1
+	foo	2
+EOF
+expect <<EOF
+01 01 02 02
+EOF
+
+asm "MACRO: two argument, same line" <<EOF
+	macro	foo
+	db	@0,@1
+	db	@0,@1
+	nop
+	endm
+
+	foo	1,10
+	foo	2,20
+EOF
+expect <<EOF
+01 0A 01 0A 40 02 14 02
+14 40
+EOF
+
+asm "MACRO: two argument, multiple lines" <<EOF
+	macro	foo
+	db	@0,@1
+	db	@0,@1
+	nop
+	endm
+
+	foo	
+		1,10
+	foo	2, \
+		20
+EOF
+expect <<EOF
+01 0A 01 0A 40 02 14 02
+14 40
+EOF
+
+asm "MACRO: extra arguments" <<EOF
+	macro	foo
+	db	@0
+	db	@0
+	nop
+	endm
+
+	foo	1,10
+	foo	2,20
+EOF
+expect <<EOF
+01 01 40 02 02 40
+EOF
+
+asm "MACRO: embedded argument" <<EOF
+	macro	foo
+	db	1@02
+	nop
+	endm
+
+	foo	0
+	foo	3
+EOF
+expect <<EOF
+66 40 84 40
+EOF
+
+asm "MACRO: embedded arguments, surrounded by spaces" <<EOF
+	macro	foo
+	dw	1@02@13
+	nop
+	endm
+
+	foo	0  ,   1	// 10213 = 0x27e5
+	foo	3  ,   4	// 13243 = 0x33bb
+EOF
+expect <<EOF
+27 E5 40 33 BB 40
+EOF
+
+asm "MACRO: arguments also expand within strings" <<EOF
+	macro	foo
+	ds	"A@0B"
+	nop
+	endm
+
+	foo	01
+EOF
+expect <<EOF
+41 30 31 42 40
+EOF
+
+asm "MACRO: bare @ (cycle count) does not cause problems" -e <<EOF
+	macro	foo
+	db	@,@0
+	endm
+
+	nop
+	foo	2
+EOF
+expect <<EOF
+40 04 02
+EOF

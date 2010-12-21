@@ -22,6 +22,77 @@ uint8_t allow[MAX_PINS];
 uint8_t external[MAX_PINS];
 
 
+/* ----- Set pin to a "gentle" drive --------------------------------------- */
+
+
+/*
+ * We choose a drive mode that goes in the desired direction, but that avoids
+ * the strong drives, i.e., "0" or "1". This way, we don't get any high-current
+ * shorts if model and real circuit disagree.
+ *
+ * This is very similar to "weak", but "gentle" will give up sooner.
+ */
+
+
+static int gentle(int bit,int value_x,int value_xr,int value_y,int value_yr)
+{
+    uint8_t a,e;
+
+    a = allow[bit];
+//fprintf(stderr,"bit %d a %d x %d\n",bit,a,value_x);
+    e = external[bit];
+    if ((a & VALUE_Z) &&
+      (e & (value_x | value_xr)) && !(e & (value_y | value_yr | VALUE_Z)))
+	return VALUE_Z;
+    if ((a & value_xr) &&
+      (e & (value_x | value_xr | VALUE_Z)) && !(e & (value_y | value_yr)))
+	return value_xr;
+    if ((a & value_yr) && e == value_x)
+	return value_yr;
+    return -1;
+}
+
+
+static int gentle_default(int bit,
+  int value_x,int value_xr,int value_y,int value_yr)
+{
+    uint8_t a;
+
+    a = allow[bit];
+    if (a & VALUE_Z)
+	return VALUE_Z;
+    if (a & value_xr)
+	return value_xr;
+    if (a & value_yr)
+	return value_yr;
+    return -1;
+}
+
+
+int gentle_low(int bit)
+{
+    int value;
+
+    value = gentle(bit,VALUE_0,VALUE_0R,VALUE_1,VALUE_1R);
+    if (value == -1)
+	value = gentle_default(bit,VALUE_0,VALUE_0R,VALUE_1,VALUE_1R);
+    values[bit] = value == -1 ? VALUE_Z : value;
+    return value != -1;
+}
+
+
+int gentle_high(int bit)
+{
+    int value;
+
+    value = gentle(bit,VALUE_1,VALUE_1R,VALUE_0,VALUE_0R);
+    if (value == -1)
+	value = gentle_default(bit,VALUE_1,VALUE_1R,VALUE_0,VALUE_0R);
+    values[bit] = value == -1 ? VALUE_Z : value;
+    return value != -1;
+}
+
+
 /* ----- Set pin to weakest drive possible --------------------------------- */
 
 
@@ -40,16 +111,19 @@ static int weak(int bit,int value_x,int value_xr,int value_y,int value_yr)
     a = allow[bit];
 //fprintf(stderr,"bit %d a %d x %d\n",bit,a,value_x);
     e = external[bit];
+
     if ((a & value_yr) && e == value_x)
 	return value_yr;
     if ((a & VALUE_Z) &&
-      (e & (value_x | value_xr)) && !(e & (value_y | value_yr)))
+      (e & (value_x | value_xr)) && !(e & (value_y | value_yr | VALUE_Z)))
 	return VALUE_Z;
     if ((a & value_xr) &&
-      (e & (value_x | value_xr | VALUE_Z)) && !(e & value_y))
+      (e & (value_x | value_xr | VALUE_Z)) && !(e & (value_y | value_yr)))
 	return value_xr;
-    if (a & value_x)
+    if ((a & value_xr) &&
+      (e & (value_x | value_xr | VALUE_Z | value_yr)) && !(e & value_y))
 	return value_x;
+
     return -1;
 }
 
@@ -57,10 +131,9 @@ static int weak(int bit,int value_x,int value_xr,int value_y,int value_yr)
 static int weak_default(int bit,
   int value_x,int value_xr,int value_y,int value_yr)
 {
-    uint8_t a,e;
+    uint8_t a;
 
     a = allow[bit];
-    e = external[bit];
     if (a & VALUE_Z)
 	return VALUE_Z;
     if (a & value_xr)
@@ -69,7 +142,9 @@ static int weak_default(int bit,
 	return value_yr;
     if (a & value_y)
 	return value_y;
-    return VALUE_Z;
+    if (a & value_x)
+	return value_x;
+    return -1;
 }
 
 
@@ -78,8 +153,9 @@ int weak_low(int bit)
     int value;
 
     value = weak(bit,VALUE_0,VALUE_0R,VALUE_1,VALUE_1R);
-    values[bit] = value == -1 ?
-      weak_default(bit,VALUE_0,VALUE_0R,VALUE_1,VALUE_1R) : value;
+    if (value == -1)
+	value = weak_default(bit,VALUE_0,VALUE_0R,VALUE_1,VALUE_1R);
+    values[bit] = value == -1 ? VALUE_Z : value;
     return value != -1;
 }
 
@@ -89,8 +165,9 @@ int weak_high(int bit)
     int value;
 
     value = weak(bit,VALUE_1,VALUE_1R,VALUE_0,VALUE_0R);
-    values[bit] = value == -1 ?
-      weak_default(bit,VALUE_1,VALUE_1R,VALUE_0,VALUE_0R) : value;
+    if (value == -1)
+	value = weak_default(bit,VALUE_1,VALUE_1R,VALUE_0,VALUE_0R);
+    values[bit] = value == -1 ? VALUE_Z : value;
     return value != -1;
 }
 
@@ -195,4 +272,3 @@ const char *value_name(uint8_t value)
 	    abort();
     }
 }
-

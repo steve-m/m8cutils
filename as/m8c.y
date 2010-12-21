@@ -14,7 +14,7 @@
 
 #include "error-as.h"
 #include "id.h"
-#include "macro.h"
+#include "input.h"
 #include "op.h"
 #include "code.h"
 
@@ -779,6 +779,8 @@ directive:
     | TOK_IF expression
 	{
 	    assert(!if_false);
+	    if (if_true+if_false == MAX_IFS)
+		yyerrorf("reached maximum depth of nested IFs (%d)",MAX_IFS);
 	    if_had_else[if_true+if_false] = 0;
 	    if (evaluate($2))
 		if_true++;
@@ -842,9 +844,11 @@ directive:
 	    else
 		if_true--;
 	}
-    | TOK_INCLUDE
+    | TOK_INCLUDE STRING
 	{
-	    yyerror("not yet implemented");
+	    assert(yychar == YYEMPTY);
+	    include_file($2);
+	    free((char *) $2);
 	}
     | TOK_LITERAL
     | TOK_ENDLITERAL

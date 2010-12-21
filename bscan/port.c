@@ -152,37 +152,53 @@ static void change(int port,int addr,uint64_t old,uint64_t new)
 
 
 /*
- * First move towards DM210 = 110, then to the final value. This way, we won't
- * do any illegal transitions, e.g., 0R -> 1 with a transient 0.
+ * We use the following algorithm, which is not monotonous, but avoids hitting
+ * 0 or 1 if those values aren't at the beginning or the end of the transition:
+ *
+ * dm1 |= new_dm1;
+ * dm0 &= new_dm0;
+ * dr = new_dr;
+ * dm0 = new_dm0;
+ * dm1 = new_dm1;
+ * dm2 = new_dm2;
+ *
+ * See http://www.psocdeveloper.com/forums/viewtopic.php?t=2703
+ * for more details.
+ *
+ * We don't need the transition to be monotonous, because the testing done by
+ * m8cbscan currently causes all sorts of values to be output, so a few more
+ * transients won't hurt.
  */
+
 
 void commit(int current_bit,int current_value)
 {
     int i;
 
+
     for (i = 0; i != 8; i++)
 	if ((defined >> i*8) & 0xff) {
-	    change(i,PRTxDMy(i,2),cached_dm2,cached_dm2 | dm2);
-	    change(i,PRTxDMy(i,0),cached_dm0,cached_dm0 & dm0);
 	    change(i,PRTxDMy(i,1),cached_dm1,cached_dm1 | dm1);
+	    change(i,PRTxDMy(i,0),cached_dm0,cached_dm0 & dm0);
 	    change(i,PRTxDR(i),cached_dr,dr);
 	}
-    cached_dm0 &= dm0;
     cached_dm1 |= dm1;
-    cached_dm2 |= dm2;
+    cached_dm0 &= dm0;
     cached_dr = dr;
 
     for (i = 0; i != 8; i++)
 	if ((defined >> i*8) & 0xff) {
-	    change(i,PRTxDMy(i,2),cached_dm2,dm2);
 	    change(i,PRTxDMy(i,0),cached_dm0,dm0);
 	    change(i,PRTxDMy(i,1),cached_dm1,dm1);
+	    change(i,PRTxDMy(i,2),cached_dm2,dm2);
 	}
     cached_dm0 = dm0;
     cached_dm1 = dm1;
     cached_dm2 = dm2;
 
     check_target(current_bit,current_value);
+
+
 }
 
 
