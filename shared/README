@@ -1,12 +1,25 @@
 Code shared among programs of the m8cutils project
 ==================================================
 
+With the exceptions noted below, all files in this directory are
 Copyright 2006 Werner Almesberger
 
 The files in this directory are distributed under the terms of the
 GNU General Public License (GPL), version 2. This license is
 included in the file ../COPYING.GPLv2.
 
+cpp.h, cpp.c:
+  Copyright 2002,2003 California Institute of Technology
+  Copyright 2004 Werner Almesberger
+
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+
+Overview
+--------
 
 The library libm8cutils.a contains functions used by more than
 one programm in this project:
@@ -15,6 +28,8 @@ one programm in this project:
   Intel HEX format
 - disasm: (non-symbolic) single-instruction disassembler
 - chips: chip characteristics database
+- cpp: helper functions to read standard input or a file through CPP
+- interact: verbosity control and progress bars
 
 Note: there are regression tests here. The respective tests are
 distributed as follows:
@@ -23,6 +38,8 @@ distributed as follows:
 - file output: none yet
 - disassembly: ../das
 - chips: none yet
+- cpp: none (this code has been thoroughly tested in tcng and umlsim)
+- interact: none yet
 
 
 File formats

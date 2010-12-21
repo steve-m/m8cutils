@@ -14,7 +14,8 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "m8cprog.h"
+#include "interact.h"
+
 #include "vectors.h"
 #include "prog.h"
 
@@ -66,10 +67,13 @@ int32_t delta_time_us(void)
 void prog_list(FILE *file)
 {
     struct prog_ops **walk;
-    int col = 0;
+    int width,col = 0;
 
+    width = get_output_width(file);
+    if (!width)
+	width = DEFAULT_OUTPUT_WIDTH;
     for (walk = programmers; *walk ; walk++) {
-	if (strlen((*walk)->name)+col+2 > output_width) {
+	if (strlen((*walk)->name)+col+2 >= width) {
 	    putc('\n',file);
 	    col = 0;
 	}
@@ -82,16 +86,24 @@ void prog_list(FILE *file)
 
 int prog_open(const char *dev,const char *programmer,int voltage)
 {
-    struct prog_ops **walk;
+    if (!dev)
+	dev = getenv("M8CPROG_PORT");
+    if (!programmer)
+	programmer = getenv("M8CPROG_DRIVER");
+    if (!programmer)
+	prog = *programmers;
+    else {
+	struct prog_ops **walk;
 
-    for (walk = programmers; *walk ; walk++) {
-	prog = *walk;
-	if (!strcasecmp(prog->name,programmer))
-	    break;
-    }
-    if (!*walk) {
-	fprintf(stderr,"programmer \"%s\" is not known\n",programmer);
-	exit(1);
+	for (walk = programmers; *walk ; walk++) {
+	    prog = *walk;
+	    if (!strcasecmp(prog->name,programmer))
+		break;
+	}
+	if (!*walk) {
+	    fprintf(stderr,"programmer \"%s\" is not known\n",programmer);
+	    exit(1);
+	}
     }
     voltage = prog->open(dev,voltage);
     if (!voltage) {

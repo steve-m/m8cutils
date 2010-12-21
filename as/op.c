@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 #include "error.h"
@@ -152,6 +153,12 @@ uint32_t op_not(uint32_t a,uint32_t b)
 uint32_t op_minus(uint32_t a,uint32_t b)
 {
     return -a;
+}
+
+
+uint32_t op_ctz(uint32_t a,uint32_t b)
+{
+    return ffs(a)-1;
 }
 
 

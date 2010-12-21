@@ -1,6 +1,12 @@
 cy8c2utils "to do" list
 ======================
 
+General
+-------
+
+- add a -V option to display the version number
+- make global "make tests" return a count for all tests
+
 cy8c2prog
 ---------
 
@@ -10,6 +16,7 @@ cy8c2prog
 - check that the Intel hex format is properly implemented
 - don't require voltage if we're reading and the target supplies power
 - add regression tests
+- prog/prog.c:prog_vector: wait 100 us, not 10 us for L->H transition (measure)
 
 waspic
 ------

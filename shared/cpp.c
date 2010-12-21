@@ -1,9 +1,9 @@
 /*
  * cpp.c - CPP subprocess
  *
- * Written 2002-2004 by Werner Almesberger
+ * Written 2002-2004, 2006 by Werner Almesberger
  * Copyright 2002,2003 California Institute of Technology
- * Copyright 2004 Werner Almesberger
+ * Copyright 2004, 2006 Werner Almesberger
  */
 
 
@@ -16,7 +16,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "util.h"
 #include "cpp.h"
 
 
@@ -40,15 +39,26 @@ void add_cpp_arg(const char *arg)
     }
     if (cpp_argc == 1)
 	cpp_argv[0] = CPP;
-    cpp_argv[cpp_argc++] = arg ? stralloc(arg) : NULL;
+    if (arg) {
+	arg = strdup(arg);
+	if (!arg) {
+	    perror("strdup");
+	    exit(1);
+	}
+    }
+    cpp_argv[cpp_argc++] = arg;
 }
 
 
 void add_cpp_Wp(const char *arg)
 {
-    char *tmp = stralloc(arg);
+    char *tmp = strdup(arg);
     char *curr,*end;
 
+    if (!tmp) {
+	perror("strdup");
+	exit(1);
+    }
     curr = tmp;
     do {
 	end = strchr(curr,',');

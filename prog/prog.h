@@ -59,7 +59,7 @@ int32_t delta_time_us(void);
 
 void prog_list(FILE *file);
 int prog_open(const char *dev,const char *programmer,int voltage);
-  /* warning: "dev" can be NULL */
+  /* "dev" and "programmer" can be NULL, to use defaults */
 uint8_t prog_vector(uint32_t v);
 uint32_t do_prog_vectors(uint32_t v,...);
 void prog_close(void);

@@ -1,0 +1,251 @@
+m8csim - Simulator for M8C systems
+==================================
+
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+
+Overview
+--------
+
+The simulator loads a program in ROM, binary, or Intel Hex format, and executes
+it in the simulation environment. The simulator currently only simulates the
+CPU core, without interrupt handling, and GPIO pins. It currently does not
+attempt to relate simulation time to real time.
+
+The simulation is controlled by a simple script that can set and query memory
+and registers, and that controls code execution. The simulator is not designed
+to be interactive, but it is possible to enter the script during the simulation
+run.
+
+
+Usage
+-----
+
+The script is by default read from standard input. This can be changed with the
+option -f. The script is passed through the C preprocessor. The usual CPP
+options -I, -D, and -U are recognized and passed on. Normally, register
+definitions are automatically included from the file default.mc8sim. This can
+be turned off with the option -n. To disable CPP entirely, put -n twice.
+
+The name of the chip is a mandatory command-line argument. The list of
+supported chips can be obtained with the option -l.
+
+The program file can be in ROM format, Intel Hex, or it can a raw binary.
+Binary mode can be forced with the option -b. If the program file name argument
+is omitted, the program is read from standard input. Note that standard input
+can only provide either the script or the program, but not both.
+
+The use of a DIY ICE is discussed below.
+
+
+The DIY ICE
+-----------
+
+The simulator can connect to a target system and remotely control its
+processor. Selected I/O operations can then be executed on the real hardware.
+Use of an ICE is enabled with the option -i. Note that this only initializes
+communication with the target but does not change it's I/O. To do this, I/O
+lines must be assigned to the ICE with the "connect" directive in the
+simulation script.
+
+The simulator uses the regular ISSP(tm) interface for communication. It
+delegates communication to the m8cprog programmer. The options "-p port",
+"-d driver", -3, and -5 are used in exactly the same way as with m8cprog.
+
+
+Scripting language
+------------------
+
+Each expression or command ends with a newline. Comments in the scripting
+language are the usual forms known from C, and the semicolon from m8cas.
+
+- if an expression is entered, it is calculated and its result is printed in
+  hex and decimal. Example:
+
+  (input)	5
+  (output)	0x5 5
+
+- constants can be numbers in any of the formats recognized by the M8C
+  assembler language, including characters.
+
+- Read from RAM, ROM, or a register:
+
+  [address]
+  RAM[address]
+  ROM[address]
+  REG[address]
+  A
+  F
+  SP
+  X
+  .
+
+  The names of CPU registers and the memory type prefixes are case-insensitive.
+  Register and RAM addresses span the entire address range and are not affected
+  by the current I/O bank or RAM page.
+
+- Expressions from constants and read accesses can be formed using all
+  operators recognized by m8cas. Additionally, the following operators are
+  available:
+
+  &ram[expression]	yields  expression
+  expression[n]		yields the n-th bit of "expression", i.e., 0 or 1
+  expression[l:r]	yields bits l through r of "expression", e.g.,
+			0xd6[4:2] yields 5
+
+  The precedence of & and [...] is like in C. Expressions are always calculated
+  as unsigned 32 bit integers.
+
+- Assign to RAM or a register. The target name is like when reading, e.g.,
+
+  A = 0
+  [0x100] = 1
+
+- Run the program until an exception occurs or until a number of cycles has
+  passed:
+
+  run
+  run CYCLES
+
+  The current time in cycles can be obtained through the read-only variable @.
+  To run the program for a N cycles, use "run @+N"
+
+  Note: currently, one instruction is one cycle. This will change in the
+  future.
+
+- Connect I/O pins to an ICE, by port, pin, or pin range, e.g.,
+
+  connect P2
+  connect P0[0]
+  connect P1[6:3]
+
+  Writes to these pins are now propagated to the ICE, and reads of the pins use
+  data obtained from the ICE. This applies to accesses from the program being
+  simulated and for register accesss from the script.
+
+  The pins used to communicate with the ICE, usually P1[0] and P1[1], cannot be
+  connected. Port names are case-insensitive, so P1 is equal to p1.
+
+- Disconnect I/O pins from the ICE, either all of them, or by port, pin, or pin
+  range:
+
+  disconnect
+  disconnect P1
+  disconnect P0[7]
+  disconnect P5[6:0]
+
+  Disconnected pins are turned into the Z state.
+
+- Definitions of registers and fields of CY8C2xxxx chips are available as
+  case-sensitive #defines.
+
+  Register and field names follow the names in the TRM. Field names are
+  constructed by appending the field name to the register name. Spaces in names
+  are removed if the adjacent characters are non-numeric or differ in case.
+  Otherwise, the spaces are replaced with underscores. Examples:
+
+  "Page Bits" in IDX_PP becomes IDX_PP_PageBits
+  "ECO EX" in CPU_SCR1 becomes CPU_SCR1_ECO_EX
+
+  Registers are defined as accesses, e.g., PRT0DM0 is reg[0x100]. Likewise,
+  fields are defined using the [...] operator, e.g. CPU_F_PgMode is CPU_F[7:6].
+
+  To obtain the address of a register, use the unary & operator.
+
+
+Known limitations
+-----------------
+
+This is a list of some known limitations and missing "must have" features.
+There are certainly many more.
+
+- "cycles" are one per instruction, not one per CPU cycle:
+  Use shared/disasm.c:m8c_cycles
+
+- simulation time is not synchronized with real time:
+  Every X cycles (configurable), check against lower/upper bound (configurable)
+  of deviation from real time. If running too fast, wait. If running too slow,
+  cancel the time debt and proceed.
+
+- relation of simulation and real time is not tracked:
+  When checking time, record both times, then plot at post-simulation
+  analysis.
+
+- there are no traces for intructions executed:
+  Instructions are easy, data will be harder. Do data "intelligently", by
+  recording just the information an instruction has destroyed ?
+
+- there are no traces for I/O lines:
+  Actually, a little GUI may be nice for once. Also add a means to override
+  target lines and provide script-driven or interactive stimuli.
+
+- no handling of interrupts observed in the target:
+  Poll INT_VC of target, clear any pending interrupts through INT_CLRx, then do
+  further processing in the simulator.
+
+- no generation of interrupts:
+  Script should be able to post an interrupt, etc. To do: think one example
+  through from A to Z, e.g., operation of shift registers in a serial link.
+
+- implementation of "PC" should be nice and fast, but it's not really
+  convenient for checks against boundaries:
+  We don't catch wrap-arounds at 0xffff, at ROM end, or the extra cycle when
+  crossing an 8 bit boundary.
+
+- scripting language doesn't really know whether it wants to be interactive or
+  non-interactive:
+  Yeah, those decisions ... Note that CPP isn't suitable for interactive use.
+
+- should the name of the PC be "PC" (it's a register) or "." (like in the
+  assembler) ?
+  Or both ?
+
+- no access to symbols:
+  Of course, since our assembler doesn't output them, we can't use them.
+
+- no way to interactively halt the problem:
+  Should catch SIGINT, and do something like a HALT.
+
+- no breakpoints:
+  Use HALT. Then figure out what to do with multiple breakpoints. Just report,
+  dump data (not needed if we have an infinite trace buffer with full
+  playback), and proceed ?
+
+- weak scripting language:
+  No loops, no variables, no functions. Should I just drag over the whole
+  umlsim core, any never worry again about a lack of power ?
+
+- no quick interconnect overview:
+  should support graphical (Postscript/XFig or interactive) view of
+  configuration status of interconnect
+
+- GPIO isn't just binary:
+  We should be able to drive a pin with a pull up/down, which doesn't override
+  a strong output. We should be able to drive a pin with Z. The simulator
+  should (optionally) detect conflicts, i.e., Z vs. Z on input, strong H vs.
+  strong L, and resistive H vs. resisitive L.
+
+- drive vs. ICE priority is wrong:
+  It should be possible to override input from the ICE, and just use the ICE
+  for output.
+
+- simulated drive is not seen by target:
+  So we can't just feed synthetic data to a digital block.
+
+- register definitions should be shared with assembler:
+  Move them to shared/ or similar. Also consider giving them a more specific
+  name, and to hide registers missing in specific chips.
+
+- is it really a good idea to make FOO to the access ?
+  If it's reg[FOO] in the assembler, it should also be reg[FOO] and not just
+  FOO in the simulator, no ?
+
+- assignments should also allow bit fields:
+  "PRT0DM2[0] = 1" just makes so much sense ...
+
+- consider supporting read-modify-write operators:
+  "PRT0DR ^= 0xff", anyone ?

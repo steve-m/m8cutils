@@ -28,3 +28,10 @@ EOF
 expect <<EOF
 22
 EOF
+
+asm "Operators: >> (ctz)" -e <<EOF
+	db	>>0x28
+EOF
+expect <<EOF
+03
+EOF

@@ -1041,6 +1041,11 @@ unary_expression:
 	    extension("unary minus");
 	    $$ = make_op(op_minus,$2,NULL);
 	}
+    | TOK_SHR primary_expression
+	{
+	    extension("unary >>");
+	    $$ = make_op(op_ctz,$2,NULL);
+	}
     ;
 
 primary_expression:

@@ -26,6 +26,7 @@ static int fd;
  */
 
 #define HELLO_STRING "\x01\x01\x01\x02\x03"
+#define BYE_STRING "\x01\x01\x01"
 
 
 static int waspic_open(const char *dev,int voltage)
@@ -83,6 +84,7 @@ static uint8_t waspic_vector(uint32_t v)
 
 static void waspic_close(void)
 {
+    tty_write(BYE_STRING,3);
     tty_close();
 }
 

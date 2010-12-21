@@ -10,13 +10,17 @@ include ../Common.make
 
 DRIVERS=waspic watsp
 FILES=README Makefile \
-      m8cprog.h m8cprog.c cy8c2regs.h vectors.h \
-      tty.h tty.c prog.h prog.c \
+      m8cprog.c cy8c2regs.h vectors.h \
+      tty.h tty.c prog.h prog.c ops.h ops.c ice.h ice.c \
       ref/Makefile ref/main.c \
       ref/vectorconv.pl ref/vdecode.pl ref/mapconv.pl \
       ref/an2026a.txt ref/an2026a.map ref/an2026b.txt ref/an2026b.map \
       $(DRIVERS:%=drv/%.c)
-OBJS=m8cprog.o tty.o prog.o $(DRIVERS:%=drv/%.o)
+OBJS=m8cprog.o
+LIBPROG_OBJS=tty.o prog.o ops.o ice.o $(DRIVERS:%=drv/%.o)
+LIBDEP += libprog.a
+# don't use += because libprog may need symbols from libm8cutils
+LDLIBS := -L. -lprog $(LDLIBS)
 
 CFLAGS += -I$(shell pwd) \
           -DPROGRAMMERS_DECL="$(DRIVERS:%=extern struct prog_ops %_ops;)" \
@@ -29,6 +33,10 @@ CFLAGS += -I$(shell pwd) \
 all:		m8cprog
 
 m8cprog:	$(OBJS) $(LIBDEP)
+		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+
+libprog.a:	$(LIBPROG_OBJS)
+		$(AR) cr$(AR_v) $@ $^
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -55,7 +63,7 @@ filelist:
 
 clean:
 		$(MAKE) -C ref clean
-		rm -f $(OBJS)
+		rm -f $(OBJS) $(LIBPROG_OBJS)
 
 spotless:	clean
 		$(MAKE) -C ref spotless

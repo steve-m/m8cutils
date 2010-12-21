@@ -113,6 +113,9 @@ static int watsp_read_bit(void)
 
 static void watsp_close(void)
 {
+    XRES(1);
+    Z();
+    SCLK(0);
     tty_close();
 }
 

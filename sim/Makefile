@@ -1,5 +1,5 @@
 #
-# Makefile - Makefile of the M8C assembler
+# Makefile - Makefile of the M8C simulator
 #
 # Written 2006 by Werner Almesberger
 # Copyright 2006 Werner Almesberger
@@ -8,45 +8,46 @@
 include ../Common.make
 
 
-TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
-      reas_8 reas_9 reas_abcd reas_e reas_f \
-      byte_bwd byte_fwd word_bwd word_fwd off1_bwd off1_fwd off2_bwd off2_fwd \
-      mvi \
-      reuse_bf reuse_fb reuse_undef reuse_before reuse_after \
-      reuse_global reuse_export \
-      area asciz blk blkw db ds dw dwl equ export org \
-      comment \
-      arith bit shift logical relop \
-      char hex decimal octal binary \
-      xminus
+TESTS=
 FILES=README Makefile \
-      m8cas.c m8c.l m8c.y \
-      util.h error.h error.c id.h id.c op.h op.c code.h code.c \
+      registers reg2simhdr.pl \
+      lang.l lang.y \
+      util.h reg.h reg.c m8c.h m8c.c sim.h sim.c gpio.h gpio.c \
       tests/Common $(TESTS:%=tests/%)
-OBJS=lex.yy.o y.tab.o m8cas.o error.o id.o op.o code.o
+OBJS=lex.yy.o y.tab.o reg.o sim.o m8c.o gpio.o
 
-LDLIBS += -lfl
+CFLAGS += -I../prog
+# don't use += because libprog may need symbols from libm8cutils
+LDLIBS := -lfl -L../prog -lprog $(LDLIBS)
 
 
 .PHONY:		all dep depend filelist clean spotless
 
 
-all:		m8cas
+all:		m8csim default.m8csim
 
-m8cas:		$(OBJS) $(LIBDEPS)
+m8csim:		$(OBJS) $(LIBDEP)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
-lex.yy.c:	m8c.l y.tab.h
-		$(LEX) m8c.l
+lex.yy.c:	lang.l y.tab.h
+		$(LEX) lang.l
 
 lex.yy.o:	lex.yy.c y.tab.h
 		$(CC) -c $(CFLAGS) -w lex.yy.c
 
-y.tab.c y.tab.h: m8c.y
-		$(YACC) $(YYFLAGS) -d m8c.y
+y.tab.c y.tab.h: lang.y
+		$(YACC) $(YYFLAGS) -d lang.y
 
-y.tab.o:	y.tab.c
+y.tab.o:	y.tab.c registers.h
 		$(CC) -c $(CFLAGS) -w y.tab.c
+
+m8c.o:		registers.h
+
+registers.h:	registers reg2simhdr.pl
+		perl ./reg2simhdr.pl >$@ $< || { rm -rf $@; exit 1; }
+
+default.m8csim:	registers reg2simhdr.pl
+		perl ./reg2simhdr.pl -s >$@ $< || { rm -rf $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 
@@ -77,4 +78,4 @@ clean:
 		rm -f $(OBJS)
 
 spotless:	clean
-		rm -f m8cas .depend
+		rm -f cy8c2sim .depend

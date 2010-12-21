@@ -13,7 +13,7 @@ version thereof. For details, please refer to the README file in
 the respective directory. Version 2 of the GPL is included in
 the file ../COPYING.GPLv2.
 
-as/cpp.h, as/cpp.c:
+shared/cpp.h, shared/cpp.c:
   Copyright 2002,2003 California Institute of Technology
   Copyright 2004 Werner Almesberger
 
@@ -48,6 +48,9 @@ This collection consists of the following parts:
   das/
     A disassembler for the M8C assembly language
 
+  sim/
+    A simulator for some M8C CPU features (very experimental)
+
   prog/
     A programmer, with drivers for different types of programmer
     hardware
@@ -73,7 +76,8 @@ agree with the CFLAGS, edit them in Common.make.
 There is no "make install" yet. The resulting executables are:
 
 - assembler: as/m8cas
-- disassembler: dasm/m8cdas
+- disassembler: das/m8cdas
+- simulator: sim/m8csim
 - programmer (host side): prog/m8cprog
 - programmer (firmware): waspic/waspic.hex
 

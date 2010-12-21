@@ -1,3 +1,19 @@
+Version 6 (23-FEB-2006)
+--------
+
+- as/: added unary >> operator that returns the number of trailing clear bits
+- as/lang.l:yyerrorf: didn't initialize "ap", oops
+- as/cpp.[ch]: moved to shared/
+- prog/libprog.a: new home of all interactions with the programmer that are not
+  part of the user interface
+- shared/interact.[ch]: new home for all "verbose" and progress reporting items
+- cleaned up library inclusion in all Makefiles
+- shared/README: moved the cpp.[ch] license, too
+- sim/: added a simulator (proof of concept only and certainly full of bugs)
+- waspic/: reset also if restarting through start1
+- prog/drv/waspic.c: reset target when closing
+- prog/drv/watsp.c: reset target and disable output when closing
+
 Version 5 (22-FEB-2006)
 --------
 
@@ -60,7 +76,7 @@ Version 2 (17-FEB-2006)
   supported
 - Makefile: didn't stop on errors in subdirectories
 - libfdr/: added red-black trees by James S. Plank
-- as/: added an assembler (experimental and largely tested)
+- as/: added an assembler (experimental and largely untested)
 - dasm/tests/Common: regression tests now print the script name on failure
 
 Version 1 (15-FEB-2006)

@@ -9,8 +9,9 @@ include ../Common.make
 
 
 FILES=README Makefile \
-      file.h file.c disasm.h disasm.c chips.h chips.c
-OBJS=file.o disasm.o chips.o
+      file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
+      interact.h interact.c
+OBJS=file.o disasm.o chips.o cpp.o interact.o
 
 
 .PHONY:		all dep depend tests filelist clean spotless

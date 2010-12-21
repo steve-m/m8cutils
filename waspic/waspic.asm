@@ -120,6 +120,8 @@ start:
 	goto	start		; no -> wait some more
 
 start1:
+	call	reset		; reset, in case we jumped here directly
+
 	call	rx		; get a byte
 	xorlw	2		; 2 ?
 	btfsc	STATUS,Z

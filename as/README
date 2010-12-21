@@ -8,15 +8,6 @@ The files in this directory are distributed under the terms of the
 GNU General Public License (GPL), version 2. This license is
 included in the file ../COPYING.GPLv2.
 
-cpp.h, cpp.c:
-  Copyright 2002,2003 California Institute of Technology
-  Copyright 2004 Werner Almesberger
-
-  This package is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-
 
 Overview
 --------
@@ -122,6 +113,8 @@ assembler:
   on the same line, and a single instruction or directive can span multiple
   lines
 - ORG, EQU, etc. accept any valid expression
+- added a unary log2 operator, >>expression. Note that its precedence is like
+  that of all other unary C operators, and not like unary < or >.
 
 
 Errata

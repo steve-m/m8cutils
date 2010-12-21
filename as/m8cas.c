@@ -14,10 +14,10 @@
 #include <fcntl.h>
 
 #include "file.h"
+#include "cpp.h"
 
 #include "error.h"
 #include "code.h"
-#include "cpp.h"
 
 
 int yyparse(void);

@@ -24,6 +24,7 @@ OBJS=m8cdas.o
 all:		m8cdas
 
 m8cdas:		$(OBJS)	$(LIBDEP)
+		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 # ----- Dependencies ----------------------------------------------------------
 
