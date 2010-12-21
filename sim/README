@@ -88,6 +88,16 @@ language are the usual forms known from C, and the semicolon from m8cas.
   Register and RAM addresses span the entire address range and are not affected
   by the current I/O bank or RAM page.
 
+- As a temporary extension, also direct accesses can be made through the ICE:
+
+  ice REG[address]
+
+  Note that they keyword "ice" is case-sensitive. Also note that such direct
+  accesses are not synchronized with the simulator state, and can cause
+  confusion when made to registers also known to the simulator. The main
+  purpose of direct ICE accesses is to provide a tool for developing proper
+  simulation support of the respective block in the microcontroller.
+
 - Expressions from constants and read accesses can be formed using all
   operators recognized by m8cas. Additionally, the following operators are
   available for lvalues (register, ROM, RAM, etc.):

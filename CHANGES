@@ -1,9 +1,19 @@
+Version 13 (xx-JUN-2006)
+----------
+
+- sim/lang.y: added direct register accesses through the ICE, see sim/README
+- moved all files describing programmer hardware to a separate package called
+  "m8cprogs"
+- TODO: still used the old name "cy8c2utils"
+- README: corrected the path to COPYING.GPLv2
+- renamed the top-level directory from "m8c" to "m8cutils-<version>"
+
 Version 12 (9-JUN-2006)
 ----------
 
 - prog/drv/ecb_at91.[ch]: added driver for an AT91RM9200-based programmer (by
   Carlos Camargo)
-- prog/cli.h and prog/cli.c were missing in the m8cutils-11
+- prog/cli.h and prog/cli.c were missing in m8cutils-11
 - sim/lang.y: to drive GPIO pins, the specifcation now has to be prefixed with
   the keyword "drive" (updated sim/README, sim/example/README,
   sim/tests/drive_0, sim/tests/drive_0r, sim/tests/drive_1, sim/tests/drive_1r,

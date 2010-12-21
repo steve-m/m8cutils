@@ -177,6 +177,7 @@ sleep				return TOK_SLEEP;
 [Rr]				return TOK_R;
 [Zz]				return TOK_Z;
 analog				return TOK_ANALOG;
+ice				return TOK_ICE;
 
 0[Xx][0-9A-Fa-f]+|[0-9]+	{ char *end;
 				  yylval.num = strtoul(yytext,&end,0);

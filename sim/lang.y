@@ -90,6 +90,9 @@ static uint32_t read_lvalue(const struct lvalue *lv)
 	case lt_x:
 	    v = x;
 	    break;
+	case lt_ice:
+	    v = ice_read(lv->n);
+	    break;
 	default:
 	    abort();
     }
@@ -137,6 +140,12 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 	case lt_x:
 	    x = (x & ~lv->mask) | rvalue;
 	    break;
+	case lt_ice:
+	    if (lv->mask == 0xff)
+		ice_write(lv->n,rvalue);
+	    else
+		ice_write(lv->n,(ice_read(lv->n) & ~lv->mask) | rvalue);
+	    break;
 	default:
 	    abort();
     }
@@ -164,6 +173,7 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %token		TOK_DEFINE
 %token		TOK_QUIT TOK_NL TOK_PRINTF TOK_SLEEP
 %token		TOK_Z TOK_R TOK_ANALOG
+%token		TOK_ICE
 
 %token	<num>	NUMBER PORT
 %token	<str>	STRING
@@ -471,6 +481,14 @@ lvalue:
 	    $$.type = lt_reg;
 	    $$.n = $1->reg;
 	    $$.mask = $2;
+	}
+    | TOK_ICE lvalue
+	{
+	    $$ = $2;
+	    if ($$.type != lt_reg)
+		yyerror(
+		  "\"ice\" prefix is only allowed for register accesses");
+	    $$.type = lt_ice;
 	}
     ;
 

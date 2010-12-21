@@ -8,16 +8,16 @@
 include Common.make
 
 
-DIR=m8c
 NAME=m8cutils
 DIRS=shared libfdr das as prog sim
-NONBUILD_DIRS=waspic watsp watpp
+NONBUILD_DIRS=
 
 SF_ACCOUNT=almesber@m8cutils.sourceforge.net
 SF_DIR=/home/groups/m/m8/m8cutils/htdocs
 SF_UPLOAD=$(SF_ACCOUNT):$(SF_DIR)
 
 VERSION=$(shell cat VERSION)
+DIR=$(NAME)-$(VERSION)
 DISTFILE=$(NAME)-$(VERSION).tar.gz
 
 ALL_DIRS=$(DIRS) $(NONBUILD_DIRS)
@@ -59,7 +59,9 @@ uninstall:
 		-rmdir -p $(INSTALL_PREFIX)/share/m8cutils/include
 
 dist:		$(FILES)
-		cd ..; tar cfz $(DIR)/$(DISTFILE) $(FILES:%=$(DIR)/%)
+		rm -f $(DIR)
+		ln -sf . $(DIR)
+		tar cfz $(DISTFILE) $(FILES:%=$(DIR)/%)
 
 obsolete:	dist
 		scp $(DISTFILE) host:/home/httpd/almesberger/misc/cy8c2/

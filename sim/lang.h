@@ -21,6 +21,7 @@ struct lvalue {
         lt_f,
         lt_sp,
         lt_x,
+	lt_ice,
     } type;
     uint32_t n;
     uint32_t mask;

@@ -11,7 +11,7 @@ The files in this package are distributed under the terms of the
 GNU General Public License (GPL), version 2, or an augmented
 version thereof. For details, please refer to the README file in
 the respective directory. Version 2 of the GPL is included in
-the file ../COPYING.GPLv2.
+the file COPYING.GPLv2.
 
 shared/cpp.h, shared/cpp.c:
   Copyright 2002,2003 California Institute of Technology
@@ -56,19 +56,16 @@ This collection consists of the following parts:
     A programmer, with drivers for different types of programmer
     hardware
 
-  waspic/
-    A simple PIC-based programmer that communicates via RS-232C
-
-  watsp/
-    An even simpler bit-banging programmer that connects to the
-    RS-232C port
-
-  watpp/
-    An also very simple bit-banging programmer that connects to
-    the parallel (printer) port
-
   shared/
     Code shared among programs of this project
+
+The home page of this package is at 
+http://m8cutils.sourceforge.net/
+
+Hardware designs for some of the programmers supported by
+"m8cprog" are distributed in the m8cprogs package that can also
+be found at
+http://m8cutils.sourceforge.net/
 
 
 Installation
@@ -92,23 +89,15 @@ with the outcome, install everything with "make install". Note that
 the utilities won't be able to find their support files by default,
 unless you install them.
 
-There is also a PIC-based programmer. In order to build its
-firmware, gputils have to be installed. Then run
-make -C waspic
-The firmware will then be in waspic/waspic.hex
-
 By default, "make" output is terse, making it easy to see what is
 done, but now showing how. You can enable full output, e.g., to
 debug build problems, by putting V=1 on the command line when
 invoking "make", e.g.,
 % make V=1 all
 
-There are also schematics and PCB layouts for programmer hardware
-in waspic/ and watsp/.
 
-
-Unistallation
--------------
+Uninstallation
+--------------
 
 "make uninstall" will remove all files installed and also the
 directories created underneath $(INSTALL_PREFIX)/share

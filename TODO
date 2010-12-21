@@ -1,5 +1,5 @@
-cy8c2utils "to do" list
-======================
+m8cutils "to do" list
+=====================
 
 m8cprog
 -------
@@ -9,19 +9,6 @@ m8cprog
 - check that the Intel hex format is properly implemented
 - add regression tests
 - fix matching algorithm in ref/main.c:lookup
-
-waspic
-------
-
-- check the checksum in communication with the host
-- add a voltage reference and measure VDD
-- add possibility to provide power to the target
-- does not recover from communication errors (in torture testing)
-
-watsp
------
-
-- try to make it work at 3V
 
 share/file
 ----------

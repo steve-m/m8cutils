@@ -1,5 +1,0 @@
-# "project" file to control information flow from gschem to PCB
-# usage: gsch2pcb project
-
-schematics waspic.sch
-output-name waspic
