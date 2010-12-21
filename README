@@ -1,0 +1,25 @@
+CY8C2 utils
+===========
+
+Copyright 2006 Werner Almesberger and others
+
+The files in this package are distributed under the terms of the
+GNU General Public License (GPL), version 2, or an augmented
+version thereof. For details, please refer to the README file in
+the respective directory. Version 2 of the GPL is included in
+the file ../COPYING.GPLv2.
+
+
+This is a collection of utilities for programming the Cypress
+CY8C2xxxx series of microcontrollers, see
+http://www.cypress.com/psoc
+
+
+This collection consists of the following parts:
+
+  prog/
+    A programmer, with drivers for different types of programmer
+    hardware.
+
+  waspic/
+    A simple PIC-based programmer that communicates via RS-232C.

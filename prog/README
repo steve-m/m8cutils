@@ -1,0 +1,139 @@
+cy8c2prog - General programmer for the CY8C2 microcontroller family
+===================================================================
+
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+
+Overview
+--------
+
+cy8c2prog is a programmer for all the chips described in Cypress'
+application note AN2026A, i.e., all current CY8C2 models except
+CY8C24x94 and CY8C29xxx.
+
+The programmer communicates with the programmer hardware through a
+driver. Drivers are statically linked into the programmer and
+handles the low-level program to the hardware and any data format
+conversions needed. cy8c2prog controls the overall programming
+operation and performs file I/O.
+
+
+Usage
+-----
+
+cy8c2prog reads and writes either raw binary files or files in the
+Intel HEX format. The file type is auto-detected when reading.
+The auto-detection can be overridden by selecting the binary format
+with the option -b. When writing, the default format is Intel HEX,
+which can be overridden with -b.
+
+The name of the file to read or write is specified on the, with the
+special name "-" meaning standard input or output. The file name can
+be omitted, in which case also standard input or output is used.
+
+The programmer can write from a file to Flash, read from Flash to a
+file, and compare file content with Flash content. In the latter two
+cases, only the program memory is accessed, while writing can also
+set the security data, if provided. Writing is selected with the
+option -w, reading with the option -r, and comparing with the option
+-c. Writing and comparing can be combined, which causes the Flash
+content to be verified byte by byte after programming. Writing
+always erases the Flash and verifies the checksum after programming.
+
+The driver for the programmer hardware is selected with the option
+"-d driver". The name is case-insensitive. A list of available
+drivers can be obtained with "cy8c2prog -l". A default driver name
+can be set via the environment variable CY8C2PROG_DRIVER. If no
+driver is specified, the first driver in the internal driver list
+is used.
+
+The port to which the driver is attached (if applicable) can be set
+with the option "-p port". A default can be provided through the
+environment variable CY8C2PROG_PORT. If no port is set, the default
+depends on the driver hardware. For hardware attached via a serial
+port, the default is /dev/ttyS0.
+
+The name of the chip to program can be specified as a the command
+line argument. The name is case-insensitive. A list of supported
+chips can be obtained with "cy8c2prog -l". If no chip name is
+specified, cy8c2prog will auto-detect the chip. Note that the chip
+name argument must be specified if the file name happens to be a
+valid chip name.
+
+The voltage at which the chip operates is set with the options -3
+(3V) and -5 (5V). This option is required if the programmer does
+not sense the chip voltage or if the programmer needs to provide
+power to the circuit being programmed, and has to decide between
+3V and 5V. In all other cases, the voltage is auto-detected. If
+the voltage is also specified on the command line, and the
+auto-detected voltage does not correspond to it, cy8c2prog aborts
+with an error.
+
+Last but not least, several degrees of verboseness can be selected
+with the option -v. By default, cy8c2prog is completely quiet. A
+single -v adds general progress information. More -v options add
+more and more noise. Note that excessive output may slow down some
+programmers such that they fail to meet protocol deadlines.
+
+Examples:
+
+% cy8c2prog -3 -w -v prog.hex
+
+Writes the file prog.hex to the programmer, using defaults. The
+voltage is set to 3V. We use verbose mode to obtain a progress bar.
+
+% cy8c2prog -d waspic -p /dev/ttyS1 -3 -r -b data.hex
+
+Silently reads the Flash content with a "waspic" programmer
+connected to /dev/ttyS1, and stores it in binary format.
+
+% cy8c2prog -l
+
+Lists the supported programmers (drivers) and chips.
+
+
+Writing a driver
+----------------
+
+Drivers are either vector-based or bit-banging. A vector-based
+driver processes a 22 bit vector at a time, while a bit-banging
+driver receives calls for single bit transmissions.
+
+
+Vector-based
+- - - - - -
+
+The "vector" function receives the vector to send. It is passed
+as the first 19 bits of the vector in a 32 bit word, with the
+first bit to send at position 0x40000, and the last bit at
+position 0.
+
+If the vector is zero, the programmer must follow its 19 bits
+with three more zero bits. If the vector is a write, the
+programmer must follow its 19 bits with three ones. If the vector
+is a ready, the programmer must only send the first 11 bits, then
+send a Z, read eight bits, send another Z, and finally send a 1.
+
+If the vector contains a read, "vector" returns the byte read
+from the hardware. Otherwise, the return value is unspecified.
+
+If the vector will execute an SSC instruction, the programmer
+must perform the WAIT-AND-POLL procedure described in AN2026A.
+Vectors executing an SSC are marked by or-ing them with
+PROG_SSC_FLAG.
+
+A simple driver for a PIC-based programmer connected via the
+serial port can be found in prog_waspic.c. Schematic and firmware
+of the programmer itself are in the directory ../waspic
+
+
+Bit-banging
+- - - - - -
+
+The bit-banging interface is currently completely untested and
+supporting it properly will need some more infrastructure work.
+Please don't try to use it yet.
