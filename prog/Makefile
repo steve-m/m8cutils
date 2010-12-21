@@ -8,7 +8,7 @@
 include ../Common.make
 
 
-DRIVERS=waspic watsp watpp wadsp ecb_at91 dummy
+DRIVERS=waspic watsp watpp wadsp ecb_at91 dummy ppporissp
 TESTS=rd errd ercmok ercmf wrrd wrcmok wrcmf wrlkcmok wrlkcmf wrlkrdf wrlkrdz \
       secu secf secr secw secfsrw secfsur secfsfw \
       secfspu secfspf secfspr secfspw secmir inrom inhex outrom outhex \
