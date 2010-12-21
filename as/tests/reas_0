@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+reas "SSC" 00 40
+
+reas "ADD A,expr" 01 30 40
+reas "ADD A,[expr]" 02 30 40
+reas "ADD A,[X+expr]" 03 30 40
+reas "ADD [expr],A" 04 30 40
+reas "ADD [X+expr],A" 05 30 40
+reas "ADD [expr],expr" 06 30 40 7f
+reas "ADD [X+expr],expr" 07 30 40 7f
+
+reas "PUSH A" 08 40
+
+reas "ADC A,expr" 09 30 40
+reas "ADC A,[expr]" 0a 30 40
+reas "ADC A,[X+expr]" 0b 30 40
+reas "ADC [expr],A" 0c 30 40
+reas "ADC [X+expr],A" 0d 30 40
+reas "ADC [expr],expr" 0e 30 40 7f
+reas "ADC [X+expr],expr" 0f 30 40 7f

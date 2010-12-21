@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+
+asm_fail "Reusable global label" <<EOF
+.label::
+	nop
+EOF
+expect <<EOF
+<stdin>:1: syntax error
+EOF

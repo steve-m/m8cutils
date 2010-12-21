@@ -1,0 +1,116 @@
+m8cas - Single-pass assembler for the M8C assembly language
+===========================================================
+
+With the exceptions noted below, all files in this directory are
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+cpp.h, cpp.c:
+  Copyright 2002,2003 California Institute of Technology
+  Copyright 2004 Werner Almesberger
+
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+
+Overview
+--------
+
+This is a single-pass assembler for the M8C assembly language. It can
+currently only generate absolute code and thus does not require a
+linker. Instead of implementing its own preprocessor, it uses
+
+Usage
+-----
+
+
+
+Compatibility
+-------------
+
+This assembler is based on the description in the Cypress document
+"Assembly Language User Guide, Document #38-12004 Rev *C". This
+section describes assumptions that have been made about behaviour
+not explicitly specified in the above document, missing features,
+and language extensions.
+
+
+Assumptions
+- - - - - -
+
+- A, F, SP, X, and REG are case-insensitive
+- the register names A, F, SP, X, and REG, mnemonics, and assembler directives
+  are reserved words and not allowed as labels
+- MVI A,[[expr]++] is a valid synonym for MVI A,[expr] (and likewise for
+  MVI [[expr]++],A)
+- there can be whitespace around the double plus, but not between the two plus
+  signs
+- label names cannot start with a decimal digit (3.1.1 says they can ?)
+- hexadecimal constants can be in lower, upper, or mixed case
+- the "h" of the second form of a hexadecimal constant (table 3-2) can be upper
+  or lower case
+- only ASCII characters are allowed in character constants
+- the only escape sequences recognized in character constants are \' and \\
+  (and not \n, \r, etc.; table 3-2)
+- the escape sequences recognized in strings are \n, \r, \t, \b, \', \", \\,
+  and between one and three octal digits
+- no whitespace is allowed between a label and its colon
+- no whitespace is allowed between the two colons of a global label
+- no whitespace is allowed after the period of a re-usable local label
+- a re-usable local label cannot be made global
+- code not selected by IF ... ELSE ... ENDIF must still be syntactically
+  correct
+- all directives can be preceded by a label on the same line
+- all calculations are done in unsigned 32 bit words (BIG question mark here)
+- values that are too big for their destination are silently truncated (with
+  the exception of PC-relative addresses)
+- there can be whitespace between "REG" and the opening square bracket
+- exporting a label more than once is valid and does not yield a warning
+- the argument of ORG, BLK, etc. must be constant at the time of evaluation
+- the argument of EQU and DB, etc. can be undefined at the time of evaluation
+
+
+Missing features
+- - - - - - - -
+
+- AREA: code and directives generating data always go into ROMspace, while
+  directives not generating data always use RAM space, "." always references
+  ROM locations
+- DSU: not yet implemented
+- IF, ELSE, ENDIF: not yet implemented - use CPP's conditional compilation
+- INCLUDE: not yet implemented - use CPP's file inclusion
+- .LITERAL, .ENDLITERAL, .SECTION, .ENDSECTION: ignored
+- MACRO, ENDM: not yet implemented - use CPP's macros
+
+
+Extensions
+- - - - -
+
+These are features that, according to the manual, do not exist in Cypress'
+assembler:
+
+- in addition to [X+expr], we also allow [X-expr]
+- we support the unary minus
+- we support the logical operators (&&, ||, and !), the relational operators,
+  and the shift operators
+- we support nesting of expressions with parentheses
+- the input is free-format, so multiple instructions or directives can appear
+  on the same line, and a single instruction or directive can span multiple
+  lines
+- ORG, EQU, etc. accept any valid expression
+
+
+Known problems
+--------------
+
+- since there is no AREA, variables allocation always begins at RAM address 0
+  (work-around: use BLK to move in RAM address space)
+- if multiple labels precede BLK or BLKW, all but the last one are in ROM space
+- there is no provision for detecting exceeding the available ROM or RAM
+  space (this is of course something the linker should do, not the assembler)
+- the grammar har four conflicts (due to how BLK and BLKW are handled now)

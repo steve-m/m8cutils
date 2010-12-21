@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+reas "PUSH X" 10 40
+
+reas "SUB A,expr" 11 30 40
+reas "SUB A,[expr]" 12 30 40
+reas "SUB A,[X+expr]" 13 30 40
+reas "SUB [expr],A" 14 30 40
+reas "SUB [X+expr],A" 15 30 40
+reas "SUB [expr],expr" 16 30 40 7f
+reas "SUB [X+expr],expr" 17 30 40 7f
+
+reas "POP A" 18 40
+
+reas "SBB A,expr" 19 30 40
+reas "SBB A,[expr]" 1a 30 40
+reas "SBB A,[X+expr]" 1b 30 40
+reas "SBB [expr],A" 1c 30 40
+reas "SBB [X+expr],A" 1d 30 40
+reas "SBB [expr],expr" 1e 30 40 7f
+reas "SBB [X+expr],expr" 1f 30 40 7f

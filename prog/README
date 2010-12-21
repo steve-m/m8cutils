@@ -36,14 +36,23 @@ The name of the file to read or write is specified on the, with the
 special name "-" meaning standard input or output. The file name can
 be omitted, in which case also standard input or output is used.
 
-The programmer can write from a file to Flash, read from Flash to a
-file, and compare file content with Flash content. In the latter two
-cases, only the program memory is accessed, while writing can also
-set the security data, if provided. Writing is selected with the
-option -w, reading with the option -r, and comparing with the option
--c. Writing and comparing can be combined, which causes the Flash
-content to be verified byte by byte after programming. Writing
-always erases the Flash and verifies the checksum after programming.
+The programmer can perform the following operations:
+
+- erase the entire Flash (-e). This is implied when writing.
+- write from a file to Flash and verify the checksum (-w). If using
+  an Intel HEX file, also the security data can be written.
+- read from Flash to a file (-r)
+- compare file content with Flash content (-c). This can be combined
+  with all other operations. If combined with reading, the
+  comparison is done before writing the file, so no file will be
+  written if the data read differs from the data obtained for
+  comparison.
+
+As a precaution against accidently overwriting the input file,
+reading cannot be combined with writing. Reading and comparing fail
+when they encounter a read-protected block. This can be changed by
+setting the -z option (in which the case the offending block is
+filled with zeroes or skipped).
 
 The driver for the programmer hardware is selected with the option
 "-d driver". The name is case-insensitive. A list of available
@@ -104,6 +113,15 @@ Writing a driver
 Drivers are either vector-based or bit-banging. A vector-based
 driver processes a 22 bit vector at a time, while a bit-banging
 driver receives calls for single bit transmissions.
+
+
+High-level
+- - - - -
+
+Programmer hardware that operates with hard-coded vectors or
+hard-coded sequences of them, are currently not supported by this
+programmer. In fact, several of its features depend on being able
+to send arbitrary vectors.
 
 
 Vector-based

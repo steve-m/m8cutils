@@ -1,0 +1,32 @@
+#!/bin/sh
+. Common
+
+asm "EXPORT local label (backward)" <<EOF
+	nop
+foo:	nop
+	export	foo
+	db	foo
+EOF
+expect <<EOF
+40 40 01
+EOF
+
+asm "EXPORT local label (forward)" <<EOF
+	nop
+	export	foo
+	db	foo
+foo:	nop
+EOF
+expect <<EOF
+40 02 40
+EOF
+
+asm "EXPORT global label" <<EOF
+	nop
+foo::	nop
+	export	foo
+	db	foo
+EOF
+expect <<EOF
+40 40 01
+EOF

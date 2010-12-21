@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+asm "Offset value (base offset 2), backward" <<EOF
+	nop
+cont:
+	call	cont
+	ret
+EOF
+expect <<EOF
+40 9F FE 7F
+EOF

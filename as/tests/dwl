@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+
+asm "DWL (constants)" <<EOF
+	nop
+here:
+	dwl	0xff,1030,0x8000
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 FF 00 06 04 00 80 50 01 57 07
+EOF

@@ -1,3 +1,19 @@
+Version 2 (xx-FEB-2006)
+--------
+
+- prog/cy8c2prog.c: programmer can now also be invoked without any operation,
+  in which case it will only establish communication and retrieve the IDs
+- prog/cy8c2prog.c: new erase device only option -e
+- prog/cy8c2prog.c: new option -z to skip read-protected blocks when reading or
+  comparing
+- prog/cy8c2prog.c: now also retrieves the silicon revision (experimental)
+- prog/cy8c2prog.c: restructured the code
+- proc/README: documented that programmers with hard-coded vectors aren't
+  supported
+- Makefile: didn't stop on errors in subdirectories
+- libfdr/: added red-black trees by James S. Plank
+- as/: added an assembler (experimental and untested)
+
 Version 1 (15-FEB-2006)
 ---------
 
@@ -17,7 +33,7 @@ Version 1 (15-FEB-2006)
   and no automatic padding occurs
 - cy8c2prog: files are now only padded to full blocks when writing
 - cy8c2prog: added support for writing security data
-- cy8c2prog: added detection of error codes retuned by SSC when reading
+- cy8c2prog: added detection of error codes returned by SSC when reading
 - cy8c2prog: new option -i to write an Intel HEX file, changed the default to
   "ROM"
 - cy8c2prog: default isn't as silent as README claimed; added option -q to make

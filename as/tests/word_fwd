@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+asm "Word value, forward" <<EOF
+	nop
+	lcall	foo
+foo:	equ	0x1234
+	halt
+EOF
+expect <<EOF
+40 7C 12 34 30
+EOF

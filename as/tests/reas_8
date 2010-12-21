@@ -1,0 +1,7 @@
+#!/bin/sh
+. Common
+
+reas "JMP 0" 80 00 40
+reas "JMP 0x7fe" 87 fe 40
+reas "JMP 0x7ff" 87 ff 40
+reas "JMP 0x800" 88 00 40

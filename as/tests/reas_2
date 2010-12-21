@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+reas "POP X" 20 40
+
+reas "AND A,expr" 21 30 40
+reas "AND A,[expr]" 22 30 40
+reas "AND A,[X+expr]" 23 30 40
+reas "AND [expr],A" 24 30 40
+reas "AND [X+expr],A" 25 30 40
+reas "AND [expr],expr" 26 30 40 7f
+reas "AND [X+expr],expr" 27 30 40 7f
+
+reas "ROMX" 28 40
+
+reas "OR A,expr" 29 30 40
+reas "OR A,[expr]" 2a 30 40
+reas "OR A,[X+expr]" 2b 30 40
+reas "OR [expr],A" 2c 30 40
+reas "OR [X+expr],A" 2d 30 40
+reas "OR [expr],expr" 2e 30 40 7f
+reas "OR [X+expr],expr" 2f 30 40 7f

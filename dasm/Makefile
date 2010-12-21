@@ -25,9 +25,7 @@ all:		m8cdasm
 
 m8cdasm:	$(OBJS)	$(LIBDEP)
 
-
 # ----- Dependencies ----------------------------------------------------------
-
 
 $(OBJS):	.depend
 
@@ -39,25 +37,19 @@ ifeq (.depend,$(wildcard .depend))
 include .depend               
 endif
 
-
 # ----- Tests -----------------------------------------------------------------
-
 
 tests:		all
 		passed=0 && cd tests && for n in $(TESTS); do \
 		  . ./$$n; done; \
 		  echo "Passed all $$passed tests" 2>&1
 
-
 # ----- Distribution ----------------------------------------------------------
-
 
 filelist:
 		@echo $(FILES)
 
-
 # ----- Cleanup ---------------------------------------------------------------
-
 
 clean:
 		rm -f y.tab.h y.tab.c lex.yy.c

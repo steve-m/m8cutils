@@ -7,7 +7,7 @@
 
 DIR=cy8c2
 NAME=cy8c2utils
-DIRS=shared dasm prog waspic
+DIRS=shared libfdr dasm as prog waspic
 
 SF_ACCOUNT=almesber@cy8c2utils.sourceforge.net
 SF_DIR=/home/groups/c/cy/cy8c2utils/htdocs         
@@ -15,7 +15,6 @@ SF_UPLOAD=$(SF_ACCOUNT):$(SF_DIR)
 
 VERSION=$(shell cat VERSION)
 DISTFILE=$(NAME)-$(VERSION).tar.gz
-
 
 FILES=VERSION README CHANGES TODO COPYING.GPLv2 \
   Makefile Common.make \
@@ -26,19 +25,19 @@ FILES=VERSION README CHANGES TODO COPYING.GPLv2 \
 
 
 all:
-		for n in $(DIRS); do $(MAKE) -C $$n; done
+		for n in $(DIRS); do $(MAKE) -C $$n || exit 1; done
 
 clean:
-		for n in $(DIRS); do $(MAKE) -C $$n clean; done
+		for n in $(DIRS); do $(MAKE) -C $$n clean || exit 1; done
 
 spotless:
-		for n in $(DIRS); do $(MAKE) -C $$n spotless; done
+		for n in $(DIRS); do $(MAKE) -C $$n spotless || exit 1; done
 
 dep depend:
-		for n in $(DIRS); do $(MAKE) -C $$n depend; done
+		for n in $(DIRS); do $(MAKE) -C $$n depend || exit 1; done
 
 tests:
-		for n in $(DIRS); do $(MAKE) -C $$n tests; done
+		for n in $(DIRS); do $(MAKE) -C $$n tests || exit 1; done
 
 dist:		$(FILES)
 		cd ..; tar cfz $(DIR)/$(DISTFILE) $(FILES:%=$(DIR)/%)

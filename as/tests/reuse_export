@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+
+asm_fail "EXPORT reusable label" <<EOF
+.label:
+	export	.label
+EOF
+expect <<EOF
+<stdin>:2: reusable local labels cannot be exported
+EOF

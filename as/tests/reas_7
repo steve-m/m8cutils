@@ -1,0 +1,24 @@
+#!/bin/sh
+. Common
+
+reas "AND F,expr" 70 30 40
+reas "OR F,expr" 71 30 40
+reas "XOR F,expr" 72 30 40
+
+reas "CPL A" 73 40
+
+reas "INC A" 74 40
+reas "INC X" 75 40
+reas "INC [expr]" 76 30 40
+reas "INC [X+expr]" 77 30 40
+
+reas "DEC A" 78 40
+reas "DEC INC X" 79 40
+reas "DEC INC [expr]" 7a 30 40
+reas "DEC INC [X+expr]" 7b 30 40
+
+reas "LCALL expr" 7c 01 02 40
+reas "LJMP expr" 7d 01 02 40
+
+reas "RETI" 7e 40
+reas "RET" 7f 40

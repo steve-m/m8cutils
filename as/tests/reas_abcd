@@ -1,0 +1,7 @@
+#!/bin/sh
+. Common
+
+reas "JZ 0" a0 00 40
+reas "JNZ 0" b0 00 40
+reas "JC 0" c0 00 40
+reas "JNC 0" d0 00 40

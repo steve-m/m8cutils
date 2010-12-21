@@ -1,0 +1,4 @@
+#!/bin/sh
+. Common
+
+reas "INDEX" f0 00 40

@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+
+asm_fail "Reusable label, undefined" <<EOF
+	nop
+	jmp	.label
+EOF
+expect <<EOF
+<stdin>:2: undefined identifier ".label"
+EOF

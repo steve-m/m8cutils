@@ -1,0 +1,8 @@
+#!/bin/sh
+. Common
+
+reas "CALL 0" 90 00 40
+reas "CALL 0x7fd" 97 fd 40
+reas "CALL 0x7fe" 97 fe 40
+reas "CALL 0x7ff" 97 ff 40
+reas "CALL 0x800" 98 00 40

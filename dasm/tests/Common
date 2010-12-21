@@ -23,7 +23,7 @@ check_result()
 	exit 1
     }
     echo PASSED 1>&2
-    rm -f _ref _out
+    rm -f _ref _out _diff
     passed=`expr $passed + 1`
 }
 

@@ -1,0 +1,25 @@
+#!/bin/sh
+. Common
+
+reas "NOP" 40 7e
+
+reas "AND reg[expr],expr" 41 30 40 7f
+reas "AND reg[X+expr],expr" 42 30 40 7f
+
+reas "OR reg[expr],expr" 43 30 40 7f
+reas "OR reg[X+expr],expr" 44 30 40 7f
+
+reas "XOR reg[expr],expr" 45 30 40 7f
+reas "XOR reg[X+expr],expr" 46 30 40 7f
+
+reas "TST [expr],expr" 47 30 40 7f
+reas "TST [X+expr],expr" 48 30 40 7f
+reas "TST reg[expr],expr" 49 30 40 7f
+reas "TST reg[X+expr],expr" 4a 30 40 7f
+
+reas "SWAP A,X" 4b 40
+reas "SWAP A,[expr]" 4c 30 40
+reas "SWAP X,[expr]" 4d 30 40
+reas "SWAP S,SP" 4e 40
+
+reas "MOV X,SP" 4f 40

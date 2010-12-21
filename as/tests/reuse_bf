@@ -1,0 +1,18 @@
+#!/bin/sh
+. Common
+
+asm "Reusable label, forward and backward" <<EOF
+start:
+	nop
+	jmp	.reuse
+.reuse:
+	ret
+middle:
+	ssc
+.reuse:
+	jmp	.reuse
+	halt
+EOF
+expect <<EOF
+40 80 01 7F 00 8F FF 30
+EOF

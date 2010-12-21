@@ -1,0 +1,22 @@
+#!/bin/sh
+. Common
+
+reas "HALT" 30 40
+
+reas "XOR A,expr" 31 30 40
+reas "XOR A,[expr]" 32 30 40
+reas "XOR A,[X+expr]" 33 30 40
+reas "XOR [expr],A" 34 30 40
+reas "XOR [X+expr],A" 35 30 40
+reas "XOR [expr],expr" 36 30 40 7f
+reas "XOR [X+expr],expr" 37 30 40 7f
+
+reas "ADD SP,expr" 38 30 40
+
+reas "CMP A,expr" 39 30 40
+reas "CMP A,[expr]" 3a 30 40
+reas "CMP A,[X+expr]" 3b 30 40
+reas "CMP [expr],expr" 3e 30 40 7f
+reas "CMP [X+expr],expr" 3f 30 40 7f
+reas "MVI A,[[expr]++]" 3c 30 40
+reas "MVI [[expr]++],A" 3d 30 40

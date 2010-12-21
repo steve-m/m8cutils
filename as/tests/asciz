@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+
+asm "ASCIZ" <<EOF
+	nop
+here:
+	asciz	"world"
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 77 6F 72 6C 64 00 50 01 57 07
+EOF

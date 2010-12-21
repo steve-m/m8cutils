@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+
+asm "Byte value, backward" <<EOF
+	nop
+foo:	equ	110
+	mov	a,foo
+	halt
+EOF
+expect <<EOF
+40 50 6E 30
+EOF

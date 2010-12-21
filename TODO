@@ -7,7 +7,6 @@ cy8c2prog
 - support selection of reset vs. power-on mode
 - check bit-banging code
 - query terminal settings to determine terminal width (OUTPUT_WIDTH)
-- don't pile up all the "intelligence" at the bottom of cy8c2prog.c
 - add terminal control helper functions to tty.c (for bit-banging)
 - add real-time support and deadline measurements (for bit-banging)
 - add support for the remaining current (and obsolete ?) chip models
@@ -16,6 +15,15 @@ cy8c2prog
 - don't require voltage if we're reading and the target supplies power
 - validate vectors against "official" vectors (?)
 - add regression tests
+- validate the silicon revision procedure
+
+waspic
+------
+
+- add protective resistors to SDATA, SCLK, and XRES
+- check the checksum in communication with the host
+- add a voltage reference and measure VDD
+- add possibility to provide power to the target
 
 share/file
 ----------

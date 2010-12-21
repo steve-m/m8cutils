@@ -22,9 +22,7 @@ all:		cy8c2prog
 
 cy8c2prog:	$(OBJS) $(LIBDEP)
 
-
 # ----- Dependencies ----------------------------------------------------------
-
 
 $(OBJS):	.depend
 
@@ -36,22 +34,16 @@ ifeq (.depend,$(wildcard .depend))
 include .depend
 endif
 
-
 # ----- Tests -----------------------------------------------------------------
-
 
 tests:
 
-
 # ----- Distribution ----------------------------------------------------------
-
 
 filelist:
 		@echo $(FILES)
 
-
 # ----- Cleanup ---------------------------------------------------------------
-
 
 clean:
 		rm -f $(OBJS)

@@ -1,0 +1,32 @@
+#!/bin/sh
+. Common
+
+asm "ORG forward" <<EOF
+	nop
+	org	4
+foo:
+	halt
+	db	foo
+EOF
+expect <<EOF
+40 00 00 00 30 04
+EOF
+
+asm "ORG forward and backward" <<EOF
+	nop
+	org	4
+	ret
+	org	2
+	halt
+EOF
+expect <<EOF
+40 00 30 00 7F
+EOF
+
+asm_fail "ORG forward-defined" <<EOF
+	org	foo
+foo:	equ	10
+EOF
+expect <<EOF
+<stdin>:1: undefined identifier "foo"
+EOF

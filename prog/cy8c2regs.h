@@ -9,6 +9,7 @@
 #define CY8C2REGS_H
 
 #define REG_CPU_A	0xf0	/* undocumented */
+#define REG_CPU_X	0xf3	/* undocumented */
 #define REG_CPU_PCL	0xf4	/* undocumented */
 #define REG_CPU_PCH	0xf5	/* undocumented */
 #define REG_CPU_SP	0xf6	/* undocumented */

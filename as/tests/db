@@ -1,0 +1,38 @@
+#!/bin/sh
+. Common
+
+asm "DB (constants)" <<EOF
+	nop
+here:
+	db	1,2,3
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 01 02 03 50 01 57 04
+EOF
+
+asm "DB (backward reference)" <<EOF
+	nop
+here:
+	db	1,here,3
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 01 01 03 50 01 57 04
+EOF
+
+asm "DB (forward reference)" <<EOF
+	nop
+here:
+	db	1,there,3
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 01 04 03 50 01 57 04
+EOF

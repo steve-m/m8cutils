@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Common - Elements shared by all regression tests for the M8C assembler
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+
+reas()
+{
+    echo -n "$1: " 1>&2
+    shift
+    in=`echo $* | tr 'a-z' 'A-Z'`
+    asm=`../../dasm/m8cdasm -s -e $*`
+    out=`echo "$asm" | ../m8cas`
+    if [ "$in" = "$out" ]; then
+	echo PASSED 2>&1
+	passed=`expr $passed + 1`
+    else
+	echo FAILED 2>&1
+	echo "$in": "$asm" '->' "$out" 2>&1
+	exit
+    fi
+}
+
+
+asm()
+{
+    echo -n "$1: " 1>&2
+    shift
+    ../m8cas "$@" >_out || {
+	echo FAILED 1>&2
+	cat _out
+	rm -f _out
+	exit 1
+    }
+}
+
+
+asm_fail()
+{
+    echo -n "$1: " 1>&2
+    shift
+    ../m8cas "$@" >_out 2>&1 && {
+	echo FAILED 1>&2
+	cat _out
+	rm -f _out
+	exit 1
+    }
+}
+
+
+expect()
+{
+    diff -u - _out >_diff || {
+	echo FAILED 1>&2
+	cat _diff 1>&2
+	rm -f _out _diff
+	exit 1
+    }
+    echo PASSED 1>&2
+    rm -f _out _diff
+    passed=`expr $passed + 1`
+}

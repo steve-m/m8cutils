@@ -1,0 +1,23 @@
+#!/bin/sh
+. Common
+
+reas "MOV reg[expr],A" 60 30 40
+reas "MOV reg[X+expr],A" 61 30 40
+reas "MOV reg[expr],expr" 62 30 40 7f
+reas "MOV reg[X+expr],expr" 63 30 40 7f
+
+reas "ASL A" 64 40
+reas "ASL [expr]" 65 30 40
+reas "ASL [X+expr]" 66 30 40
+
+reas "ASR A" 67 40
+reas "ASR [expr]" 68 30 40
+reas "ASR [X+expr]" 69 30 40
+
+reas "RLC A" 6a 40
+reas "RLC [expr]" 6b 30 40
+reas "RLC [X+expr]" 6c 30 40
+
+reas "RRC A" 6d 40
+reas "RRC [expr]" 6e 30 40
+reas "RRC [X+expr]" 6f 30 40

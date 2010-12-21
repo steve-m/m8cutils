@@ -1,0 +1,17 @@
+#!/bin/sh
+. Common
+
+asm "BLKW" <<EOF
+	nop
+	blkw	1
+foo:
+	blkw	3
+bar:
+	blkw	2
+here:	mov	A,[foo]
+	mov	A,[bar]
+	db	here
+EOF
+expect <<EOF
+40 51 02 51 08 01
+EOF

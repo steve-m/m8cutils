@@ -1,0 +1,52 @@
+#!/bin/sh
+. Common
+
+asm "BLK" <<EOF
+	nop
+foo:
+	blk	1
+bar:
+	blk	2
+here:	mov	A,[foo]
+	mov	A,[bar]
+	db	here
+EOF
+expect <<EOF
+40 51 00 51 01 01
+EOF
+
+asm "BLK (backward-defined)" <<EOF
+	nop
+foo:
+	nop
+bar:
+	blk	foo
+end:
+	blk	0
+	db	end
+	nop
+EOF
+expect <<EOF
+40 40 01 40
+EOF
+
+asm_fail "BLK (self-reference)" <<EOF
+	nop
+foo:
+	blk	foo
+	db	foo
+	nop
+EOF
+expect <<EOF
+<stdin>:2: undefined identifier "foo"
+EOF
+
+asm_fail "BLK (forward-defined)" <<EOF
+	nop
+	blk	foo
+foo:
+	nop
+EOF
+expect <<EOF
+<stdin>:2: undefined identifier "foo"
+EOF

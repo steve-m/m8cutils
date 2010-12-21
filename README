@@ -1,6 +1,10 @@
 CY8C2 Utilities
 ===============
 
+Copyright
+---------
+
+With the exceptions noted below, all files are
 Copyright 2006 Werner Almesberger
 
 The files in this package are distributed under the terms of the
@@ -9,6 +13,27 @@ version thereof. For details, please refer to the README file in
 the respective directory. Version 2 of the GPL is included in
 the file ../COPYING.GPLv2.
 
+as/cpp.h, as/cpp.c:
+  Copyright 2002,2003 California Institute of Technology
+  Copyright 2004 Werner Almesberger
+
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+libfdr/ (Red-black trees)
+  Copyright 2001 James S. Plank
+
+  The files in as/libfdr/ are distributed under the GNU Lesser General
+  Public License. See the file libfdr/LICENSE for details.
+
+libfdr/Makefile and as/m8c.l have additional copyright holders. Please
+refer directly to the respective file for details.
+
+
+Overview
+--------
 
 This is a collection of utilities for programming the Cypress
 CY8C2xxxx series of microcontrollers, see
@@ -17,8 +42,11 @@ http://www.cypress.com/psoc
 
 This collection consists of the following parts:
 
+  as/
+    An assembler for the M8C assembly language
+
   dasm/
-    A disassembler for the M8C language
+    A disassembler for the M8C assembly language
 
   prog/
     A programmer, with drivers for different types of programmer
@@ -40,8 +68,9 @@ agree with the CFLAGS, edit them in Common.make.
 
 There is no "make install" yet. The resulting executables are:
 
-- programmer (host side): prog/cy8c2prog
+- assembler: as/m8cas
 - disassembler: dasm/m8cdasm
+- programmer (host side): prog/cy8c2prog
 - programmer (firmware): waspic/waspic.hex
 
 

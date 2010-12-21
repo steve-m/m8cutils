@@ -1,0 +1,23 @@
+#!/bin/sh
+. Common
+
+reas "MOV A,expr" 50 30 40
+reas "MOV A,[expr]" 51 30 40
+reas "MOV A,[X+expr]" 52 30 40
+reas "MOV [expr],A" 53 30 40
+reas "MOV [X+expr],A" 54 30 40
+reas "MOV [expr],expr" 55 30 40 7f
+reas "MOV [X+expr],expr" 56 30 40 7f
+
+reas "MOV X,expr" 57 30 40
+reas "MOV X,[expr]" 58 30 40
+reas "MOV X,[X+expr]" 59 30 40
+reas "MOV [expr],A" 5a 30 40
+
+reas "MOV A,X" 5b 40
+reas "MOV X,A" 5c 40
+
+reas "MOV A,reg[expr]" 5d 30 40
+reas "MOV A,reg[X+expr]" 5e 30 40
+
+reas "MOV [expr],[expr]" 5f 30 40 7e

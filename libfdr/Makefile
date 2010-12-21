@@ -1,24 +1,26 @@
 #
-# Makefile - Makefile for shared parts of the CY8C2 utilities
+# libfdr/Makefile - Makefile for red-black trees
 #
-# Written 2006 by Werner Almesberger
-# Copyright 2006 Werner Almesberger
+# Written 2002-2004, 2006 by Werner Almesberger
+# Copyright 2002, 2003 California Institute of Technology
+# Copyright 2004 Koninklijke Philips Electronics NV
+# Copyright 2003, 2006 Werner Almesberger
 #
 
 include ../Common.make
 
+FILES=README LICENSE Makefile \
+  jrb.c jrb.h jval.c jval.h
+OBJS=jrb.o jval.o
 
-FILES=README Makefile \
-      file.h file.c disasm.h disasm.c
-OBJS=file.o disasm.o
-
+CFLAGS=-g -O $(CFLAGS_WARN)
 
 .PHONY:		all dep depend tests filelist clean spotless
 
 
-all:		libcy8c2utils.a
+all:		libfdr.a
 
-libcy8c2utils.a: $(OBJS)
+libfdr.a:	$(OBJS)
 		$(AR) crv $@ $^
 
 # ----- Dependencies ----------------------------------------------------------
@@ -45,7 +47,7 @@ filelist:
 # ----- Cleanup ---------------------------------------------------------------
 
 clean:
-		rm -f $(OBJS)
+		rm -f $(OBJS) .depend
 
 spotless:	clean
-		rm -f libcy8c2utils.a .depend
+		rm -f libfdr.a

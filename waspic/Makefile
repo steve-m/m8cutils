@@ -10,14 +10,11 @@
 
 # ----- User-configurable items -----------------------------------------------
 
-
 PORT = $(shell echo $${PICSTART_PORT:-/dev/ttyS0})
 #DEVICE=16f88	# DON'T USE THIS - PICP MIS-PROGRAMS THE CHIP !!
 DEVICE=16f819
 
-
 # -----------------------------------------------------------------------------
-
 
 FILES=README COPYING PARTS Makefile \
       project waspic.sch waspic.pcb \
@@ -38,28 +35,20 @@ waspic.hex:	waspic.asm Makefile
 prog:		waspic.hex
 		$(prog_pic)
 
-
 # ----- Dependencies (dummy target) -------------------------------------------
-
 
 dep depend:
 
-
 # ----- Tests -----------------------------------------------------------------
-
 
 tests:
 
-
 # ----- Distribution ----------------------------------------------------------
-
 
 filelist:
 		@echo $(FILES)
 
-
 # ----- Cleanup ---------------------------------------------------------------
-
 
 clean:
 		rm -f waspic.cod waspic.hex waspic.lst

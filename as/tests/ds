@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+
+asm "DS" <<EOF
+	nop
+here:
+	ds	"Hello, "
+there:
+	mov	A,here
+	mov	X,there
+EOF
+expect <<EOF
+40 48 65 6C 6C 6F 2C 20 50 01 57 08
+EOF
