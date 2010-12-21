@@ -1,0 +1,56 @@
+#!/bin/sh
+. Common
+
+sym "Separate assembly, export, define, map" <<EOF
+	export	foo
+	nop
+foo:
+EOF
+expect -w <<EOF
+ROM  0001  G  foo  text <stdin>:4
+EOF
+
+sym "Separate assembly, define, export, map" <<EOF
+	nop
+foo:
+	nop
+	export	foo
+EOF
+expect -w <<EOF
+ROM  0001  G  foo  text <stdin>:3
+EOF
+
+file "Separate assembly, globalize, export, define, map" <<EOF
+	ljmp	foo
+EOF
+sym <<EOF
+	export	foo
+	nop
+foo:
+EOF
+expect -w <<EOF
+ROM  0004  G  foo  text <stdin>:4
+EOF
+
+file "Separate assembly, globalize, define, export, map" <<EOF
+	ljmp	foo
+EOF
+sym <<EOF
+	nop
+foo:
+	nop
+	export	foo
+EOF
+expect -w <<EOF
+ROM  0004  G  foo  text <stdin>:3
+EOF
+
+file "Separate assembly, export twice" <<EOF
+foo::
+EOF
+asm_fail <<EOF
+	export	foo
+EOF
+expect <<EOF
+<stdin>:1: re-exporting "foo" (first definition at _file_0:2)
+EOF

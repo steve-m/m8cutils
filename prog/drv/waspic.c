@@ -28,8 +28,10 @@ static int fd;
 #define BYE_STRING "\x01\x01\x01"
 
 
-static int waspic_open(const char *dev,int voltage)
+static int waspic_open(const char *dev,int voltage,int power_on)
 {
+    if (power_on)
+	return -1;
     fd = tty_open_raw(dev,B19200);
     tty_write(HELLO_STRING,5);
     while (tty_read_byte(1) != '+');

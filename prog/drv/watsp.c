@@ -42,8 +42,10 @@ static int fd;
 static int reset;
 
 
-static int watsp_open(const char *dev,int voltage)
+static int watsp_open(const char *dev,int voltage,int power_on)
 {
+    if (power_on)
+	return -1;
     if (voltage == 3)
 	fprintf(stderr,
 	  "warning: 3V operation is not reliable. Trying anyway ...\n");

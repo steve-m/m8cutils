@@ -1,0 +1,15 @@
+#!/bin/sh
+. Common
+
+asm "Set 1, DR = 0" </dev/null
+sim <<EOF
+reg[1] = 4
+reg[1]
+reg[4]
+reg[reg[1]]
+EOF
+expect <<EOF
+0x4 4
+0x0 0
+0x4 4
+EOF

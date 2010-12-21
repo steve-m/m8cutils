@@ -29,8 +29,7 @@ libfdr.a:	$(OBJS)
 $(OBJS):	.depend
 
 dep depend .depend:
-		$(CPP) $(CFLAGS) -MM -MG *.c >.depend || \
-		  { rm -f .depend; exit 1; }
+		$(DEPEND)
 
 ifeq (.depend,$(wildcard .depend))
 include .depend

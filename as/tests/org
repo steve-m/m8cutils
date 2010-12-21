@@ -28,5 +28,5 @@ asm_fail "ORG forward-defined" <<EOF
 foo:	equ	10
 EOF
 expect <<EOF
-<stdin>:1: undefined identifier "foo"
+<stdin>:1: undefined label "foo"
 EOF

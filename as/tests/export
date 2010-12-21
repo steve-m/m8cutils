@@ -30,3 +30,12 @@ EOF
 expect <<EOF
 40 40 01
 EOF
+
+asm_fail "EXPORT undefined label" <<EOF
+	nop
+	export	foo
+	nop
+EOF
+expect <<EOF
+<stdin>:2: undefined exported label "foo"
+EOF

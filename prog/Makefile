@@ -50,9 +50,10 @@ $(OBJS):	.depend
 
 prog.o:		$(DRIVERS:%=drv/%.c)
 
+DEPEND_EXTRA_CFLAGS = -Wno-error
+
 dep depend .depend:
-		$(CPP) $(CFLAGS) -Wno-error -MM -MG *.c >.depend || \
-		  { rm -f .depend; exit 1; }
+		$(DEPEND) 
 
 ifeq (.depend,$(wildcard .depend))
 include .depend

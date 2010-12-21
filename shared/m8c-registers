@@ -86,6 +86,7 @@
 0x0e0	INT_MSK0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
 0x0e1	INT_MSK1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
 0x0e2	INT_VC
+0x0e3	RES_WDT
 
 0x0e6	DEC_CR0		IGEN[4] { _ ACol0 ACol1 _ ACol2 _ _ _ ACol3 }
 			ICLKS0 DCOL[2] { ACol0 ACol1 ACol2 ACol3 } DCLKS0
@@ -176,5 +177,6 @@
 0x1e8	IMO_TR
 0x1e9	ILO_TR		_[2] BaseTrim[2] FreqTrim[4]
 0x1ea	BDG_TR		_ AGNDBYP TC[2] V[4]
+0x1eb	ECO_TR		PSSDC[2] _[6]
 
 0x1fa	FLS_PR1

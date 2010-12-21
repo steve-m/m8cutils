@@ -1,3 +1,28 @@
+Version 15 (5-JUL-2006)
+----------
+
+- sim/lang.y: expressions can now be used almost everywhere where numbers are
+  expected (sim/tests/symexpr, sim/tests/regreg)
+- sim/lang.y: symbols names can be distinguished from keywords by putting them
+  in double quotes (sim/tests/symquot)
+- shared/m8c-registers: added more registers
+- as/: error messages call identifiers now "labels" (updated
+  as/tests/reuse_undef, as/tests/reuse_before, as/tests/reuse_after,
+  as/tests/blk, as/tests/org)
+- as/: the assembler can now process multiple files in one run. Global labels
+  are shared among files, while local labels remain local per file.
+  (as/tests/sep_local, as/tests/sep_global, as/tests/sep_undef,
+  as/tests/sep_mix, as/tests/sep_export; updated as/tests/export)
+- prog/drv/watpp.c: cleaned up some debugging code
+- prog/: added support for power-on mode, with the command-line option -P
+- prog/drv/watpp.c: added support for power-on mode
+- as/Makefile, sim/Makefile: $(OBJS) now depend on .depend, like everywhere
+  else
+- Common.make, */Makefile: dependency generation is now defined in Common.make
+- Common.make: dependency generation can now be quiet or verbose
+- Common.make: use `...` instead of $(shell ...) to cat VERSION, so that we
+  don't get a stray error during top-level make
+
 Version 14 (22-JUN-2006)
 ----------
 

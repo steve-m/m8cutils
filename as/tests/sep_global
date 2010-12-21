@@ -1,0 +1,50 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, global symbol, use follows definition, code" <<EOF
+	nop
+here::
+	nop
+EOF
+asm <<EOF
+	ljmp	here
+EOF
+expect <<EOF
+40 40 7D 00 01
+EOF
+
+file "Separate assembly, global symbol, definition follows use, code" <<EOF
+	ljmp	here
+EOF
+asm <<EOF
+	nop
+here::
+	nop
+EOF
+expect <<EOF
+7D 00 04 40 40
+EOF
+
+file "Separate assembly, global symbol, use follows definition, map" <<EOF
+	nop
+here::
+	nop
+EOF
+sym <<EOF
+	ljmp	here
+EOF
+expect -w <<EOF
+ROM  0001  G  here  text  _file_0:3
+EOF
+
+file "Separate assembly, global symbol, definition follows use, map" <<EOF
+	ljmp	here
+EOF
+sym <<EOF
+	nop
+here::
+	nop
+EOF
+expect -w <<EOF
+ROM  0004  G  here  text  <stdin>:3
+EOF

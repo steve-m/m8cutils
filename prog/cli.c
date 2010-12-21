@@ -22,6 +22,7 @@ int prog_voltage = 0;
 const char *prog_driver = NULL;
 const char *prog_port = NULL;
 int real_time = 0;
+int prog_power_on = 0;
 
 
 void prog_usage(void)
@@ -34,6 +35,7 @@ void prog_usage(void)
 "  -l        list supported programmers and chips, then exit\n"
 "  -p port   port to programmer (overrides M8CPROG_PORT, default for tty:\n"
 "            %s, for parallel port: %s)\n"
+"  -P        select power-on method\n"
 "  -R        run timing-critical parts at real-time priority (requires root)\n"
 "  -v        verbose operation, report major events\n"
 "  -v -v     more verbose operation, report vectors\n"
@@ -70,6 +72,9 @@ int prog_option(char option,const char *arg)
 	case 'p':
 	    prog_port = arg;
 	    break;
+	case 'P':
+	    prog_power_on = 1;
+	    break;
 	case 'R':
 	    real_time = 1;
 	    break;
@@ -85,5 +90,5 @@ int prog_option(char option,const char *arg)
 
 int prog_open_cli(void)
 {
-    return prog_open(prog_port,prog_driver,prog_voltage);
+    return prog_open(prog_port,prog_driver,prog_voltage,prog_power_on);
 }

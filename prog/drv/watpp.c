@@ -48,44 +48,58 @@
 
 static uint8_t data;
 static int fd;
-static int reset;
 
 
-static int watpp_open(const char *dev,int voltage)
+static int watpp_open(const char *dev,int voltage,int power_on)
 {
+    if (power_on && voltage != 5)
+	return -1;
     fd = pp_open(dev,0);
     PWR_PROG(1);
-    PWR_TARGET(1);
-    XRES(1);
+    PWR_TARGET(0);
     SCLK(0);
     Z();
+    if (power_on) {
+	XRES(0);
+	/*
+	 * With the power off, we now wait for capacitors on the board to
+	 * discharge. Using v(t) = v(0)*exp(-t/RC) and
+	 * v(0) = 5V, R = 4.7kOhm, t = 100ms, we can discharge up to
+	 * C = 10uF down to a diode drop of 0.6V.
+	 */
+	usleep(100000); /* 100 ms */
+    }
+    else {
+	XRES(1);
+	usleep(T_XRES);
+    }
     COMMIT();
-usleep(10000);
-#if 0
-while (1) {
-   SCLK(0);
-   SDATA(1);
-   COMMIT();
-    sleep(1);
-   SCLK(1);
-   SDATA(0);
-   COMMIT();
-    sleep(1);
-}
-//sleep(100);
-#endif
-    reset = 1;
     return voltage;
+}
+
+
+static void watpp_initialize(int power_on)
+{
+    if (power_on) {
+	struct timeval t0;
+
+	PWR_TARGET(1);
+	COMMIT();
+	start_time(&t0);
+	/*
+	 * This is much safer than usleep.
+	 */
+	while (delta_time_us(&t0) < T_VDDWAIT);
+    }
+    else {
+	XRES(0);
+	COMMIT();
+    }
 }
 
 
 static void watpp_send_bit(int bit)
 {
-    if (reset) {
-	XRES(0);
-	COMMIT();
-	reset = 0;
-    }
     SDATA(bit);
     SCLK(1);
     COMMIT();
@@ -126,6 +140,7 @@ static void watpp_close(void)
 struct prog_ops watpp_ops = {
     .name = "watpp",
     .open = watpp_open,
+    .initialize = watpp_initialize,
     .send_bit = watpp_send_bit,
     .send_z = watpp_send_z,
     .read_bit = watpp_read_bit,

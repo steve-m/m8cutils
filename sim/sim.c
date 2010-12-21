@@ -176,8 +176,10 @@ int main(int argc,char **argv)
     /*
      * Reserved for future use:
      *
+     * -o  pass option(s) to the driver
      * -s  time synchronization
      * -t  trace
+     * -x  historical (was reserved for XRES mode)
      *
      * Available: acghjkmoruwxyz
      */
@@ -259,7 +261,7 @@ int main(int argc,char **argv)
 	sym_read_file_by_name(symbols);
     if (ice) {
 	voltage = prog_open_cli();
-	prog_initialize(0,voltage);
+	prog_initialize(0,voltage,prog_power_on);
 	chip = prog_identify(chip,0);
 	ice_init();
 	atexit(prog_close);

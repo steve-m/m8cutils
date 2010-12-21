@@ -25,42 +25,74 @@ reas()
 }
 
 
+file()
+{
+    if [ -z "$files" ]; then
+	echo -n "$1: " 1>&2
+	shift
+	n=0
+    else
+	n=`expr $n + 1`
+    fi
+    files="$files _file_$n"
+    cat >_file_$n
+}
+
+
 asm()
 {
-    echo -n "$1: " 1>&2
-    shift
-    $VALGRIND ../m8cas "$@" >_out || {
+    if [ -z "$files" ]; then
+	echo -n "$1: " 1>&2
+	shift
+    fi
+    $VALGRIND ../m8cas "$@" $files - >_out || {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
-	rm -f _out
+	rm -f _out $files
 	exit 1
     }
+    if [ ! -z "$files" ]; then
+	rm $files
+	files=
+    fi
 }
 
 
 sym()
 {
-    echo -n "$1: " 1>&2
-    shift
-    $VALGRIND ../m8cas -m _out "$@" >/dev/null || {
+    if [ -z "$files" ]; then
+	echo -n "$1: " 1>&2
+	shift
+    fi
+    $VALGRIND ../m8cas -m _out "$@" $files - >/dev/null || {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
 	rm -f _out
 	exit 1
     }
+    if [ ! -z "$files" ]; then
+	rm $files
+	files=
+    fi
 }
 
 
 asm_fail()
 {
-    echo -n "$1: " 1>&2
-    shift
-    $VALGRIND ../m8cas "$@" >_out 2>&1 && {
+    if [ -z "$files" ]; then
+	echo -n "$1: " 1>&2
+	shift
+    fi
+    $VALGRIND ../m8cas "$@" $files - >_out 2>&1 && {
 	echo FAILED "($SCRIPT)" 1>&2
 	cat _out
-	rm -f _out
+	rm -f _out $files
 	exit 1
     }
+    if [ ! -z "$files" ]; then
+	rm $files
+	files=
+    fi
 }
 
 

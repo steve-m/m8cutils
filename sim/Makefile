@@ -22,7 +22,7 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       gpioint gpiointcfg \
       addrop printf sleep \
       bugs7 bugs8 \
-      symbols
+      symbols symexpr symquot regreg
 FILES=README Makefile \
       lang.l lang.y lang.h id.h id.c \
       util.h reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
@@ -64,9 +64,10 @@ default.m8csim:	../shared/m8c-registers ../shared/reg2hdrs.pl
 
 # ----- Dependencies ----------------------------------------------------------
 
+$(OBJS):	.depend
+
 dep depend .depend:
-		$(CPP) $(CFLAGS) -MM -MG *.c >.depend || \
-		  { rm -f .depend; exit 1; }
+		$(DEPEND)
 
 ifeq (.depend,$(wildcard .depend))
 include .depend               

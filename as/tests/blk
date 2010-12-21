@@ -57,5 +57,5 @@ foo:
 	nop
 EOF
 expect <<EOF
-<stdin>:3: undefined identifier "foo"
+<stdin>:3: undefined label "foo"
 EOF

@@ -172,14 +172,14 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 
 %union {
     uint32_t num;
-    char *str;
+    const char *str;
     struct id *id;
     struct lvalue lval;
     struct nlist *nlist;
 };
 
 
-%token		TOK_A TOK_F TOK_SP TOK_X TOK_REG TOK_RAM TOK_ROM
+%token		TOK_A TOK_F TOK_SP TOK_X TOK_REG TOK_REG TOK_RAM TOK_ROM
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
@@ -206,6 +206,9 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %type	<num>	unary_expression postfix_expression primary_expression
 
 %type	<nlist>	expression_list
+
+%nonassoc SINGLE_REG
+%nonassoc ']'
 
 %%
 
@@ -375,7 +378,7 @@ printf:
     TOK_PRINTF STRING expression_list
 	{
 	    do_printf(stdout,$2,$3);
-	    free($2);
+	    free((char *) $2);
 	    while ($3) {
 		struct nlist *next = $3->next;
 
@@ -438,7 +441,7 @@ assignment:
     ;
 
 lvalue:
-    opt_ram '[' NUMBER ']' opt_byte_mask
+    opt_ram '[' expression ']' opt_byte_mask
 	{
 	    if ($3 > chip->pages*256)
 		yyerrorf("address %u is outside of RAM",(unsigned) $3);
@@ -446,7 +449,7 @@ lvalue:
 	    $$.n = $3;
 	    $$.mask = $5;
 	}
-    | TOK_ROM '[' NUMBER ']' opt_byte_mask
+    | TOK_ROM '[' expression ']' opt_byte_mask
 	{
 	    if ($3 > chip->banks*chip->blocks*BLOCK_SIZE)
 		yyerrorf("address %u is outside of ROM",(unsigned) $3);
@@ -516,13 +519,13 @@ opt_ram:
     ;
 
 register:
-    TOK_REG '[' NUMBER ']'
+    TOK_REG '[' expression ']' %prec SINGLE_REG
 	{
 	    if ($3 > NUM_REGS)
 		yyerrorf("address %u is outside of REG",(unsigned) $3);
 	    $$ = $3;
 	}
-    | TOK_REG '[' TOK_REG '[' NUMBER ']' ']'
+    | TOK_REG '[' TOK_REG '[' expression ']' ']'
 	{
 	    if ($5 > NUM_REGS)
 		yyerrorf("address %u is outside of REG",(unsigned) $5);
@@ -783,5 +786,18 @@ primary_expression:
 	    if (attr & SYM_ATTR_MORE)
 		yyerrorf("symbol \"%s\" is not unique",$1->name);
 	    $$ = *value;
+	}
+    | STRING
+	{
+	    const uint32_t *value;
+	    int attr;
+
+	    value = sym_by_name($1,SYM_ATTR_ANY,&attr);
+	    if (!value)
+		yyerrorf("no symbol \"%s\"",$1);
+	    if (attr & SYM_ATTR_MORE)
+		yyerrorf("symbol \"%s\" is not unique",$1);
+	    $$ = *value;
+	    free((char *) $1);
 	}
     ;

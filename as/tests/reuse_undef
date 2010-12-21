@@ -6,5 +6,5 @@ asm_fail "Reusable label, undefined" <<EOF
 	jmp	.label
 EOF
 expect <<EOF
-<stdin>:2: undefined identifier ".label"
+<stdin>:2: undefined label ".label"
 EOF

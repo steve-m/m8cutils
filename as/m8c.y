@@ -66,6 +66,7 @@ int yyparse(void);
 %type	<op>	shift_expression
 %type	<op>	additive_expression multiplicative_expression
 %type	<op>	unary_expression primary_expression
+
 %%
 
 all:
@@ -90,23 +91,21 @@ all:
 label:
     GLOBAL
 	{
-	    assign($1,number_op(*pc));
-	    $1->global = 1;
-	    $1->area = current_area;
+	    assign($1,number_op(*pc),current_area);
+	    export($1);
 	}
     | LOCAL
 	{
-	    assign($1,number_op(*pc));
-	    $1->area = current_area;
+	    assign($1,number_op(*pc),current_area);
 	}
     | GLOBAL label_directive
 	{
-	    assign($1,$2);
-	    $1->global = 1;
+	    assign($1,$2,NULL);
+	    export($1);
 	}
     | LOCAL label_directive
 	{
-	    assign($1,$2);
+	    assign($1,$2,NULL);
 	}
     ;
 
@@ -732,7 +731,7 @@ directive:
 	    if (*$2->name == '.')
 		yyerror("reusable local labels cannot be exported");
 	    /* @@@ silently ignore multiple exports of the same label ? */
-	    $2->global = 1;
+	    export($2);
 	}
     | TOK_IF
 	{

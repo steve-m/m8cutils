@@ -1,0 +1,24 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, undefined symbol, local in first file" <<EOF
+	ljmp	here
+here:
+EOF
+asm_fail <<EOF
+	ljmp	here
+EOF
+expect <<EOF
+<stdin>:1: undefined label "here"
+EOF
+
+file "Separate assembly, undefined symbol, local in second file" <<EOF
+	ljmp	here
+EOF
+asm_fail <<EOF
+	ljmp	here
+here:
+EOF
+expect <<EOF
+_file_0:1: undefined label "here"
+EOF

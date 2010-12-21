@@ -21,8 +21,11 @@ linker. Instead of implementing its own preprocessor, it uses CPP.
 Usage
 -----
 
-m8cas reads the file specified on the command line. If no file is
-specified or if its name is "-", it reads from standard input.
+m8cas reads the files specified on the command line. If no file is
+specified or if a file's name is "-", it reads from standard input.
+Local labels are only visible in the file in which they are defined.
+Global labels must be defined in one of the files passed to m8cas,
+i.e., there is no separate linker pass following assembly.
 
 The assembler language either closely follows the specification in the
 assembly language user guide (see below), or you can enable various
@@ -105,6 +108,8 @@ Assumptions
 - the name of an area does not implicitly define a label, and is available for
   use as a label, even if completely unrelated to the area
 - it is an error to try to store data in a RAM area
+- undefined local labels are automatically resolved through global labels
+- defined local labels are not affected by global labels
 
 
 Missing features
@@ -152,5 +157,4 @@ Known problems
 
 - there is no provision for detecting exceeding the available ROM or RAM
   space (this is of course something the linker should do, not the assembler)
-- the behaviour of AREA is still unsatisfactory. We really need a linker to
-  properly use this.
+- the behaviour of AREA is still unsatisfactory

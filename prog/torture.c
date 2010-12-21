@@ -125,7 +125,7 @@ int main(int argc,char **argv)
 	if (!prog_option(c,optarg))
 		usage(*argv);
     voltage = prog_open_cli();
-    prog_initialize(0,voltage);
+    prog_initialize(0,voltage,prog_power_on);
     chip = prog_identify(NULL,0);
     get_time(&t0);
     ta = t0;

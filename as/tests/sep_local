@@ -1,0 +1,40 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, local symbols, code" <<EOF
+	nop
+foo:
+	nop
+	ljmp	foo
+	nop
+EOF
+asm <<EOF
+	nop
+	ljmp	foo
+	nop
+foo:
+	nop
+EOF
+expect <<EOF
+40 40 7D 00 01 40 40 7D
+00 0B 40 40
+EOF
+
+file "Separate assembly, local symbols, map" <<EOF
+	nop
+foo:
+	nop
+	ljmp	foo
+	nop
+EOF
+sym <<EOF
+	nop
+	ljmp	foo
+	nop
+foo:
+	nop
+EOF
+expect -w <<EOF
+ROM  0001  L  foo  text  _file_0:3
+ROM  000B  L  foo  text  <stdin>:5
+EOF

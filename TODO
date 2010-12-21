@@ -4,7 +4,6 @@ m8cutils "to do" list
 m8cprog
 -------
 
-- support selection of reset vs. power-on mode
 - generalize interface device support to USB, etc.
 - check that the Intel hex format is properly implemented
 - add regression tests
@@ -19,10 +18,8 @@ share/file
 m8cdas
 ------
 
-- as/tests/reuse_global: fails with some versions of Bison/YACC which say
-  "parse error" instead of "syntax error"
 - regression tests need to check file input error handling
-- scrap this and do it in binutils instead
+- consider scrapping this and doing it in binutils instead
 
 m8cas
 -----

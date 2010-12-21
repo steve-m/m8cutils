@@ -76,7 +76,7 @@ int main(int argc,char **argv)
 
     /*
      * Reserved option letters:
-     * x  select XRES method even if power-on is available
+     * x  historical (was reserved for XRES mode)
      * o  pass option(s) to the driver
      */
     while ((c = getopt(argc,argv,"bceiqrswVz" PROG_OPTIONS)) != EOF)
@@ -149,8 +149,9 @@ int main(int argc,char **argv)
 
     voltage = prog_open_cli();
     if (verbose)
-	fprintf(stderr,"selected %dV operation\n",voltage);
-    prog_initialize(op_erase || op_write,voltage);
+	fprintf(stderr,"selected %dV operation, %s mode\n",voltage,
+	  prog_power_on ? "power-on" : "reset");
+    prog_initialize(op_erase || op_write,voltage,prog_power_on);
     chip = prog_identify(chip,1);
     if (op_write || op_compare)
 	if (program_size > chip->banks*chip->blocks*BLOCK_SIZE) {

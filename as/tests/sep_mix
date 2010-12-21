@@ -1,0 +1,107 @@
+#!/bin/sh
+. Common
+
+file "Separate assembly, export, local, global, code" <<EOF
+	nop
+foo::
+	ljmp	foo
+EOF
+file <<EOF
+foo:
+	ljmp	foo
+EOF
+asm <<EOF
+	ljmp	foo
+EOF
+expect <<EOF
+40 7D 00 01 7D 00 04 7D
+00 01
+EOF
+
+file "Separate assembly, global, local, export, code" <<EOF
+	nop
+	ljmp	foo
+EOF
+file <<EOF
+foo:
+	ljmp	foo
+EOF
+asm <<EOF
+foo::
+	ljmp	foo
+EOF
+expect <<EOF
+40 7D 00 07 7D 00 04 7D
+00 07
+EOF
+
+file "Separate assembly, local, global, local, code" <<EOF
+	nop
+foo:
+	ljmp	foo
+EOF
+file <<EOF
+foo::
+	ljmp	foo
+EOF
+asm <<EOF
+foo:
+	ljmp	foo
+EOF
+expect <<EOF
+40 7D 00 01 7D 00 04 7D
+00 07
+EOF
+
+file "Separate assembly, export, local, global, map" <<EOF
+	nop
+foo::
+	ljmp	foo
+EOF
+file <<EOF
+foo:
+	ljmp	foo
+EOF
+sym <<EOF
+	ljmp	foo
+EOF
+expect -w <<EOF
+ROM  0001  G  foo  text _file_0:3
+ROM  0004  L  foo  text _file_1:2
+EOF
+
+file "Separate assembly, global, local, export, map" <<EOF
+	nop
+	ljmp	foo
+EOF
+file <<EOF
+foo:
+	ljmp	foo
+EOF
+sym <<EOF
+foo::
+	ljmp	foo
+EOF
+expect -w <<EOF
+ROM  0007  G  foo  text <stdin>:2
+ROM  0004  L  foo  text _file_1:2
+EOF
+
+file "Separate assembly, local, global, local, map" <<EOF
+	nop
+foo:
+	ljmp	foo
+EOF
+file <<EOF
+foo::
+	ljmp	foo
+EOF
+sym <<EOF
+foo:
+	ljmp	foo
+EOF
+expect -w <<EOF
+ROM  0004  G  foo  text _file_1:2
+ROM  0001  L  foo  text _file_0:3
+ROM  0007  L  foo  text <stdin>:2
+EOF

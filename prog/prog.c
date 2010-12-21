@@ -32,12 +32,11 @@ struct prog_ops *programmers[] = {
 
 static struct prog_ops *prog = NULL;
 static int initial = 0;
-static struct timeval t0;
 
 
-void start_time(void)
+void start_time(struct timeval *t0)
 {
-    if (gettimeofday(&t0,NULL) < 0) {
+    if (gettimeofday(t0,NULL) < 0) {
 	perror("gettimeofday");
 	exit(1);
     }
@@ -48,7 +47,7 @@ void start_time(void)
  * Return up to one second. Delays > 1s are indicated as 1s.
  */
 
-int32_t delta_time_us(void)
+int32_t delta_time_us(const struct timeval *t0)
 {
     struct timeval t1;
 
@@ -56,8 +55,8 @@ int32_t delta_time_us(void)
 	perror("gettimeofday");
 	exit(1);
     }
-    t1.tv_sec -= t0.tv_sec;
-    t1.tv_usec -= t0.tv_usec;
+    t1.tv_sec -= t0->tv_sec;
+    t1.tv_usec -= t0->tv_usec;
     if (t1.tv_usec < 0) {
 	t1.tv_sec--;
 	t1.tv_usec += 1000000;
@@ -86,7 +85,7 @@ void prog_list(FILE *file)
 }
 
 
-int prog_open(const char *dev,const char *programmer,int voltage)
+int prog_open(const char *dev,const char *programmer,int voltage,int power_on)
 {
     if (!dev)
 	dev = getenv("M8CPROG_PORT");
@@ -107,7 +106,11 @@ int prog_open(const char *dev,const char *programmer,int voltage)
 	    exit(1);
 	}
     }
-    voltage = prog->open(dev,voltage);
+    voltage = prog->open(dev,voltage,power_on);
+    if (voltage < 0) {
+	fprintf(stderr,"programming mode not supported\n");
+	exit(1);
+    }
     initial = 1;
     return voltage;
 }
@@ -115,12 +118,13 @@ int prog_open(const char *dev,const char *programmer,int voltage)
 
 static void wait_and_poll(void)
 {
+    struct timeval t0;
     int i;
 
     prog->send_z();
-    start_time();
+    start_time(&t0);
     while (!prog->read_bit())
-	if (delta_time_us() > 10) /* 10 us */
+	if (delta_time_us(&t0) > 10) /* 10 us */
 	    goto ready;
     /*
      * Don't try to "simplify" this loop. The way it's done makes sure that
@@ -135,7 +139,7 @@ static void wait_and_poll(void)
      * here.)
      */
     while (1) {
-	int timeout = delta_time_us() > 100000; /* 100 ms */
+	int timeout = delta_time_us(&t0) > 100000; /* 100 ms */
 
 	if (!prog->read_bit())
 	    break;
@@ -225,20 +229,41 @@ uint32_t do_prog_vectors(uint32_t v,...)
 }
 
 
-void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
+static void do_prog_acquire(uint32_t v,int power_on,
+  const char *deadline_name,int deadline)
 {
+    struct timeval t0,wait_sdata;
     int i;
     int32_t dt;
 
-    if (verbose > 1)
-	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
-    if (prog->acquire_reset) {
-	prog->acquire_reset(v);
-	return;
-    }
     if (real_time)
 	realtimize();
-    start_time();
+    start_time(&t0);
+    start_time(&wait_sdata);
+    if (prog->initialize)
+	prog->initialize(power_on);
+    if (power_on) {
+	while (1) {
+	    struct timeval t0_new;
+	    int timeout;
+
+	    timeout = delta_time_us(&wait_sdata) > 100000; /* 100 ms */
+	    start_time(&t0_new);
+	    if (!prog->read_bit())
+		break;
+	    if (timeout) {
+		int missed_deadline;
+
+		missed_deadline = delta_time_us(&t0) > deadline;
+		fprintf(stderr,"power-on timed out while waiting for SDATA\n");
+		if (missed_deadline)
+		    fprintf(stderr,
+		      "may also have missed the deadline, please try -R\n");
+		exit(1);
+	    }
+	    t0 = t0_new;
+	}
+    }
     if (prog->vector)
 	prog->vector(v);
     else {
@@ -249,12 +274,12 @@ void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
 	for (i = 18; i != 9; i--)
 	    prog->send_bit((v >> i) & 1);
     }
-    dt = delta_time_us();
+    dt = delta_time_us(&t0);
     if (real_time)
 	unrealtime();
-    if (dt > T_XRESINIT) {
-	fprintf(stderr,"Txresinit deadline missed: %ld > %d us\n",
-	  (long) dt,T_XRESINIT);
+    if (dt > deadline) {
+	fprintf(stderr,"%s deadline missed: %ld > %d us\n",deadline_name,
+	  (long) dt,deadline);
 	exit(1);
     }
     if (!prog->vector)
@@ -262,7 +287,33 @@ void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
 	    prog->send_bit(0);
     if (verbose > 1)
 	fprintf(stderr,"acquisition vector sent in %ld/%d us\n",
-	  (long) dt,T_XRESINIT);
+	  (long) dt,deadline);
+}
+
+
+void do_prog_acquire_reset(uint32_t v,uint32_t dummy)
+{
+    if (verbose > 1)
+	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
+    if (prog->acquire_reset) {
+	prog->acquire_reset(v);
+	return;
+    }
+    do_prog_acquire(v,0,"Txresinit",T_XRESINIT);
+}
+
+
+/*
+ * Oddly enough, at least the CY8C21323 doesn't seem to require any of the
+ * elaborate initialization AN2026A prescribes, so we just treat this like
+ * reset mode.
+ */
+
+void do_prog_acquire_power_on(uint32_t v,uint32_t dummy)
+{
+    if (verbose > 1)
+	fprintf(stderr,"ACQUIRE VECTOR 0x%08x\n",v);
+    do_prog_acquire(v,1,"Tacq",T_ACQ);
 }
 
 

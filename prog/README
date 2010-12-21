@@ -95,10 +95,14 @@ The voltage at which the chip operates is set with the options -3
 (3V) and -5 (5V). This option is required if the programmer does
 not sense the chip voltage or if the programmer needs to provide
 power to the circuit being programmed, and has to decide between
-3V and 5V. In all other cases, the voltage is auto-detected. If
+3V and 5V. In all other cases, the voltage is auto-detected,
+provided that the programmer hardware is capable of doing this. If
 the voltage is also specified on the command line, and the
 auto-detected voltage does not correspond to it, m8cprog aborts
 with an error.
+
+By default, m8cprog uses reset mode. Power-on mode can be selected
+with the option -P.
 
 Last but not least, several degrees of verboseness can be selected
 with the options -q and -v. By default, m8cprog only displays

@@ -15,7 +15,7 @@ SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations \
                   -Wno-strict-prototypes
 SLOPPY_LOCALS=-Wno-unused
 CFLAGS_COMMON=-g -I../shared -I../libfdr \
-	      -DVERSION=$(shell cat ../VERSION) \
+	      -DVERSION=`cat ../VERSION` \
 	      -DINSTALL_PREFIX=\"$(INSTALL_PREFIX)\"
 CFLAGS=$(CFLAGS_WARN) $(CFLAGS_COMMON)
 CFLAGS_LEX=$(CFLAGS_WARN) $(SLOPPY_PROTOTYPES) $(SLOPPY_LOCALS) \
@@ -42,6 +42,10 @@ LEX_normal	:= $(LEX)
 INSTALL_normal	:= $(INSTALL)
 UNINSTALL_normal:= $(UNINSTALL)
 
+DEPEND_normal = \
+  $(CPP) $(CFLAGS) $(DEPEND_EXTRA_CFLAGS) -MM -MG *.c >.depend || \
+    { rm -f .depend; exit 1; }
+
 CC_quiet	= @echo "  CC       " $@ && $(CC_normal)
 LD_quiet	= @echo "  LD       " $@ && $(LD_normal)
 AR_quiet	= @echo "  AR       " $@ && $(AR_normal)
@@ -53,6 +57,7 @@ INSTALL_quiet	= \
     $(INSTALL_normal) "$$@"; }; ___
 UNINSTALL_quiet	= \
   @___() { echo "  RM       " "$$1" && $(UNINSTALL_normal) "$$@"; }; ___
+DEPEND_quiet	= @echo "  DEPENDENCIES" && $(DEPEND_normal)
 
 ifdef V
     CC		= $(CC_normal)
@@ -65,6 +70,7 @@ ifdef V
     GEN_more	=
     INSTALL	= $(INSTALL_normal)
     UNINSTALL	= $(UNINSTALL_normal)
+    DEPEND	= $(DEPEND_normal)
 else
     CC		= $(CC_quiet)
     LD		= $(LD_quiet)
@@ -76,6 +82,7 @@ else
     GEN_more	= @
     INSTALL	= $(INSTALL_quiet)
     UNINSTALL	= $(UNINSTALL_quiet)
+    DEPEND	= $(DEPEND_quiet)
 endif
 
 #

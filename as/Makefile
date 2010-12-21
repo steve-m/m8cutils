@@ -20,7 +20,8 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       char hex decimal octal binary \
       xminus \
       evalconst \
-      sym_local sym_global sym_reuse redefine
+      sym_local sym_global sym_reuse redefine \
+      sep_local sep_global sep_undef sep_mix sep_export
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
       util.h error.h error.c id.h id.c op.h op.c code.h code.c \
@@ -53,9 +54,10 @@ y.tab.o:	y.tab.c
 
 # ----- Dependencies ----------------------------------------------------------
 
+$(OBJS):	.depend
+
 dep depend .depend:
-		$(CPP) $(CFLAGS) -MM -MG *.c >.depend || \
-		  { rm -f .depend; exit 1; }
+		$(DEPEND)
 
 ifeq (.depend,$(wildcard .depend))
 include .depend               

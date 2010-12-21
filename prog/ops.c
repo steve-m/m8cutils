@@ -54,13 +54,16 @@ static int read_block(int block)
 }
 
 
-void prog_initialize(int may_write,int voltage)
+void prog_initialize(int may_write,int voltage,int power_on)
 {
     if (may_write && !voltage) {
 	fprintf(stderr,"must specify voltage (-3 or -5)\n");
 	exit(1);
     }
-    prog_acquire_reset(INIT_VECTOR);
+    if (power_on)
+	prog_acquire_power_on(INIT_VECTOR);
+    else
+	prog_acquire_reset(INIT_VECTOR);
     prog_vectors(INITIALIZE_1_REST);
     if (may_write) {
 	prog_vectors(INITIALIZE_2);

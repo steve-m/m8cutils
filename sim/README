@@ -57,7 +57,8 @@ simulation script.
 
 The simulator uses the regular ISSP(tm) interface for communication. It
 delegates communication to the m8cprog programmer. The options "-p port",
-"-d driver", -3, and -5 are used in exactly the same way as with m8cprog.
+"-d driver", -P, -R, -3, and -5 are used in exactly the same way as with
+m8cprog.
 
 
 Scripting language
@@ -66,13 +67,13 @@ Scripting language
 Each expression or command ends with a newline. Comments in the scripting
 language are the usual forms known from C, and the semicolon from m8cas.
 
-- if an expression is entered, it is calculated and its result is printed in
+- If an expression is entered, it is calculated and its result is printed in
   hex and decimal. Example:
 
   (input)	5
   (output)	0x5 5
 
-- constants can be numbers in any of the formats recognized by the M8C
+- Constants can be numbers in any of the formats recognized by the M8C
   assembler language, including characters.
 
 - Read from RAM, ROM, or a register:
@@ -92,7 +93,8 @@ language are the usual forms known from C, and the semicolon from m8cas.
   by the current I/O bank or RAM page.
 
   If a symbol map is loaded, symbolic names can be used as addresses and
-  values.
+  values. If a symbol name coincides with a keyword of the scripting language,
+  it has to be put in double quotes.
 
 - As a temporary extension, also direct accesses can be made through the ICE:
 

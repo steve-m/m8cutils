@@ -9,5 +9,5 @@ here:
 	ret
 EOF
 expect <<EOF
-<stdin>:1: undefined identifier ".label"
+<stdin>:1: undefined reusable label ".label"
 EOF

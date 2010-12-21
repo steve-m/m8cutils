@@ -216,8 +216,9 @@ struct op *id_op(const struct id *id)
 {
     struct op *op;
 
-    if (id->defined)
-	return get_op(id->value);
+    op = id_resolve(id);
+    if (op)
+	return get_op(op);
     op = new_op(op_id);
     op->u.id = id;
     return op;
@@ -248,10 +249,12 @@ uint32_t evaluate(const struct op *op)
     if (op->fn == op_number)
 	return op->u.value;
     if (op->fn == op_id) {
-	if (!op->u.id->defined)
-	    lerrorf(&op->u.id->loc,"undefined identifier \"%s\"",
-	      op->u.id->name);
-	return evaluate(op->u.id->value);
+	struct op *v;
+
+	v = id_resolve(op->u.id);
+	if (v)
+	    return evaluate(v);
+	lerrorf(&op->u.id->loc,"undefined label \"%s\"",op->u.id->name);
     }
     return op->fn(evaluate(op->u.a),op->b ? evaluate(op->b) : 0);
 }

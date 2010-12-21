@@ -13,10 +13,11 @@ extern int prog_voltage;
 extern const char *prog_driver;
 extern const char *prog_port;
 extern int real_time; /* try to obtain real-time priority for acquisition */
+extern int prog_power_on;
 
 
-#define PROG_OPTIONS	"35d:lp:Rv"
-#define PROG_SYNOPSIS	"[-3|-5] [-d driver] [-p port] [-R] [-v ...]"
+#define PROG_OPTIONS	"35d:lp:PRv"
+#define PROG_SYNOPSIS	"[-3|-5] [-d driver] [-p port] [-P] [-R] [-v ...]"
 
 
 /*

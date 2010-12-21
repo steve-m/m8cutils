@@ -36,12 +36,17 @@ struct id {
 			   this is an assignment) */
     struct loc loc;	/* location of definition, or first reference if
 			   undefined */
+    struct id *alias;	/* global label with the same name, NULL if none */
 };
 
 
 struct id *make_id(char *name);
-void assign(struct id *id,struct op *value);
+void assign(struct id *id,struct op *value,const struct area *area);
+void export(struct id *id);
+struct op *id_resolve(const struct id *id);
 void id_init(void);
+void id_begin_file(void);
+void id_end_file(void);
 void write_ids(FILE *file);
 void id_cleanup(void);
 

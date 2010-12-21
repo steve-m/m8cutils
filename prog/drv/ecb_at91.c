@@ -91,9 +91,10 @@ static int pio_map(void)
 }
 
 
-static int ecb_at91_open(const char *dev,int voltage)
+static int ecb_at91_open(const char *dev,int voltage,int power_on)
 {
-	
+	if (power_on)
+		return -1;
 	if (!pio_map ())
 		return -1;
 	pio_setup();

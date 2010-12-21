@@ -1,0 +1,36 @@
+#!/bin/sh
+. Common
+
+asm "Symbols can be put in double quotes" <<EOF
+	nop
+foo:	ret
+EOF
+sim <<EOF
+"foo"
+EOF
+expect <<EOF
+0x1 1
+EOF
+
+asm "Symbol names that are commands are protected by double quotes" <<EOF
+	nop
+	nop
+run:	ret
+EOF
+sim <<EOF
+"run"
+EOF
+expect <<EOF
+0x2 2
+EOF
+
+asm "Symbol name \"reg\" is protected by double quotes" <<EOF
+	nop
+reg:	ret
+EOF
+sim <<EOF
+"reg"
+EOF
+expect <<EOF
+0x1 1
+EOF

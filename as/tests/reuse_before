@@ -8,5 +8,5 @@ here:
 	jmp	.label
 EOF
 expect <<EOF
-<stdin>:4: undefined identifier ".label"
+<stdin>:4: undefined label ".label"
 EOF
