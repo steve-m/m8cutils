@@ -1,0 +1,27 @@
+#!/bin/sh
+. Common
+
+asm "Bug: drive value was masked before shifting" </dev/null
+sim <<EOF
+PRT0DM1 = 0
+PRT0DM2 = 0
+P0[2:1] = 3
+PRT0DR
+EOF
+expect <<EOF
+0x6 6
+EOF
+
+asm "Bug: HALT was sometimes printed also on timeout" <<EOF
+	nop
+	dec	[0]
+EOF
+sim <<EOF
+run 6
+.
+@
+EOF
+expect <<EOF
+0x1 1
+0x4 4
+EOF

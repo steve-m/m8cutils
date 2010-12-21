@@ -181,16 +181,3 @@ unsigned short jval_ush(Jval j) {
 unsigned int jval_ui(Jval j) {
   return j.ui;
 }
-
-int *jval_iarray(Jval j) {
-  return j.iarray;
-}
-
-float *jval_farray(Jval j) {
-  return j.farray;
-}
-
-char *jval_carray(Jval j) {
-  return j.carray;
-}
-

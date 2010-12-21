@@ -108,6 +108,21 @@ language are the usual forms known from C, and the semicolon from m8cas.
   A = 0
   [0x100] = 1
 
+- Drive GPIO pins with an external signal (in the simulation). All the bits
+  covered by the mask are affected
+
+  P0 = 8		; drives P0[7:3] and P0[1:0] with "L", P0[2] with "H"
+  P0[1] = 1 r		; drives P0[1] with a resistive low
+  p0[1] = z		; doesn't drive P0[1]
+
+  The status of this port can be queried with
+
+  p0
+  p0[6:2]
+
+  The characters in the output are "Z" for Hi-Z, "H" for strong 1, "L" for
+  strong 0, "R" for resistive 1, and "r" for resistive 0.
+
 - Run the program until an exception occurs or until a number of (CPUCLK)
   cycles has passed:
 
@@ -116,6 +131,8 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
   The current time in cycles can be obtained through the read-only variable @.
   To run the program for a N cycles, use "run @+N"
+
+  To interrupt a running program, press Ctrl-C.
 
 - Connect I/O pins to an ICE, by port, pin, or pin range, e.g.,
 
@@ -156,6 +173,8 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
   To obtain the address of a register, use the unary & operator.
 
+- In interactive use, leave the simulator with ^D or "quit"
+
 
 Known limitations
 -----------------
@@ -187,9 +206,6 @@ There are certainly many more.
 - no access to symbols:
   Of course, since our assembler doesn't output them, we can't use them.
 
-- no way to interactively halt the simulation:
-  Should catch SIGINT, and do something like a HALT.
-
 - no breakpoints:
   Use HALT. Then figure out what to do with multiple breakpoints. Just report,
   dump data (not needed if we have an infinite trace buffer with full
@@ -216,9 +232,14 @@ There are certainly many more.
 - simulated "drive" is not seen by target:
   So we can't just feed synthetic data to a digital block.
 
-- register definitions should be shared with assembler:
-  Move them to shared/ or similar. Also consider giving them a more specific
-  name, and to hide registers missing in specific chips.
+- setting I/O lines through the ICE is awkward:
+  Should there be something like "ice P0[3] = 1r" to drive "unconnected"
+  lines ?
+
+- cannot detach ICE under software control:
+  It may be nice to be able to temporarily detach the ICE and let the program
+  on the target just run, e.g., with "disconnect" and "connect". "connect"
+  would require a full reset of the simulator state, though.
 
 - is it really a good idea to make FOO do the access ?
   If it's reg[FOO] in the assembler, it should also be reg[FOO] and not just
@@ -228,3 +249,7 @@ There are certainly many more.
   "PRT0DR ^= 0xff", anyone ?
 
 - input error recovery is only partial
+
+- something's still screwy with I/O bit calculation:
+  example/switch.asm sort of works in the simulator with ICE connected even if
+  we don't do the "and a,3", which is clearly wrong.

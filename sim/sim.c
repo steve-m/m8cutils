@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <setjmp.h>
 #include <sys/types.h>
 #include <readline/history.h>
@@ -32,9 +33,37 @@
 #include "sim.h"
 
 
+volatile int interrupted = 0; /* SIGINT */
+volatile int running = 0; /* set if we want to be interruptible */
 const struct chip *chip;
 int ice = 0;
 jmp_buf error_env;
+
+
+static void handle_sigint(void (*handler)(int sig))
+{
+    struct sigaction sa;
+
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_NODEFER;
+    if (sigaction(SIGINT,&sa,NULL) < 0) {
+	perror("sigaction");
+	exit(1);
+    }
+}
+
+
+static void sigint_handler(int sig)
+{
+    if (!running)
+	return;
+    if (interrupted) {
+	handle_sigint(SIG_DFL);
+	raise(SIGINT);
+    }
+    interrupted = 1;
+}
 
 
 void exception(const char *msg,...)
@@ -104,11 +133,13 @@ static FILE *find_file(const char *name,...)
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-I directory]\n"
-"          [-f script] chip [program]\n"
+"usage: %s [-b] [-n] [-q] [-i [programmer_option ...]] [-e interval]\n"
+"              [-I directory] [-f script] chip [program]\n"
 "       %s -l\n"
 "       %s -V\n\n"
 "  -b                program is a binary (overrides auto-detection)\n"
+"  -e interval       look for interrupts only every \"interval\" instructions\n"
+"                    (default: 1)\n"
 "  -f script         file to read the script from, \"-\" for stdin (default:\n"
 "                    stdin)\n"
 "  -i                use a DIY ICE\n"
@@ -121,6 +152,7 @@ static void usage(const char *name)
 "    -d driver       name of programmer driver, overrides M8CPROG_DRIVER\n"
 "    -3              if the programmer powers the board, supply 3V\n"
 "    -5              if the programmer powers the board, supply 5V\n"
+"    -v ...          verbose operation\n"
 "  -V                only print the version number and exit\n"
 "  chip              chip name, e.g., CY8C21323\n"
 "  program           binary or hex file containing ROM data, \"-\" for stdin\n"
@@ -140,8 +172,18 @@ int main(int argc,char **argv)
     int binary = 0,include_default = 1,voltage = 0;
     int c;
 
-    while ((c = getopt(argc,argv,"35bd:f:ilnp:qI:V")) != EOF)
+    /*
+     * Reserved for future use:
+     *
+     * -s  time synchronization
+     * -t  trace
+     *
+     * Available: acghjkmoruwxyz
+     */
+    while ((c = getopt(argc,argv,"35bd:e:f:iI:lnp:qvV")) != EOF)
 	switch (c) {
+	    char *end;
+
 	    case '3':
 		if (voltage)
 		    usage(*argv);
@@ -158,11 +200,19 @@ int main(int argc,char **argv)
 	    case 'd':
 		driver = optarg;
 		break;
+	    case 'e':
+		interrupt_poll_interval = strtoul(optarg,&end,0);
+		if (*end)
+		    usage(*argv);
+		break;
 	    case 'f':
 		script = optarg;
 		break;
 	    case 'i':
 		ice = 1;
+		break;
+	    case 'I':
+		include_dir = optarg;
 		break;
 	    case 'l':
 		chip_list(stdout,79);
@@ -176,8 +226,8 @@ int main(int argc,char **argv)
 	    case 'q':
 		quiet = 1;
 		break;
-	    case 'I':
-		include_dir = optarg;
+	    case 'v':
+		verbose++;
 		break;
 	    case 'V':
 		printf("m8csim from m8cutils version %d\n",VERSION);
@@ -213,6 +263,7 @@ int main(int argc,char **argv)
 	voltage = prog_open(port,driver,voltage);
 	prog_initialize(0,voltage);
 	chip = prog_identify(chip);
+	atexit(prog_close);
     }
 
     m8c_init();
@@ -230,6 +281,8 @@ int main(int argc,char **argv)
 	yyin = find_file(script,".",NULL);
 	next_file = NULL;
     }
+    if (isatty(fileno(next_file ? next_file : yyin)))
+	handle_sigint(sigint_handler);
     using_history();
     while (1) {
 	if (setjmp(error_env)) {
@@ -244,7 +297,5 @@ int main(int argc,char **argv)
 	}
     }
 
-    if (ice)
-	prog_close();
     return 0;
 }

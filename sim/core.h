@@ -46,8 +46,11 @@ extern uint16_t pc;
 extern uint8_t x;
 extern uint8_t sp;
 
+extern int interrupt_poll_interval;
+
 
 uint32_t m8c_run(uint32_t cycles);
+uint32_t m8c_step(void);
 void m8c_init(void);
 
 #endif /* !CORE_H */

@@ -27,6 +27,9 @@
 #include "core.h"
 
 
+int interrupt_poll_interval = 1;
+
+
 typedef uint16_t fast_math_type;
 
 union fast_math {
@@ -422,199 +425,254 @@ uint8_t sp;
 /* ----- Code execution ---------------------------------------------------- */
 
 
-uint32_t m8c_run(uint32_t cycles)
+static uint32_t m8c_check_interrupt(uint32_t cycles)
 {
-    uint32_t done = 0;
+    if (!gie)
+	return 0;
+    int_poll();
+    if (!int_vc)
+	return 0;
+    if (cycles && cycles < 13)
+	return 0;
+    int_handle();
+    return 13;
+}
+
+
+static uint32_t m8c_prep(uint32_t cycles)
+{
+    uint8_t op;
+    uint32_t tmp;
+
+    op = rom[pc];
+    tmp = m8c_cycles[op];
+    if ((pc ^ (pc+m8c_bytes[op])) & 0xff00)
+	tmp++;
+    if (((unsigned) pc+m8c_bytes[op]) & ~0xffff) {
+	exception("PC would wrap");
+	return 0;
+    }
+    if (cycles && tmp > cycles)
+	return 0;
+    return tmp;
+}
+
+
+static int m8c_one(void)
+{
     uint16_t offset;
     uint8_t r8;
+    uint32_t tmp;
 
-    while (1) {
-	uint8_t op;
+    switch (rom[pc++]) {
+	case 0x00: /* SSC */		/* 0x00 */
+	    exception("SSC");
+	    return 1;
+	ARITH_OPS(0x01,ADD);		/* 0x01-0x07 */
+	case 0x08: /* PUSH A */		/* 0x08 */
+	    stack[sp++] = a;
+	    break;
+	ARITH_OPS(0x09,ADC);  		/* 0x09-0x0f */
+	case 0x10: /* PUSH X */		/* 0x10 */
+	    stack[sp++] = x;
+	    break;
+	ARITH_OPS(0x11,SUB);  		/* 0x11-0x17 */
+	case 0x18: /* POP A */		/* 0x18 */
+	    a = stack[--sp];
+	    zf = !a;
+	    break;
+	ARITH_OPS(0x19,SBB);  		/* 0x19-0x1f */
+	case 0x20: /* POP X */		/* 0x20 */
+	    x = stack[--sp];
+	    break;
+	BIT_OPS(0x21,AND);		/* 0x21-0x27 */
+	case 0x28: /* ROMX */		/* 0x28 */
+	    a = rom[(a << 8) | x];
+	    zf = !a;
+	    break;
+	BIT_OPS(0x29,OR);		/* 0x29-0x2f */
+	case 0x30: /* HALT */		/* 0x30 */
+	    fflush(stdout);
+	    fprintf(stderr,"HALT\n");
+	    return 1;
+	BIT_OPS(0x31,XOR);		/* 0x31-0x37 */
+	case 0x38: /* ADD SP,expr */	/* 0x38 */
+	    sp += rom[pc];
+	    pc++;
+	    break;
+	CMP_OPS(0x39,CMP);		/* 0x39-0x3d */
+	case 0x3e: /* MVI A,[expr] */	/* 0x3e */
+	    /* @@@ is "direct" correct ? TRM is unclear */
+	    a = mvi_read[direct[rom[pc++]]++];
+	    zf = !a;
+	    break;
+	case 0x3f: /* MVI [expr],A */	/* 0x3f */
+	    /* @@@ is "direct" correct ? TRM is unclear */
+	    mvi_write[direct[rom[pc++]]++] = a;
+	    break;
+	case 0x40: /* NOP */		/* 0x40 */
+	    break;
+	BIT_OPS_REG(0x41,AND);		/* 0x41-0x42 */
+	BIT_OPS_REG(0x43,OR);		/* 0x43-0x44 */
+	BIT_OPS_REG(0x45,XOR);		/* 0x45-0x46 */
+	case 0x47: /* TST [expr],expr *//* 0x47 */
+	    zf = direct[rom[pc]] == rom[pc+1];
+	    pc += 2;
+	    break;
+	case 0x48: /* TST [X+expr],expr *//* 0x48 */
+	    zf = indexed[(x+rom[pc]) & 0xff] == rom[pc+1];
+	    pc += 2;
+	    break;
+	FROM_REG_OP(0x49,TST,0,rom[pc+1]); /* 0x49 */
+	    pc += 2;
+	    break;
+	FROM_REG_OP(0x4a,TST,x,rom[pc+1]); /* 0x4a */
+	    pc += 2;
+	    break;
+	case 0x4b: /* SWAP A,X */	/* 0x4b */
+	    r8 = x;
+	    x = a;
+	    a = r8;
+	    zf = !a;
+	    break;
+	case 0x4c: /* SWAP A,[expr] */	/* 0x4c */
+	    r8 = direct[rom[pc]];
+	    direct[rom[pc++]] = a;
+	    a = r8;
+	    zf = !a;
+	    break;
+	case 0x4d: /* SWAP X,[expr] */	/* 0x4d */
+	    r8 = direct[rom[pc]];
+	    direct[rom[pc++]] = x;
+	    x = r8;
+	    break;
+	case 0x4e: /* SWAP A,SP */	/* 0x4e */
+	    r8 = sp;
+	    sp = a;
+	    a = r8;
+	    zf = !a;
+	    break;
+	case 0x4f: /* MOV X,SP */	/* 0x4f */
+	    x = sp;
+	    break;
+	REGULAR_CPU_OPS(0x50,MOV_A,a);	/* 0x50-0x52 */
+	REGULAR_MEM_OPS(0x53,MOV);	/* 0x53-0x56 */
+	REGULAR_CPU_OPS(0x57,MOV,x);	/* 0x57-0x59 */
+	case 0x5a: /* MOV [expr],X */	/* 0x5a */
+	    direct[rom[pc]] = x;
+	    pc++;
+	    break;
+	case 0x5b: /* MOV A,X */	/* 0x5b */
+	    a = x;
+	    zf = !a;
+	    break;
+	case 0x5c: /* MOV X,A */	/* 0x5c */
+	    x = a;
+	    break;
+	MOV_REG_TO_A(0x5d,0);		/* 0x5d */
+	MOV_REG_TO_A(0x5e,x);		/* 0x5e */
+	case 0x5f: /* MOV [expr],[expr] *//* 0x5f */
+	    direct[rom[pc]] = direct[rom[pc+1]];
+	    pc += 2;
+	    break;
+	 TO_REG_OP(0x60,MOV,0,a);	/* 0x60 */
+	    pc++;
+	    break;
+	 TO_REG_OP(0x61,MOV,x,a);	/* 0x61 */
+	    pc++;
+	    break;
+	 TO_REG_OP(0x62,MOV,0,rom[pc+1]); /* 0x62 */
+	    pc += 2;
+	    break;
+	 TO_REG_OP(0x63,MOV,x,rom[pc+1]); /* 0x63 */
+	    pc += 2;
+	    break;
+	SHIFT_OPS(0x64,ASL);		/* 0x64-0x66 */
+	SHIFT_OPS(0x67,ASR);		/* 0x67-0x69 */	
+	SHIFT_OPS(0x6a,RLC);		/* 0x6a-0x6c */	
+	SHIFT_OPS(0x6d,RRC);		/* 0x6d-0x6f */	
+	BIT_OPS_F(0x70,&);		/* 0x70 */
+	BIT_OPS_F(0x71,|);		/* 0x71 */
+	BIT_OPS_F(0x72,^);		/* 0x72 */
+	case 0x73: /* CPL A */		/* 0x73 */
+	    a = ~a;
+	    zf = !a;
+	    break;
+	INC_OPS(0x74,INC);		/* 0x74-0x77 */
+	INC_OPS(0x78,DEC);		/* 0x78-0x7b */
+	case 0x7c: /* LCALL */		/* 0x7c */
+	    stack[sp++] = (pc+2) >> 8;
+	    stack[sp++] = pc+2;
+	    /* fall through */
+	case 0x7d: /* LJMP */		/* 0x7d */
+	    pc = (rom[pc] << 8) | rom[pc+1];
+	    break;
+	case 0x7e: /* RETI */		/* 0x7e */
+	    f = stack[--sp];
+	    update_pages();
+	    /* fall through */
+	case 0x7f: /* RET */		/* 0x7f */
+	    pc = stack[--sp];
+	    pc += stack[--sp] << 8;
+	    break;
+	OFFSET_OP(0x80,JMP);		/* 0x80-0x8f */
+	OFFSET_OP(0x90,CALL);		/* 0x90-0x9f */
+	OFFSET_OP(0xa0,JZ);		/* 0xa0-0xaf */
+	OFFSET_OP(0xb0,JNZ);		/* 0xb0-0xbf */
+	OFFSET_OP(0xc0,JC);		/* 0xc0-0xcf */
+	OFFSET_OP(0xd0,JNC);		/* 0xd0-0xdf */
+	OFFSET_OP(0xe0,JACC);		/* 0xe0-0xef */
+	OFFSET_OP(0xf0,INDEX);		/* 0xf0-0xff */
+	default:
+	    abort();
+    }
+    return 0;
+}
+
+
+uint32_t m8c_run(uint32_t cycles)
+{
+//fprintf(stderr,"pc = 0x%x\n",pc);
+    int until_poll = interrupt_poll_interval;
+    uint32_t done = 0;
+
+    interrupted = 0;
+    running = 1;
+    while ((!cycles || cycles != done) && !interrupted) {
 	uint32_t tmp;
 
-//fprintf(stderr,"pc = 0x%x\n",pc);
-	if (gie) {
-	    int_poll();
-	    if (int_vc) {
-		if (cycles && done+13 > cycles)
-		    break;
-		done += 13;
-		int_handle();
+	if (until_poll && !--until_poll) {
+	    until_poll = interrupt_poll_interval;
+	    tmp = m8c_check_interrupt(cycles-done);
+	    if (tmp) {
+		done += tmp;
+		continue;
 	    }
 	}
-	op = rom[pc];
-	tmp = m8c_cycles[op];
-	if ((pc ^ (pc+m8c_bytes[op])) & 0xff00)
-	    tmp++;
-	if (((unsigned) pc+m8c_bytes[op]) & ~0xffff) {
-	    exception("PC would wrap");
-	    return done;
-	}
-	if (cycles && done+tmp > cycles)
+	tmp = m8c_prep(cycles-done);
+	if (!tmp)
 	    break;
 	done += tmp;
-	pc++;
-	switch (op) {
-	    case 0x00: /* SSC */	/* 0x00 */
-		exception("SSC");
-		return done;
-	    ARITH_OPS(0x01,ADD);	/* 0x01-0x07 */
-	    case 0x08: /* PUSH A */	/* 0x08 */
-		stack[sp++] = a;
-		break;
-	    ARITH_OPS(0x09,ADC);  	/* 0x09-0x0f */
-	    case 0x10: /* PUSH X */	/* 0x10 */
-		stack[sp++] = x;
-		break;
-	    ARITH_OPS(0x11,SUB);  	/* 0x11-0x17 */
-	    case 0x18: /* POP A */	/* 0x18 */
-		a = stack[--sp];
-		zf = !a;
-		break;
-	    ARITH_OPS(0x19,SBB);  	/* 0x19-0x1f */
-	    case 0x20: /* POP X */	/* 0x20 */
-		x = stack[--sp];
-		break;
-	    BIT_OPS(0x21,AND);		/* 0x21-0x27 */
-	    case 0x28: /* ROMX */	/* 0x28 */
-		a = rom[(a << 8) | x];
-		zf = !a;
-		break;
-	    BIT_OPS(0x29,OR);		/* 0x29-0x2f */
-	    case 0x30: /* HALT */	/* 0x30 */
-	    	return done;
-	    BIT_OPS(0x31,XOR);		/* 0x31-0x37 */
-	    case 0x38: /* ADD SP,expr *//* 0x38 */
-		sp += rom[pc];
-		pc++;
-		break;
-	    CMP_OPS(0x39,CMP);		/* 0x39-0x3d */
-	    case 0x3e: /* MVI A,[expr] *//* 0x3e */
-		/* @@@ is "direct" correct ? TRM is unclear */
-		a = mvi_read[direct[rom[pc++]]++];
-		zf = !a;
-		break;
-	    case 0x3f: /* MVI [expr],A *//* 0x3f */
-		/* @@@ is "direct" correct ? TRM is unclear */
-		mvi_write[direct[rom[pc++]]++] = a;
-		break;
-	    case 0x40: /* NOP */	/* 0x40 */
-		break;
-	    BIT_OPS_REG(0x41,AND);	/* 0x41-0x42 */
-	    BIT_OPS_REG(0x43,OR);	/* 0x43-0x44 */
-	    BIT_OPS_REG(0x45,XOR);	/* 0x45-0x46 */
-	    case 0x47: /* TST [expr],expr *//* 0x47 */
-		zf = direct[rom[pc]] == rom[pc+1];
-		pc += 2;
-		break;
-	    case 0x48: /* TST [X+expr],expr *//* 0x48 */
-		zf = indexed[(x+rom[pc]) & 0xff] == rom[pc+1];
-		pc += 2;
-		break;
-	    FROM_REG_OP(0x49,TST,0,rom[pc+1]); /* 0x49 */
-		pc += 2;
-		break;
-	    FROM_REG_OP(0x4a,TST,x,rom[pc+1]); /* 0x4a */
-		pc += 2;
-		break;
-	    case 0x4b: /* SWAP A,X */	/* 0x4b */
-		r8 = x;
-		x = a;
-		a = r8;
-		zf = !a;
-		break;
-	    case 0x4c: /* SWAP A,[expr] *//* 0x4c */
-		r8 = direct[rom[pc]];
-		direct[rom[pc++]] = a;
-		a = r8;
-		zf = !a;
-		break;
-	    case 0x4d: /* SWAP X,[expr] *//* 0x4d */
-		r8 = direct[rom[pc]];
-		direct[rom[pc++]] = x;
-		x = r8;
-		break;
-	    case 0x4e: /* SWAP A,SP */	/* 0x4e */
-		r8 = sp;
-		sp = a;
-		a = r8;
-		zf = !a;
-		break;
-	    case 0x4f: /* MOV X,SP */	/* 0x4f */
-		x = sp;
-		break;
-	    REGULAR_CPU_OPS(0x50,MOV_A,a);/* 0x50-0x52 */
-	    REGULAR_MEM_OPS(0x53,MOV);	/* 0x53-0x56 */
-	    REGULAR_CPU_OPS(0x57,MOV,x);/* 0x57-0x59 */
-	    case 0x5a: /* MOV [expr],X *//* 0x5a */
-		direct[rom[pc]] = x;
-		pc++;
-		break;
-	    case 0x5b: /* MOV A,X */	/* 0x5b */
-		a = x;
-		zf = !a;
-		break;
-	    case 0x5c: /* MOV X,A */	/* 0x5c */
-		x = a;
-		break;
-	    MOV_REG_TO_A(0x5d,0);	/* 0x5d */
-	    MOV_REG_TO_A(0x5e,x);	/* 0x5e */
- 	    case 0x5f: /* MOV [expr],[expr] *//* 0x5f */
-		direct[rom[pc]] = direct[rom[pc+1]];
-		pc += 2;
-		break;
-	     TO_REG_OP(0x60,MOV,0,a);	/* 0x60 */
-		pc++;
-		break;
-	     TO_REG_OP(0x61,MOV,x,a);	/* 0x61 */
-		pc++;
-		break;
-	     TO_REG_OP(0x62,MOV,0,rom[pc+1]); /* 0x62 */
-		pc += 2;
-		break;
-	     TO_REG_OP(0x63,MOV,x,rom[pc+1]); /* 0x63 */
-		pc += 2;
-		break;
-	    SHIFT_OPS(0x64,ASL);	/* 0x64-0x66 */
-	    SHIFT_OPS(0x67,ASR);	/* 0x67-0x69 */	
-	    SHIFT_OPS(0x6a,RLC);	/* 0x6a-0x6c */	
-	    SHIFT_OPS(0x6d,RRC);	/* 0x6d-0x6f */	
-	    BIT_OPS_F(0x70,&);		/* 0x70 */
-	    BIT_OPS_F(0x71,|);		/* 0x71 */
-	    BIT_OPS_F(0x72,^);		/* 0x72 */
-	    case 0x73: /* CPL A */	/* 0x73 */
-		a = ~a;
-		zf = !a;
-		break;
-	    INC_OPS(0x74,INC);		/* 0x74-0x77 */
-	    INC_OPS(0x78,DEC);		/* 0x78-0x7b */
-	    case 0x7c: /* LCALL */	/* 0x7c */
-		stack[sp++] = (pc+3) >> 8;
-		stack[sp++] = pc+3;
-		/* fall through */
-	    case 0x7d: /* LJMP */	/* 0x7d */
-		pc = (rom[pc+1] << 8 | rom[pc])+3;
-		break;
-	    case 0x7e: /* RETI */	/* 0x7e */
-		f = stack[--sp];
-		update_pages();
-		/* fall through */
-	    case 0x7f: /* RET */	/* 0x7f */
-		pc = stack[--sp];
-		pc += stack[--sp] << 8;
-		break;
-	    OFFSET_OP(0x80,JMP);	/* 0x80-0x8f */
-	    OFFSET_OP(0x90,CALL);	/* 0x90-0x9f */
-	    OFFSET_OP(0xa0,JZ);		/* 0xa0-0xaf */
-	    OFFSET_OP(0xb0,JNZ);	/* 0xb0-0xbf */
-	    OFFSET_OP(0xc0,JC);		/* 0xc0-0xcf */
-	    OFFSET_OP(0xd0,JNC);	/* 0xd0-0xdf */
-	    OFFSET_OP(0xe0,JACC);	/* 0xe0-0xef */
-	    OFFSET_OP(0xf0,INDEX);	/* 0xf0-0xff */
-	    default:
-		abort();
-	}
+	if (m8c_one())
+	    break;
     }
+    running = 0;
+    return done;
+}
+
+
+uint32_t m8c_step(void)
+{
+//fprintf(stderr,"pc = 0x%x\n",pc);
+    uint32_t done;
+
+    done = m8c_check_interrupt(0);
+    if (done)
+	return done;
+    done = m8c_prep(0);
+    if (!done)
+	return 0;
+    m8c_one();
     return done;
 }
 

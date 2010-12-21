@@ -107,11 +107,26 @@ int my_yyinput(char *buffer,int max_size)
     if (!isatty(fileno(yyin)))
 	return read(fileno(yyin),buffer,max_size);
     if (!p) {
+again:
 	free(line);
 	line = p = readline("m8csim> ");
 	if (!line)
 	    return 0;
-	add_history(line);
+	if (!*line) {
+	    HIST_ENTRY *hist = NULL;
+	    int pos;
+
+	    pos = where_history();
+	    if (pos)
+		hist = history_get(pos);
+	    if (!hist)
+		goto again;
+	    p = hist->line;
+	}
+	else {
+	    if (strspn(line," \t") != strlen(line))
+		add_history(line);
+	}
     }
     while (p && size != max_size) {
 	if (*p)
@@ -146,9 +161,11 @@ void my_yyrestart(void)
 [Rr][Aa][Mm]			return TOK_RAM;
 
 run				return TOK_RUN;
+step				return TOK_STEP;
 connect				return TOK_CONNECT;
 disconnect			return TOK_DISCONNECT;
 define				return TOK_DEFINE;
+quit				return TOK_QUIT;
 
 [pP][012345678]			{ yylval.num = yytext[1]-'0';
 				  return PORT; }

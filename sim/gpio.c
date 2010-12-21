@@ -49,7 +49,7 @@ static struct gpio {
 static inline uint8_t is_input(const struct gpio *gpio)
 {
     return (gpio->dm1 & ~gpio->dm0) |
-      (((~gpio->drive_r & ~gpio->drive_z) | gpio->dm2) &
+      (((~gpio->drive_r & ~gpio->drive_z) | gpio->dm2 | gpio->ice) &
       ~(gpio->dm0 ^ gpio->dr) & ~(gpio->dm1 ^ gpio->dr));
 
 }
@@ -371,15 +371,17 @@ void gpio_drive(int port,uint8_t mask,uint8_t value)
     struct gpio *gpio = gpios+port;
 
     gpio->drive = (gpio->drive & ~mask) | (value & mask);
+    gpio->drive_r &= ~mask;
+    gpio->drive_z &= ~mask;
     gpio_maybe_interrupt(gpio);
 }
 
 
-void gpio_drive_z(int port,uint8_t mask,uint8_t value)
+void gpio_drive_z(int port,uint8_t mask)
 {
     struct gpio *gpio = gpios+port;
 
-    gpio->drive_z = (gpio->drive_z & ~mask) | (value & mask);
+    gpio->drive_z |= mask;
     gpio_maybe_interrupt(gpio);
 }
 
@@ -388,8 +390,30 @@ void gpio_drive_r(int port,uint8_t mask,uint8_t value)
 {
     struct gpio *gpio = gpios+port;
 
-    gpio->drive_r = (gpio->drive_r & ~mask) | (value & mask);
+    gpio->drive = (gpio->drive & ~mask) | (value & mask);
+    gpio->drive_r |= mask;
+    gpio->drive_z &= ~mask;
     gpio_maybe_interrupt(gpio);
+}
+
+
+void gpio_show_drive(FILE *file,int port,uint8_t mask)
+{
+    struct gpio *gpio = gpios+port;
+
+    int i;
+
+    for (i = 7; i >= 0; i--) {
+	if (gpio->drive_z & (1 << i))
+	    fputc('Z',file);
+	else {
+	    if (gpio->drive_r & (1 << i))
+		fputc(gpio->drive & (1 << i) ? 'R' : 'r',file);
+	    else
+		fputc(gpio->drive & (1 << i) ? 'H' : 'L',file);
+	}
+    }
+    fputc('\n',file);
 }
 
 

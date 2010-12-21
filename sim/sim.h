@@ -27,6 +27,8 @@ extern FILE *next_file;
 /* ----- Regular stuff ----------------------------------------------------- */
 
 
+extern volatile int interrupted; /* SIGINT */
+extern volatile int running; /* set if we want to be interruptible */
 extern const struct chip *chip;
 extern int ice;
 extern jmp_buf error_env;

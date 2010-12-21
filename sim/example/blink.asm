@@ -1,4 +1,4 @@
-#include "../registers.h"
+#include "m8c.inc"
 
 	area	vars(ram)
 cntl:	blk	1
@@ -12,8 +12,6 @@ cnth:	blk	1
 	or	reg[PRT0DM0],3
 	and	reg[PRT0DM1],~3
 	and	f,~CPU_F_XIO
-
-	; wait for 
 
 ledloop:
 	; make P0[0] blink at rate 2X, P0[1] at rate X

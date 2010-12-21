@@ -8,6 +8,7 @@
 
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "interact.h"
@@ -26,18 +27,31 @@
 static uint32_t now = 0;
 
 
-static void run_cycles(uint32_t cycles)
+static void status(void)
 {
-    uint32_t done;
-
-    done = m8c_run(cycles);
-    if (done != cycles)
-	printf("HALT\n");
-    now += done;
     if (!quiet)
 	printf("%04x: A=%02x F=%02x (PgMode=%d XIO=%d Carry=%d "
 	  "Zero=%d GIE=%d) X=%02x SP=%02x\n",
 	  pc,a,f,pgmode,xio,cf,zf,gie,x,sp);
+}
+
+
+static void run_cycles(uint32_t cycles)
+{
+    now += m8c_run(cycles);
+    if (interrupted) {
+	interrupted = 0;
+	fflush(stdout);
+	fprintf(stderr,"Stopped\n");
+    }
+    status();
+}
+
+
+static void run_one(void)
+{
+    now += m8c_step();
+    status();
 }
 
 
@@ -141,7 +155,10 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
-%token		TOK_RUN TOK_CONNECT TOK_DISCONNECT TOK_DEFINE TOK_NL
+%token		TOK_RUN TOK_STEP
+%token		TOK_CONNECT TOK_DISCONNECT
+%token		TOK_DEFINE
+%token		TOK_QUIT TOK_NL
 %token		TOK_Z TOK_R
 
 %token	<num>	NUMBER PORT
@@ -191,24 +208,34 @@ command:
 	    if ($2 != now)
 		run_cycles($2-now);
 	}
+    | TOK_STEP
+	{
+	    run_one();
+	}
     | drive_port
     | ice
     | define
+    | TOK_QUIT
+	{
+	    exit(0);
+	}
     ;
 
 drive_port:
     PORT opt_byte_mask '=' expression opt_r
 	{
 	    if ($5)
-		gpio_drive_r($1,$2,$2);
-	    gpio_drive($1,$2,($4 & $2) << ctz($2));
-	    if (!$5)
-		gpio_drive_r($1,$2,0);
-	    gpio_drive_z($1,$2,0);
+		gpio_drive_r($1,$2,($4 << ctz($2)) & $2);
+	    else
+		gpio_drive($1,$2,($4 << ctz($2)) & $2);
 	}
     | PORT opt_byte_mask '=' TOK_Z
 	{
-	    gpio_drive_z($1,$2,$2);
+	    gpio_drive_z($1,$2);
+	}
+    | PORT opt_byte_mask
+	{
+	    gpio_show_drive(stdout,$1,$2);
 	}
     ;
 

@@ -1,3 +1,36 @@
+Version 9 (2-MAR-2006)
+---------
+
+- Common.make:SLOPPY_PROTOTYPES: added -Wno-strict-prototypes for bison 1.35
+  compatibility
+- sim/Makefile:LDLIBS: added -lcurses for compatibility with older libraries
+- sim/sim.c: added -v to the programmer options
+- sim/gpio.c:is_input: also resistive without a strong drive is an input if the
+  line is assigned to the ICE
+- sim/lang.y:drive_port: moved drive logic to gpio.c:gpio_drive*, making it
+  atomic
+- sim/lang.y:drive_port: drive value was masked before shifting, not the other
+  way around (tests/bugs8)
+- sim/core.c: LJMP and LCALL had the byte order wrong plus a weird +3 offset
+  (tests/ljmp, tests/lcall)
+- sim/core.c: LCALL had the return address off by one
+- sim/example/blink.asm: use m8c.inc instead of ../registers.h
+- sim/lang.y:run_cycles: moved printing of "HALT to core.c, in order to
+  properly distinguish between HALT and timeout (tests/bugs8)
+- libfdr/jval.c: removed broken functions jval_iarray, jval_farray, and
+  jval_carray
+- sim/core.c:m8c_run: split into m8c_check_interrupt, m8c_prep, and m8c_one,
+  and handle taking an interrupt like an instruction
+- sim/: programs can now be single-stepped with "step"
+- sim/lang.l:my_yyinput: don't add empty lines to the history
+- sim/lang.l:my_yyinput: a completely empty line now repeats the previous
+  input, just like in gdb
+- sim/: "run" can now be interrupted with ^C
+- sim/: added "quit" command
+- sim/sim.c: prog_close is now executed through "atexit"
+- {as,sim}/Makefile: print "GENERATE" when making machine-generated sources,
+  not the actual command (unless in verbose mode)
+
 Version 8 (1-MAR-2006)
 ---------
 

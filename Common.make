@@ -11,7 +11,8 @@ INSTALL_PREFIX=/usr
 
 CFLAGS_WARN=-Wall -Wshadow -Werror \
 	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
-SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations
+SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations \
+                  -Wno-strict-prototypes
 SLOPPY_LOCALS=-Wno-unused
 CFLAGS_COMMON=-g -I../shared -I../libfdr \
 	      -DVERSION=$(shell cat ../VERSION) \

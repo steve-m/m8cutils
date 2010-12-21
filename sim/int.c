@@ -55,6 +55,11 @@ static void int_select(void)
 	uint8_t tmp;
 
 	tmp = ice_read(INT_VC);
+	if ((tmp & 3) || tmp > 0x64) {
+	    fprintf(stderr,
+	      "fatal communication error: ICE sent INT_VC = 0x%x\n",tmp);
+	    exit(1);
+	}
 	if (tmp && (!int_vc || (tmp < int_vc)))
 	    int_vc = tmp;
     }

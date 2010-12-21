@@ -1,0 +1,19 @@
+#!/bin/sh
+. Common
+
+asm "LJMP" <<EOF
+	ljmp	loop
+	halt
+loop:
+	ljmp	loop
+	halt
+EOF
+sim <<EOF
+run 70
+.
+@
+EOF
+expect <<EOF
+0x4 4
+0x46 70
+EOF

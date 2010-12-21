@@ -50,7 +50,8 @@ y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
 
 m8c.inc:	../shared/m8c-registers ../shared/reg2hdrs.pl
-		perl ../shared/reg2hdrs.pl asm >$@ $< || { rm -rf $@; exit 1; }
+		$(GEN) perl ../shared/reg2hdrs.pl asm >$@ $< || \
+		  { rm -rf $@; exit 1; }
 
 # ----- Dependencies ----------------------------------------------------------
 

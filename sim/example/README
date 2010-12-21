@@ -10,7 +10,7 @@ connections:
 
 - a LED ("LED A") from P0[0] to ground
 - a LED ("LED B") from VDD to P0[1]
-- a button between P0[2] and ground
+- a button between P0[2] and VDD
 
 
 Hardware output with the DIY ICE
@@ -42,7 +42,8 @@ LED B is now on
 
 m8csim> PRT0DM1[1:0] = 0
 
-This also gives us LED A. The LEDs can now be toggled with
+This also gives us access to LED A, which is still turned off.
+The LEDs can now be toggled with
 
 m8csim> PRT0DR[0] = !PRT0DR[0]
 
@@ -105,3 +106,143 @@ information from the target.
 You may have to disconnect the programmer and reset (power cycle)
 the test circuit to start the program. Now you should see the LEDs
 blink happily.
+
+
+Input in the simulation
+-----------------------
+
+Now we want to read our button. First, we just look at it from the
+simulation. After a reset, our pins are already configured a inputs,
+but we need to make the input a digital one, and we need to add a
+pull-down resistor. For this, we switch the drive mode to
+"resistive":
+
+% m8csim cy8c24223 /dev/null
+m8csim> PRT0DM1[2] = 0
+m8csim> PRT0DM2[2] = 0
+
+(PRT0DR[2] is already low after a reset.) Now we can poll the button
+status with
+
+m8csim> PRT0DR[2]
+
+Of course it's always zero. We can now pretend that something drives
+the line "high", with
+
+m8csim> P0[2] = 1
+
+or low again with
+
+m8csim> P0[2] = 0 
+
+By the way, "P0[2]" is case-insentitive, while "PRT0DM1" and such are
+case-sensitive. The drive status in the simulation can also be queried:
+
+m8csim> p0
+ZZZZZLZZ
+
+"Z" stands for Hi-Z, "H" for a high level, "L" for a low level, "R"
+for a pull-up resistor (resistive high), and "r" for a pull-down
+resistor. See ../README for further details.
+
+
+Hardware input from the DIY ICE
+-------------------------------
+
+So this seems to work. How about reading the real hardware button ?
+The setup is the same, with the only difference that we connect to
+the ICE:
+
+% m8csim -i cy8c24223 /dev/null
+m8csim> connect p0[2]
+m8csim> PRT0DM1[2] = 0
+m8csim> PRT0DM2[2] = 0
+
+Now we can poll the button status with
+
+m8csim> PRT0DR[2]
+
+
+Generating an interrupt inside the simulation
+---------------------------------------------
+
+Now we can set up things to generate an interrupt from the GPIO port.
+An example program for this is in switch.asm: it starts by blinking
+LED B at 1.9 Hz, while LED B is off. When the button is pressed, LED B
+remains in its current state, i.e., on or off, and now LED A is
+blinking. To return to blinking LED B, press the button again.
+
+% m8cas -e -o switch.rom switch.asm
+
+First, we want to do everything inside the simulation, without using
+the ICE. Unfortunately, looking at the simulation activity isn't very
+convenient at the moment, so we satisfy ourselves with halting the
+simulation when the interrupt occurs. For this, we overwrite the
+interrupt vector with a HALT instruction.
+
+% m8csim cy8c24223 switch.rom
+m8csim> rom[0x1c] = 0x30
+
+Since the simulation would run forever, we need to set a deadline.
+We do this by specifying the time when we want to stop, counted in
+CPUCLK cycles, with the "run" command:
+
+m8csim> run 1000
+0093: A=01 F=01 (PgMode=0 XIO=0 Carry=0 Zero=0 GIE=1) X=00 SP=00
+
+The simulation has stopped at location PC=0093. The current simulation
+time is
+
+m8csim> @
+0x3e2 994
+
+994 cycles. Why not 1000 ? That's because we're about to execute a
+"DEC [expr]" instruction that would take 7 cycles, one more than
+allowed.
+
+We can now press our virtual button by driving the simulated P0[2]
+high. Then we resume the simulation:
+
+m8csim> p0[2] = 1
+m8csim> run
+HALT
+001d: A=01 F=00 (PgMode=0 XIO=0 Carry=0 Zero=0 GIE=0) X=00 SP=03
+
+It instantly stops after taking the interrupt.
+
+
+Sending an interrupt into the simulation
+----------------------------------------
+
+Now we do all the I/O through the DIY ICE. Since we now have a
+clearly visible response, we no longer need to tweak the executable
+(if you want to try, please go ahead, it'll work):
+
+% m8csim -i cy8c24223 switch.rom
+m8csim> connect p0
+m8csim> run
+
+The blink frequency will vary a lot depending on the speed and type
+of the programmer, and can range from blindingly fast to glacially
+slow. This is because the simulator may now have to ask the chip for
+its interrupt status at every instruction. In order to ask less often,
+and thus run faster, increase the interrupt poll interval, e.g., to
+poll only every 1000 instructions:
+
+% m8csim -e 1000 -i cy8c24223 switch.rom
+...
+
+
+Running the program with interrupt on the chip
+----------------------------------------------
+
+This is of course easy. Write the program to the chip's Flash:
+
+% m8cprog -v -5 -w switch.rom
+
+And then we reset the chip.
+
+You will notice that the switching isn't very reliable. This is
+because the button "bounces" and the signal goes back between H and
+L several times before it settles. Fixing this is left as an
+exercise to the reader :-)
