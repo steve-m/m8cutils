@@ -25,9 +25,9 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       dundef
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
-      error.h error.c id.h id.c op.h op.c code.h code.c \
+      error-as.h error-as.c id.h id.c op.h op.c code.h code.c \
       tests/Common $(TESTS:%=tests/%)
-OBJS=lex.yy.o y.tab.o m8cas.o error.o id.o op.o code.o
+OBJS=lex.yy.o y.tab.o m8cas.o error-as.o id.o op.o code.o
 
 LDLIBS += -lfl
 

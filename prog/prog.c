@@ -339,8 +339,15 @@ void prog_write_block(const uint8_t *data)
 }
 
 
-void prog_close(void)
+void prog_close(int detach)
 {
+    if (detach) {
+	if (prog->detach) {
+	    prog->detach();
+	    return;
+	}
+	fprintf(stderr,"warning: \"detach\" operation is not supported\n");
+    }
     if (prog->close)
 	prog->close();
 }

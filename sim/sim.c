@@ -22,6 +22,7 @@
 #include "symmap.h"
 #include "file.h"
 #include "chips.h"
+#include "cpp.h"
 
 #include "ops.h"
 #include "prog.h"
@@ -38,6 +39,8 @@
 
 volatile int interrupted = 0; /* SIGINT */
 volatile int running = 0; /* set if we want to be interruptible */
+int include_default = 1;
+int saved_stdin;
 const struct chip *chip;
 int ice = 0;
 jmp_buf error_env;
@@ -170,7 +173,7 @@ int main(int argc,char **argv)
     const char *program_file = NULL;
     const char *include_dir = NULL;
     const char *symbols = NULL;
-    int binary = 0,include_default = 1,voltage = 0;
+    int binary = 0,voltage = 0;
     int c;
 
     /*
@@ -264,7 +267,7 @@ int main(int argc,char **argv)
 	prog_initialize(0,voltage,prog_power_on);
 	chip = prog_identify(chip,0);
 	ice_init();
-	atexit(prog_close);
+	atexit(prog_close_cli);
     }
     if (program_file)
 	set_program(program,program_size);
@@ -276,15 +279,29 @@ int main(int argc,char **argv)
     id_init();
 
     if (include_default) {
-	yyin = find_file("default.m8csim",
+	FILE *file;
+
+	file = find_file("default.m8csim",
 	  INSTALL_PREFIX "/share/m8cutils/include",include_dir,NULL);
+	saved_stdin = dup(0);
+	if (saved_stdin < 0) {
+	    perror("dup");
+	    exit(1);
+	}
+	if (dup2(fileno(file),0) < 0) {
+	    perror("dup2");
+	    exit(1);
+	}
+	add_cpp_arg("-D");
+	add_cpp_arg(chip->name);
+	run_cpp_on_file(NULL);
 	next_file = find_file(script,".",NULL);
     }
     else {
 	yyin = find_file(script,".",NULL);
 	next_file = NULL;
+	interactive = isatty(fileno(yyin));
     }
-    interactive = isatty(fileno(yyin));
     if (isatty(fileno(next_file ? next_file : yyin)))
 	handle_sigint(sigint_handler);
     using_history();

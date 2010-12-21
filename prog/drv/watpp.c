@@ -44,6 +44,7 @@
 #define	COMMIT()	pp_write_data(data)
 #define	SDATA_IN()	(!(pp_read_status() & PARPORT_STATUS_ACK))
 #define Z()		(data = (data & ~nSDATA_L_BIT) | nSDATA_H_BIT)
+#define SCLK_Z()	(data = (data & ~nSCLK_L_BIT) | nSCLK_H_BIT)
 
 
 static uint8_t data;
@@ -137,6 +138,18 @@ static void watpp_close(void)
 }
 
 
+static void watpp_detach(void)
+{
+    XRES(1);
+    Z();
+    SCLK_Z();
+    COMMIT();
+    XRES(0);
+    COMMIT();
+    pp_close();
+}
+
+
 struct prog_ops watpp_ops = {
     .name = "watpp",
     .open = watpp_open,
@@ -145,4 +158,5 @@ struct prog_ops watpp_ops = {
     .send_z = watpp_send_z,
     .read_bit = watpp_read_bit,
     .close = watpp_close,
+    .detach = watpp_detach,
 };

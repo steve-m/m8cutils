@@ -57,7 +57,7 @@ simulation script.
 
 The simulator uses the regular ISSP(tm) interface for communication. It
 delegates communication to the m8cprog programmer. The options "-p port",
-"-d driver", -P, -R, -3, and -5 are used in exactly the same way as with
+"-d driver", -D, -P, -R, -3, and -5 are used in exactly the same way as with
 m8cprog.
 
 

@@ -16,8 +16,8 @@ extern int real_time; /* try to obtain real-time priority for acquisition */
 extern int prog_power_on;
 
 
-#define PROG_OPTIONS	"35d:lp:PRv"
-#define PROG_SYNOPSIS	"[-3|-5] [-d driver] [-p port] [-P] [-R] [-v ...]"
+#define PROG_OPTIONS	"35d:Dlp:PRv"
+#define PROG_SYNOPSIS	"[-3|-5] [-d driver] [-D] [-p port] [-P] [-R] [-v ...]"
 
 
 /*
@@ -44,5 +44,13 @@ int prog_option(char option,const char *arg);
  */
 
 int prog_open_cli(void);
+
+/*
+ * prog_close_cli ends the programmer session. The state in which programmer
+ * and target are left depends on the capabilities of the programmer hardware
+ * and driver, and whether the -D flag was set.
+ */
+
+void prog_close_cli(void);
 
 #endif /* !CLI_H */

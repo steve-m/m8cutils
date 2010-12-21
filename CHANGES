@@ -1,3 +1,33 @@
+Version 17 (x-SEP-2006)
+----------
+
+- shared/error.[ch]: moved general portion of as/error.[ch] and as/m8c.l here 
+- as/error-as.[ch]: assembler-specific part of previous as/error.[ch]
+- shared/backslash.[ch]: moved as/m8c.l:backslash here
+- shared/reg2hdrs.pl, shared/regdef.h: dual-banked registers are now flagged
+  with PSOC_REG_ADDR_X in "c" mode
+- misc/reginfo.c: added support for dual-banked registers
+- prog/: new programmer driver operation prog_detach and command line option -D
+  to detach from target (currently only supported by watpp)
+- prog/cli.[ch]:prog_close_cli: new function to disconnect programmer while
+  respecting the -D option
+- prog/m8cprog.c: call prog_close_cli at the end (note: changes behaviour,
+  target may now be powered down and held in reset, unless using -D)
+- shared/chips.c:chip_list: corrected formatting to leave the last column empty
+- shared/chips.c:chip_by_name,chip_by_id: simplified curiously awkward return
+  logic
+- shared/{m8c-registers,reg2hdrs.pl,regdf.h}: moved to new directory regs/
+- regs/reg2hdr.pl: added support for chip-specific register definitions
+- regs/m8c-registers: added all missing registers and classified unclassified
+  ones
+- regs/m8c-register,regs/capabilities: added chip-specific attributes and
+  definitions
+- shared/Makefile: installed ssc.inc (and not ssh.h) as ssc.h
+- misc/reginfo.c: added optional first argument to select the chip
+- sim/sim.c: pass default.m8csim through CPP
+- sim/core.c:m8c_init: didn't initialize regs[CPU_SCR1].user, causing a crash
+  when trying to read CPU_SCR1
+
 Version 16 (2-AUG-2006)
 ----------
 

@@ -38,7 +38,7 @@ static void usage(const char *name)
 {
     fprintf(stderr,
 "usage: %s %s [-q] [-b|-i]\n"
-"                 [-c] [-e] [-r|-w] [-z] [-s] [chip] [file]\n"
+"               [-c] [-D] [-e] [-r|-w] [-z] [-s] [chip] [file]\n"
 "       %s -l\n"
 "       %s -V\n\n"
 "  -b        use binary format (overrides auto-detection on input)\n"
@@ -181,5 +181,6 @@ int main(int argc,char **argv)
 	prog_compare_security(chip);
     if (op_read)
 	write_file(file_name,binary,hex);
+    prog_close_cli();
     return 0;
 }

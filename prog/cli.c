@@ -24,6 +24,8 @@ const char *prog_port = NULL;
 int real_time = 0;
 int prog_power_on = 0;
 
+static int detach = 0;
+
 
 void prog_usage(void)
 {
@@ -32,6 +34,7 @@ void prog_usage(void)
 "  -5        set up 5V operation\n"
 "  -d driver name of programmer driver (overrides M8CPROG_DRIVER, default:\n"
 "            %s)\n"
+"  -D        detach from target instead of halting it\n"
 "  -l        list supported programmers and chips, then exit\n"
 "  -p port   port to programmer (overrides M8CPROG_PORT, default for tty:\n"
 "            %s, for parallel port: %s)\n"
@@ -62,6 +65,9 @@ int prog_option(char option,const char *arg)
 	case 'd':
 	    prog_driver = arg;
 	    break;
+	case 'D':
+	    detach = 1;
+	    break;
 	case 'l':
 	    printf("supported programmers:\n");
 	    prog_list(stdout);
@@ -91,4 +97,10 @@ int prog_option(char option,const char *arg)
 int prog_open_cli(void)
 {
     return prog_open(prog_port,prog_driver,prog_voltage,prog_power_on);
+}
+
+
+void prog_close_cli(void)
+{
+    prog_close(detach);
 }

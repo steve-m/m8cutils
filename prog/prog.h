@@ -56,6 +56,21 @@
  * deadline.
  */
 
+/*
+ * "close" should power down the programmer hardware and halt the target. The
+ * target can be halted in any of the following ways:
+ * - by powering it down
+ * - by holding it in reset
+ * - by leaving it in ISSP mode
+ * This is also the order of preference for the method of halting a target.
+ * The target should be left in ISSP mode if the programmer hardware is unable
+ * to assert XRES after having been shut down itself.
+ *
+ * "detach" is like "close", but tri-states SDATA and SCLK, and sends an XRES
+ * pulse. This way, the target can be tested without physically disconnecting
+ * it from the programmer circuit.
+ */
+
 struct prog_ops {
     const char *name;
     int (*open)(const char *dev,int voltage,int power_on);
@@ -69,6 +84,7 @@ struct prog_ops {
     void (*send_z)(void);			/* unused if vector-based */
     int (*read_bit)(void);			/* unused if vector-based */
     void (*close)(void);			/* optional */
+    void (*detach)(void);			/* optional */
 };
 
 extern struct prog_ops *programmers[];
@@ -89,7 +105,7 @@ void do_prog_acquire_reset(uint32_t v,uint32_t dummy);
 void do_prog_acquire_power_on(uint32_t v,uint32_t dummy);
 void prog_read_block(uint8_t *data);
 void prog_write_block(const uint8_t *data);
-void prog_close(void);
+void prog_close(int detach);
 
 #define prog_acquire_reset(v) do_prog_acquire_reset(v END_OF_VECTORS)
 #define prog_acquire_power_on(v) do_prog_acquire_power_on(v END_OF_VECTORS)

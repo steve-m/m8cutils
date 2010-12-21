@@ -104,6 +104,14 @@ with an error.
 By default, m8cprog uses reset mode. Power-on mode can be selected
 with the option -P.
 
+Upon successful termination, m8cprog powers down the target and/or
+holds it in reset. This can be changed with the option -D, which
+(provided that the programmer hardware supports this) tri-states
+SDATA and SCLK, and sends an XRES pulse to the target. The effect
+is that the target no longer "sees" the programmer, and starts
+executing its firmware. "m8cprog -D", without any of the options
+-c, -e, -r, -s, and -w, simply resets the target.
+
 Last but not least, several degrees of verboseness can be selected
 with the options -q and -v. By default, m8cprog only displays
 progress bars, which can be turned off with -q. A single -v adds

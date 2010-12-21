@@ -1,5 +1,5 @@
 /*
- * error.c - Error reporting
+ * error.c - Error reporting for programming languages
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -17,7 +17,6 @@
 
 
 struct loc current_loc;
-int allow_extensions = 0;
 
 
 static JRB file_names;
@@ -37,6 +36,9 @@ void set_file(char *name)
     current_loc.file = name;
     current_loc.line = 1;
 }
+
+
+/* ----- Errors ------------------------------------------------------------ */
 
 
 void __attribute__((noreturn)) vlerrorf(const struct loc *loc,const char *fmt,
@@ -61,15 +63,57 @@ void __attribute__((noreturn)) lerrorf(const struct loc *loc,const char *fmt,
 }
 
 
-void __attribute__((noreturn)) no_extension(const char *name)
+void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
 {
-    lerrorf(&current_loc,"%s is a non-standard extension",name);
+    va_list ap;
+
+    va_start(ap,fmt);
+    vlerrorf(&current_loc,fmt,ap);
+    va_end(ap);
 }
 
 
-void __attribute__((noreturn)) no_extensions(const char *name)
+void __attribute__((noreturn)) yyerror(const char *s)
 {
-    lerrorf(&current_loc,"%s are a non-standard extension",name);
+    lerrorf(&current_loc,"%s",s);
+}
+
+
+/* ----- Warnings ---------------------------------------------------------- */
+
+
+void  vlwarnf(const struct loc *loc,const char *fmt,va_list ap)
+{
+    fflush(stdout);
+    fprintf(stderr,"%s:%d: warning: ",loc->file,loc->line);
+    vfprintf(stderr,fmt,ap);
+    putc('\n',stderr);
+}
+
+
+void lwarnf(const struct loc *loc,const char *fmt,...)
+{
+    va_list(ap);
+
+    va_start(ap,fmt);
+    vlwarnf(loc,fmt,ap);
+    va_end(ap);
+}
+
+
+void yywarnf(const char *fmt,...)
+{
+    va_list ap;
+
+    va_start(ap,fmt);
+    vlwarnf(&current_loc,fmt,ap);
+    va_end(ap);
+}
+
+
+void yywarn(const char *s)
+{
+    lwarnf(&current_loc,"%s",s);
 }
 
 

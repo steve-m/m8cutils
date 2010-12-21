@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define	CY8C29866	/* non-USB chip with maximum number of blocks */
 #include "m8c.h"
 #include "ice.h"
 

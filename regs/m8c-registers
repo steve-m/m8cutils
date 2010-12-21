@@ -1,0 +1,1125 @@
+/*
+ * m8c-registers - Register definitions of PSoC chips
+ *
+ * Written 2006 by Werner Almesberger
+ * Copyright 2006 Werner Almesberger
+ */
+
+#include "capabilities"
+
+
+/* ===== Common definitions ================================================ */
+
+
+#define LUT		FALSE A_AND_B A_AND_NOT_B A NOT_A_AND_B B \
+			  A_XOR_B A_OR_B A_NOR_B A_XNOR_B NOT_B A_OR_NOT_B \
+			  NOT_A NOT_A_OR_B A_NAND_B TRUE
+
+
+
+/* ===== CPU Registers ===================================================== */
+
+
+if PAGED
+x,6ch	TMP_DR0
+x,6dh	TMP_DR1
+x,6eh	TMP_DR2
+x,6fh	TMP_DR3
+endif
+
+0,d0h	CUR_PP		_[5] PageBits[3]
+0,d1h	STK_PP		_[5] PageBits[3]
+0,d3h	IDX_PP		_[5] PageBits[3]
+0,d4h	MVR_PP		_[5] PageBits[3]
+0,d5h	MVW_PP		_[5] PageBits[3]
+
+0,f0h	CPU_A		/* undocumented */
+0,f3h	CPU_X		/* undocumented */
+0,f4h	CPU_PCL		/* undocumented */
+0,f5h	CPU_PCH		/* undocumented */
+0,f6h	CPU_SP		/* undocumented */
+0,f7h	CPU_F		PgMode[2] { 0_0 0_STK CUR_IDX CUR_STK }
+			_ XIO _ Carry Zero GIE
+0,f8h	CPU_CODE0	/* undocumented */
+0,f9h	CPU_CODE1	/* undocumented */
+0,fah	CPU_CODE2	/* undocumented */
+
+0,ffh	CPU_SCR0	GIES _ WDRS PORS Sleep _[2] STOP
+
+1,fah	FLS_PR1		_[6] Bank[2]
+
+/* ----- CPU_SCR1 ---------------------------------------------------------- */
+
+if ECO
+if SLIMO
+0,feh	CPU_SCR1	IRESS _[2] SLIMO ECO_EXW ECO_EX _ IRAMDIS
+endif
+if !SLIMO
+0,feh	CPU_SCR1	IRESS _[3] ECO_EXW ECO_EX _ IRAMDIS
+endif
+endif
+
+if !ECO
+if SLIMO
+0,feh	CPU_SCR1	IRESS _[2] SLIMO _[3] IRAMDIS
+endif
+if !SLIMO
+0,feh	CPU_SCR1	IRESS _[6] IRAMDIS
+endif
+endif
+
+
+/* ===== Interrupts and watchdog =========================================== */
+
+
+/* ----- INT_xxx0 ---------------------------------------------------------- */
+
+if ANALOG_1
+0,dah	INT_CLR0	VC3 Sleep GPIO _ _ Analog1 _ V_Monitor
+0,e0h	INT_MSK0	VC3 Sleep GPIO _ _ Analog1 _ V_Monitor
+endif
+
+if ANALOG_2 || ANALOG_2LIM
+0,dah	INT_CLR0	VC3 Sleep GPIO _ _ Analog1 Analog0 V_Monitor
+0,e0h	INT_MSK0	VC3 Sleep GPIO _ _ Analog1 Analog0 V_Monitor
+endif
+
+if ANALOG_4
+0,dah	INT_CLR0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
+0,e0h	INT_MSK0	VC3 Sleep GPIO Analog3 Analog2 Analog1 Analog0 V_Monitor
+endif
+
+/* ----- INT_CLR1 ---------------------------------------------------------- */
+
+if DIGITAL_1
+0,dbh	INT_CLR1	_[4] DCB03 DCB02 DBB01 DBB00
+0,e1h	INT_MSK1	_[4] DCB03 DCB02 DBB01 DBB00
+endif
+
+if DIGITAL_2 || DIGITAL_4
+0,dbh	INT_CLR1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
+0,e1h	INT_MSK1	DCB13 DCB12 DBB11 DBB10 DCB03 DCB02 DBB01 DBB00
+endif
+
+/* ----- INT_CLR2 ---------------------------------------------------------- */
+
+if DIGITAL_4
+0,dch	INT_CLR2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
+0,dfh	INT_MSK2	DCB33 DCB31 DBB31 DBB30 DCB23 DCB22 DBB21 DBB20
+endif
+
+if USB
+0,dch	INT_CLR2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1
+			Endpoint0 StartOfFrame BusReset
+0,dfh	INT_MSK2	Wakeup Endpoint4 Endpoint3 Endpoint2 Endpoint1
+			Endpoint0 StartOfFrame BusReset
+endif
+
+/* ----- INT_CLR3 ---------------------------------------------------------- */
+
+0,ddh	INT_CLR3	_[7] I2C
+0,deh	INT_MSK3	ENSWINT _[6] I2C
+
+/* ----- INT_VC ------------------------------------------------------------ */
+
+0,e2h	INT_VC
+
+/* ----- RES_WDT ----------------------------------------------------------- */
+
+0,e3h	RES_WDT
+
+
+/* ===== System Clocks and power =========================================== */
+
+
+1,ddh	OSC_GO_EN	SLPINT VC3 VC2 VC1 SYSCLKX2 SYSCLK CLK24M CLK32K
+1,deh	OSC_CR4		_[6] VC3Input[2] { SYSCLK VC1 VC2 SYSCLKX2 }
+1,dfh	OSC_CR3		VC3Div[8]
+1,e1h	OSC_CR1		VC1Div[4] VC2Div[4]
+1,e2h	OSC_CR2		PLLGAIN _[4] EXTCLKEN { Disabled P1_4 }
+			IMODIS SYSCLKX2DIS
+
+1,e8h	IMO_TR
+1,e9h	ILO_TR		_[2] BaseTrim[2] FreqTrim[4]
+1,eah	BDG_TR		_ AGNDBYP TC[2] V[4]
+
+if ECO
+1,ebh	ECO_TR		PSSDC[2] { 128 512 32 8 } _[6]
+endif
+
+/* ----- OSC_CR0 ----------------------------------------------------------- */
+
+if !CY7C603xx
+if ECO
+1,e0h	OSC_CR0		32kSelect PLL_Mode NoBuzz
+			Sleep[2] { 64 512 4096 32768 }
+			CPU_Speed[3] { 8 4 2 1 16 32 128 256 }
+endif
+if !ECO
+1,e0h	OSC_CR0		_[2] NoBuzz
+			Sleep[2] { 64 512 4096 32768 }
+			CPU_Speed[3] { 8 4 2 1 16 32 128 256 }
+endif
+endif
+
+if CY7C603xx
+1,e0h	OSC_CR0		32kSelect PLL_Mode NoBuzz
+			Sleep[2] { 64 512 4096 32768 }
+			CPU_Speed[3] { 8 4 2 _ 16 32 128 256 }
+endif
+
+/* ----- VLT_CR ------------------------------------------------------------ */
+
+if SMP
+1,e3h	VLT_CR		SMP _[1] PORLEV[2] LVDTBEN VM[3]
+endif
+
+if !SMP
+/* @@@ VM even without SMP, also in ANALOG_1 ? */
+1,e3h	VLT_CR		_[2] PORLEV[2] LVDTBEN VM[3]
+endif
+
+/* ----- VLT_CMP ----------------------------------------------------------- */
+
+if ANALOG_2 || ANALOG_4
+1,e4h	VLT_CMP		_[5] PUMP LVD PPOR
+endif
+
+if ANALOG_2LIM
+1,e4h	VLT_CMP		_[4] NoWrite PUMP LVD PPOR
+endif
+
+if ANALOG_1
+1,e4h	VLT_CMP		_[6] LVD PPOR
+endif
+
+
+/* ===== GPIO Ports ======================================================== */
+
+
+#define PRTxxx(n,base,base0,base1,base2,base3) \
+	0,base##base0##h	PRT##n##DR	/* data */		\
+	0,base##base1##h	PRT##n##IE	/* interrupt enable */	\
+	0,base##base2##h	PRT##n##GS	/* global select */	\
+	0,base##base3##h	PRT##n##DM2	/* drive mode 2 */	\
+	1,base##base0##h	PRT##n##DM0	/* drive mode 0 */	\
+	1,base##base1##h	PRT##n##DM1	/* drive mode 1 */	\
+	1,base##base2##h	PRT##n##IC0	/* interrupt control 0 */ \
+	1,base##base3##h	PRT##n##IC1	/* interrupt control 1 */
+
+PRTxxx(0,0,0,1,2,3)
+PRTxxx(1,0,4,5,6,7)
+
+if P2
+PRTxxx(2,0,8,9,a,b)
+endif
+
+if P3
+PRTxxx(3,0,c,d,e,f)
+endif
+
+if P4
+PRTxxx(4,1,0,1,2,3)
+endif
+
+if P5
+PRTxxx(5,1,4,5,6,7)
+endif
+
+if P6
+PRTxxx(6,1,8,9,a,b)
+endif
+
+if P7
+PRTxxx(7,1,c,d,e,f)
+endif
+
+
+/* ==== Global Digital Interconnect ======================================== */
+
+
+1,d0h	GDI_O_IN	GIONOUT7 GIONOUT6 GIONOUT5 GIONOUT4
+			GIONOUT3 GIONOUT2 GIONOUT1 GIONOUT0
+1,d1h	GDI_E_IN	GIENOUT7 GIENOUT6 GIENOUT5 GIENOUT4
+			GIENOUT3 GIENOUT2 GIENOUT1 GIENOUT0
+1,d2h	GDI_O_OU	GOOUTIN7 GOOUTIN6 GOOUTIN5 GOOUTIN4
+			GOOUTIN3 GOOUTIN2 GOOUTIN1 GOOUTIN0
+1,d3h	GDI_E_OU	GOEUTIN7 GOEUTIN6 GOEUTIN5 GOEUTIN4
+			GOEUTIN3 GOEUTIN2 GOEUTIN1 GOEUTIN0
+
+
+/* ==== Row Digital Interconnect =========================================== */
+
+
+/* ----- RDIxRI ------------------------------------------------------------ */
+
+#define RDIxRI	RI3[2] { GIE3 GIE7 GIO3 GIO7 } \
+		RI2[2] { GIE2 GIE6 GIO2 GIO6 } \
+		RI1[2] { GIE1 GIE5 GIO1 GIO5 } \
+		RI0[2] { GIE0 GIE4 GIO0 GIO5 }
+
+x,b0h	RDI0RI 	RDIxRI
+
+if DIGITAL_2 || DIGITAL_4
+x,b8h	RDI1RI		RDIxRI
+endif
+
+if DIGITAL_4
+x,c0h	RDI2RI		RDIxRI
+x,c8h	RDI3RI		RDIxRI
+endif
+
+/* ----- RDIxSYN ----------------------------------------------------------- */
+
+#define	RDIxSYN	_[4] RI3SYN RI2SYN RI1SYN RI0SYN
+
+x,b1h	RDI0SYN		RDIxSYN
+
+if DIGITAL_2 || DIGITAL_4
+x,b9h	RDI1SYN		RDIxSYN
+endif
+
+if DIGITAL_4
+x,c1h	RDI2SYN		RDIxSYN
+x,c9h	RDI3SYN		RDIxSYN
+endif
+
+/* ----- RDIxIS ------------------------------------------------------------ */
+
+#define RDIxIS	_[2] BCSEL[2] \
+		IS3 { RO3 RI3 } IS2 { RO2 RI1 } IS1 { RO1 RI1 } IS0 { RO0 RI0 }
+
+x,b2h	RDI0IS		RDIxIS
+
+if DIGITAL_2 || DIGITAL_4
+x,bah	RDI1IS		RDIxIS
+endif
+
+if DIGITAL_4
+x,c2h	RDI2IS		RDIxIS
+x,cah	RDI3IS		RDIxIS
+endif
+
+/* ----- RDIxLTx ----------------------------------------------------------- */
+
+x,b3h	RDI0LT0		LUT1[4] { LUT } LUT0[4] { LUT }
+x,b4h	RDI0LT1		LUT3[4] { LUT } LUT2[4] { LUT }
+
+if DIGITAL_2 || DIGITAL_4
+x,bbh	RDI1LT0		LUT1[4]  { LUT } LUT0[4] { LUT }
+x,bch	RDI1LT1		LUT3[4]  { LUT } LUT2[4] { LUT }
+endif
+
+if DIGITAL_4
+x,c3h	RDI2LT0		LUT1[4]  { LUT } LUT0[4] { LUT }
+x,c4h	RDI2LT1		LUT3[4]  { LUT } LUT2[4] { LUT }
+x,cbh	RDI3LT0		LUT1[4]  { LUT } LUT0[4] { LUT }
+x,cch	RDI3LT1		LUT3[4]  { LUT } LUT2[4] { LUT }
+endif
+
+/* ----- RDIxROx ----------------------------------------------------------- */
+
+#define	RDIxRO0		GOO5EN GOO1EN GOE5EN GOE1EN GOO4EN GOO0EN GOE4EN GOE0EN
+#define	RDIxRO1		GOO7EN GOO3EN GOE7EN GOE3EN GOO6EN GOO2EN GOE6EN GOE2EN
+
+x,b5h	RDI0RO0		RDIxRO0
+x,b6h	RDI0RO1		RDIxRO1
+
+if DIGITAL_2 || DIGITAL_4
+x,bdh	RDI1RO0		RDIxRO0
+x,beh	RDI1RO1		RDIxRO1
+endif
+
+if DIGITAL_4
+x,c5h	RDI2RO0		RDIxRO0
+x,c6h	RDI2RO1		RDIxRO1
+x,cdh	RDI3RO0		RDIxRO0
+x,ceh	RDI3RO1		RDIxRO1
+endif
+
+
+/* ===== Digital Basic/Communication Type B Block ========================== */
+
+
+#define DB_FN(mode) \
+	DataInvert BCEN EndSingle mode \
+	Function[3] { Timer Counter CRCPRS _ DeadBand UART SPI _ }
+
+#define DIGITAL_BASIC(name,base0,base1,base2,base3) \
+  0,base0##h	name##DR0 \
+  0,base1##h	name##DR1 \
+  0,base2##h	name##DR2 \
+  0,base3##h	name##CR0 \
+  0,base3##h	name##CR0_Timer		_[5] TC_PulseWidth CaptureInt Enable \
+  0,base3##h	name##CR0_Counter	_[7] Enable \
+  0,base3##h	name##CR0_DeadBand	_[5] BitBangClock \
+	BitBangMode { PreviousBlock BitBangClock } Enable \
+  0,base3##h	name##CR0_CRCRPS	_[6] PassMode Enable \
+  1,base0##h	name##FN		DB_FN(Mode[2]) \
+  1,base0##h	name##FN_Timer \
+	DB_FN(CompareType { LE LT } InterruptType { TC CompareTrue }) \
+  1,base0##h	name##FN_Counter \
+	DB_FN(CompareType { LE LT } InterruptType { TC CompareTrue }) \
+  1,base0##h	name##FN_CRCPRS		DB_FN(CompareType[2] { EQ LE _ LT }) \
+  1,base0##h	name##FN_DeadBand \
+	DB_FN(KillType[2] { SyncRestart Disable Async _ }) \
+  1,base1##h	name##IN \
+	DataInput[4] { Low High RowBC PreviousBlock \
+		AComp0 AComp1 AComp2 AComp3 \
+		RowOut0 RowOut1 RowOut2 RowOut3 RowIn0 RowIn1 RowIn2 RowIn3 } \
+	ClockInput[4] { Disabled VC3 RowBC PreviousBlock \
+		SYSCLKX2 VC1 VC2 CLK32K \
+		RowOut0 RowOut1 RowOut2 RowOut3 RowIn0 RowIn1 RowIn2 RowIn3 } \
+  1,base2##h	name##OU \
+	AUXCLK[2] { NoSync SyncSYSCLK SyncSYSCLKX2 SYSCLK } \
+	AUXEN { AUX_IO SS_Active } /* SPI Slave */ \
+	AUX_IO_Select[2] { Row0 Row1 Row2 Row3 } OUTEN \
+	OutputSelect[2] { RowOut0 RowOut1 RowOut2 RowOut3 }
+
+#define SPI_CR0 \
+	LSbFirst Overrun SPI_Complete Tx_RegEmpty RX_RegFull ClockPhase \
+	ClockPolarity Enable
+
+#define DIGITAL_COMM(name,base0,base1,base2,base3) \
+  DIGITAL_BASIC(name,base0,base1,base2,base3) \
+  0,base3##h	name##CR0_SPIM		SPI_CR0 \
+  0,base3##h	name##CR0_SPIS		SPI_CR0 \
+  0,base3##h	name##CR0_UART_TX	_[2] TX_Complete TX_RegEmpty _ \
+	ParityType { Even Odd } ParityEnable Enable \
+  0,base3##h	name##CR0_UART_RX	ParityError Overrun FramingError \
+	RX_Active RX_RegFull ParityType ParityEnable Enable \
+  1,base0##h	name##FN_UART \
+	DB_FN(InterruptType { TX_RegEmpty TX_Complete } Direction { RX TX }) \
+  1,base0##h	name##FN_SPI \
+	DB_FN(InterruptType { TX_RegEmpty SPI_Complete } Type { Master Slave })
+
+#define DIGITAL_ROW(n,base) \
+  DIGITAL_BASIC(DBB##n##0,base##0,base##1,base##2,base##3) \
+  DIGITAL_BASIC(DBB##n##1,base##4,base##5,base##6,base##7) \
+  DIGITAL_COMM(DCB##n##2,base##8,base##9,base##a,base##b) \
+  DIGITAL_COMM(DCB##n##3,base##c,base##d,base##e,base##f) \
+
+DIGITAL_ROW(0,2)
+
+if DIGITAL_2
+DIGITAL_ROW(1,3)
+endif
+
+if DIGITAL_4
+DIGITAL_ROW(2,4)
+DIGITAL_ROW(3,5)
+endif
+
+
+/* ==== The Analog System: registers common to limited and unlimited ======= */
+
+
+/* ----- AMX_IN ------------------------------------------------------------ */
+
+if ANALOG_4
+0,60h	AMX_IN		ACI3[2] { P0_0 P0_2 P0_4 P0_6 }
+			ACI2[2] { P0_1 P0_3 P0_5 P0_7 }
+			ACI1[2] { P0_0 P0_2 P0_4 P0_6 }
+			ACI0[2] { P0_1 P0_3 P0_5 P0_7 }
+endif
+
+if ANALOG_2 || ANALOG_1 || ANALOG_2LIM
+0,60h	AMX_IN		_[4]
+			ACI1[2] { P0_0 P0_2 P0_4 P0_6 }
+			ACI0[2] { P0_1 P0_3 P0_5 P0_7 }
+endif
+
+/* ----- CMP_CR0 ----------------------------------------------------------- */
+
+if ANALOG_4
+0,64h	CMP_CR0		COMP3 COMP2 COMP1 COMP0 AINT3 AINT2 AINT1 AINT0
+endif
+
+if ANALOG_2 || ANALOG_2LIM
+0,64h	CMP_CR0		_[2] COMP1 COMP0 _[2] AINT1 AINT0
+endif
+
+if ANALOG_1
+0,64h	CMP_CR0		_[2] COMP1 _[3] AINT1 _
+endif
+
+/* ----- CMP_CR1 ----------------------------------------------------------- */
+
+if ANALOG_4
+0,66h	CMP_CR1		CLDIS3 CLDIS2 CLDIS1 CLDIS0 _[4]
+endif
+
+if (ANALOG_2 || ANALOG_2LIM) && !(CY8C24x94 || CY7C64215)
+0,66h	CMP_CR1		_[2] CLDIS1 CLDIS0 _[4]
+endif
+
+if CY8C24x94 || CY7C64215
+0,66h	CMP_CR1		_[2] CLDIS1 CLDIS0 _[2] CLK1X1 CLK1X0
+endif
+
+if ANALOG_1
+0,66h	CMP_CR1		_[2] CLDIS1 _[5]
+endif
+
+/* ----- CLK_CR0 ----------------------------------------------------------- */
+
+if ANALOG_4
+1,60h	CLK_CR0		AColumn3[2] { VC1 VC2 ACLK0 ACLK1 }
+			AColumn2[2] { VC1 VC2 ACLK0 ACLK1 }
+			AColumn1[2] { VC1 VC2 ACLK0 ACLK1 }
+			AColumn0[2] { VC1 VC2 ACLK0 ACLK1 }
+endif
+
+if ANALOG_2 || ANALOG_2LIM
+1,60h	CLK_CR0		_[4]
+			AColumn1[2] { VC1 VC2 ACLK0 ACLK1 }
+			AColumn0[2] { VC1 VC2 ACLK0 ACLK1 }
+endif
+
+if ANALOG_1
+1,60h	CLK_CR0		_[4]
+			AColumn1[2] { VC1 VC2 ACLK0 ACLK1 }
+			_[2]
+endif
+
+/* ----- CLK_CR1 ----------------------------------------------------------- */
+
+if ANALOG_2 || ANALOG_4
+1,61h	CLK_CR1		_ SHDIS
+			ACLK1[3]
+			  { DBB00 DBB01 DCB02 DCB03 DBB10 DBB11 DCB12 DCB13 }
+			ACLK0[3]
+			  { DBB00 DBB01 DCB02 DCB03 DBB10 DBB11 DCB12 DCB13 }
+endif
+
+if ANALOG_2LIM
+1,61h	CLK_CR1		_[3]
+			ACLK1[2]
+			  { DBB00 DBB01 DCB02 DCB03 }
+			_
+			ACLK0[2]
+			  { DBB00 DBB01 DCB02 DCB03 }
+endif
+
+/* ----- ABF_CR0 ----------------------------------------------------------- */
+
+if ANALOG_4
+1,62h	ABF_CR0		ACol1Mux ACol2Mux ABUF1EN ABUF2EN ABUF0EN ABUF3EN
+			Bypass PWR
+endif
+
+if ANALOG_2
+1,62h	ABF_CR0		ACol1Mux _ ABUF1EN _ ABUF0EN _ Bypass PWR
+endif
+
+if ANALOG_1
+1,62h	ABF_CR0		ACol1Mux _ ABUF1EN _[3] Bypass PWR
+endif
+
+if ANALOG_2LIM
+1,62h	ABF_CR0		ACol1Mux _[7]
+endif
+
+/* ----- AMD_CRx ----------------------------------------------------------- */
+
+
+if ANALOG_4
+1,63h	AMD_CR0		_ AMOD2[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+			_ AMOD0[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+1,66h	AMD_CR1		_ AMOD0[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+			_ AMOD1[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+endif
+
+if ANALOG_2
+1,63h	AMD_CR0		_[5]
+			AMOD0[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+1,66h	AMD_CR1		_[5]
+			AMOD1[3] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 }
+endif
+
+if ANALOG_2LIM
+1,63h	AMD_CR0		_[4]
+			AMOD0[4] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 _ _ _ _ Comp0Single Comp1Single _ _ }
+1,66h	AMD_CR1		_[4]
+			AMOD1[4] { Zero GOE1 GOE0 Row0BC Comp0 Comp1 Comp2
+			  Comp3 _ _ _ _ Comp0Single Comp1Single _ _ }
+endif
+
+/* ----- CMP_GO_ENx -------------------------------------------------------- */
+
+if ANALOG_2LIM
+1,64h	CMP_GO_EN	GOO5 GOO1
+			SEL1[2] { CompBus ColClk CompSingle ColClkGated }
+			GOO4 GOO0
+			SEL0[2] { CompBus ColClk ADC_PWM ColClkGated }
+endif
+
+if CY8C24x94 || CY7C64215 
+1,64h	CMP_GO_EN	GOO5 GOO1
+			SEL1[2] { CompBus PHI1 PHI2 Column }
+			GOO4 GOO0
+			SEL0[2] { CompBus PHI1 PHI2 Column }
+1,65h	CMP_GO_EN1	GOO7 GOO3
+			SEL3[2] { CompBus PHI1 PHI2 Unsync }
+			GOO6 GOO2
+			SEL2[2] { CompBus PHI1 PHI2 Unsync }
+endif
+
+/* ----- ALT_CRx ----------------------------------------------------------- */
+
+if ANALOG_2 || ANALOG_2LIM || ANALOG_4
+1,67h	ALT_CR0		LUT1[4] { LUT } LUT0[4] { LUT }
+endif
+
+if ANALOG_1
+1,67h	ALT_CR0		LUT1[4] { LUT } _[4]
+endif
+
+if ANALOG_4
+1,68h	ALT_CR1		LUT3[4] { LUT } LUT2[4] { LUT }
+endif
+
+/* ----- CLK_CR2 ----------------------------------------------------------- */
+
+if ANALOG_4
+1,69h	CLK_CR2		_[4] ACLK1R _[2] ACLK0R
+endif
+
+
+/* ===== The "unlimited" Analog System  ==================================== */
+
+
+if ANALOG_UNLIMITED
+
+/* ----- ARF_CR ------------------------------------------------------------ */
+
+/* Cypress lump Reference, CT, and SC into a single field */
+#define ARF_CR_PWR	PWR_SC PWR[2] { Off Low Medium High }
+
+if ANALOG_4 || ANALOG_2
+0,63h	ARF_CR		_ HBE REF[3] { Vdd2_BG P2_4_P2_6 Vdd2_Vdd2 2BG_BG
+			  2BG_P2_6 P2_4_BG BG_BG 1_6BG_1_6BG } ARF_CR_PWR
+endif
+
+if ANALOG_1
+0,63h	ARF_CR		_ HBE REF[3] { _ _ Vdd2_Vdd2 _ _ _ _ _ } ARF_CR_PWR
+endif
+
+/* ----- ASY_CR ------------------------------------------------------------ */
+
+/* @@@ does ASY_CR.SALCOL really make sense ?!? */
+
+if ANALOG_4 || ANALOG_2
+0,65h	ASY_CR		_ SARCNT[3] SARSIGN SARCOL[2] SYNCEN
+endif
+
+if ANALOG_1
+0,65h	ASY_CR		_ SARCNT[3] SARSIGN SARCOL _ SYNCEN
+endif
+
+/* ----- ACBxxCR0 ---------------------------------------------------------- */
+
+#define ACBxxCR0(rbm)	RTapMux[4] Gain RTopMux RBotMux[2] { rbm }
+
+if ANALOG_1
+x,75h	ACB01CR0	ACBxxCR0(_ AGND Vss ASD11)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,71h	ACB00CR0	ACBxxCR0(ACB01 AGND Vss ASC10)
+x,75h	ACB01CR0	ACBxxCR0(ACB00 AGND Vss ASD11)
+endif
+
+if ANALOG_4
+x,79h	ACB02CR0	ACBxxCR0(ACB03 AGND Vss ASC12)
+x,7dh	ACB03CR0	ACBxxCR0(ACB02 AGND Vss ASD13)
+endif
+
+/* ----- ACBxxCR1 ---------------------------------------------------------- */
+
+#define ACBxxCR1(nmux,pmux) \
+			AnalogBus CompBus NMux[3] { nmux } PMux[3] { pmux }
+#define nmux(side,down,across) \
+			side AGND RefLo RefHi FB down across PortInputs
+
+if ANALOG_1
+x,76h	ACB01CR1	ACBxxCR1(_ AGND Vss Vdd FB ASD11 _ PortInputs,
+			  Vss PortInputs _ AGND ASD11 _ ABUS1 FB)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,72h	ACB00CR1	ACBxxCR1(nmux(ACB01,ASC10,ASD11),
+			  RefLo PortInputs ACB01 AGND ASC10 ASD11 ABUS0 FB)
+endif
+
+if ANALOG_2
+x,76h	ACB01CR1	ACBxxCR1(nmux(ACB00,ASD11,ASC10),
+			  Vss PortInputs ACB00 AGND ASD11 ASC10 ABUS1 FB)
+endif
+
+if ANALOG_4
+x,76h	ACB01CR1	ACBxxCR1(nmux(ACB00,ASD11,ASC10),
+			  ACB02 PortInputs ACB00 AGND ASD11 ASC10 ABUS1 FB)
+x,7ah	ACB02CR1	ACBxxCR1(nmux(ACB03,ASC12,ASD13),
+			  ACB01 PortInputs ACB03 AGND ASC12 ASD13 ABUS2 FB)
+x,73h	ACB03CR1	ACBxxCR1(nmux(ACB02,ASD13,ASC12),
+			  RefLo PortInputs ACB02 AGND ASD13 ASC12 ABUS3 FB)
+endif
+
+#undef nmux
+
+/* ----- ACBxxCR2 ---------------------------------------------------------- */
+
+#define	ACBxxCR2	CPhase CLatch CompCap TMUXEN \
+			TestMux[2] { PIn AGND RefLo RefHi } \
+			PWR[2] { Off Low Medium High }
+
+if ANALOG_2 || ANALOG_4
+x,73h	ACB00CR2	ACBxxCR2
+endif
+
+x,74h	ACB01CR2	ACBxxCR2
+
+if ANALOG_4
+x,7bh	ACB02CR2	ACBxxCR2
+x,7fh	ACB03CR2	ACBxxCR2
+endif
+
+/* ----- ACBxxCR3 ---------------------------------------------------------- */
+
+#define	ACBxxCR3	_[4] LPCMPEN CMOUT INSAMP EXGAIN
+
+if ANALOG_2 || ANALOG_4
+x,70h	ACB00CR3	ACBxxCR3
+endif
+
+x,74h	ACB01CR3	ACBxxCR3
+
+if ANALOG_4
+x,78h	ACB02CR3	ACBxxCR3
+x,7ch	ACB03CR3	ACBxxCR3
+endif
+
+/* ----- ASCxxCR0 ---------------------------------------------------------- */
+
+#define	ASCxxCR0	FCap ClockPhase ASign ACap[5]
+
+if ANALOG_2 || ANALOG_4
+x,80h	ASC10CR0	ASCxxCR0
+endif
+
+x,94h	ASC21CR0	ASCxxCR0
+
+if ANALOG_4
+x,88h	ASC12CR0	ASCxxCR0
+x,9ch	ASC23CR0	ASCxxCR0
+endif
+
+/* ----- ASCxxCR1 ---------------------------------------------------------- */
+
+#define	ASCxxCR1(axmux)	ACMux[3] { acmux } BCap[5]
+
+if ANALOG_1
+x,95h	ASC21CR1	ASCxxCR1(
+			  ASD11_ASD11 _ Vdd_ASD11 Vtemp_ASD11
+			  _ _ ABUS1_ASD11 _)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,81h	ASC10CR1	ASCxxCR1(
+			  ACB00_ACB00 ASD11_ACB00 RefHi_ACB00 ASD20_ACB00
+			  ACB01_ASD20 ACB00_ASD20 ASD11_ASD20 P2_1_ASD20)
+endif
+
+if ANALOG_2
+x,95h	ASC21CR1	ASCxxCR1(
+			  ASD11_ASD11 ASD20_ASD11 RefHi_ASD11 Vtemp_ASD11
+			  ASC10_ASD11 ASD20_ASD11 ABUS1_ASD11 P2_2_ASD11)
+endif
+
+if ANALOG_4
+x,89h	ASC12CR1	ASCxxCR1(
+			  ACB02_ACB02 ASD13_ACB02 RefHi_ACB02 ASD22_ACB02
+			  ACB03_ASD22 ACB02_ASD22 ASD13_ASD22 ASD11_ASD22)
+x,95h	ASC21CR1	ASCxxCR1(
+			  ASD11_ASD11 ASD20_ASD11 RefHi_ASD11 Vtemp_ASD11
+			  ASC10_ASD11 ASD20_ASD11 ABUS1_ASD11 ASD22_ASD11)
+x,9dh	ASC23CR1	ASCxxCR1(
+			  ASD13_ASD13 ASD22_ASD13 RefHi_ASD13 ABUS3_ASD13
+			  ASC12_ASD13 ASD22_ASD13 ABUS3_ASD13 P2_2_ASD13)
+endif
+
+/* ----- ASCxxCR2 ---------------------------------------------------------- */
+
+#define	ASCxxCR2	AnalogBus CompBus AutoZero CCap[5]
+
+if ANALOG_2 || ANALOG_4
+x,82h	ASC10CR2	ASCxxCR2
+endif
+
+x,96h	ASC21CR2	ASCxxCR2
+
+if ANALOG_4
+x,8ah	ASC12CR2	ASCxxCR2
+x,9eh	ASC23CR2	ASCxxCR2
+endif
+
+/* ----- ASCxxCR3 ---------------------------------------------------------- */
+
+#define	ASCxxCR3(bmux)	ARefMux[2] { AGND RefHi RefLo CompRef } \
+			  FSW1 FSW0 BMuxSC[2] { bmux } \
+			  PWR[2] { Off Low Medium High }
+
+if ANALOG_1
+x,97h	ASC21CR3	ASCxxCR3(ASD11 _ TrefGND)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,83h	ASC10CR3	ASCxxCR3(ACB00 ASD11 P2_3 ASD20)
+endif
+
+if ANALOG_2
+x,97h	ASC21CR3	ASCxxCR3(ASD11 ASD20 P2_0 TrefGND)
+endif
+
+if ANALOG_4
+x,8bh	ASC12CR3	ASCxxCR3(ACB02 ASD13 ASD11 ASD22)
+x,97h	ASC21CR3	ASCxxCR3(ASD11 ASD20 ASD22 TrefGND)
+x,9fh	ASC23CR3	ASCxxCR3(ASD13 ASD22 P2_0 ABUS3)
+endif
+
+/* ----- ASDxxCR0 ---------------------------------------------------------- */
+
+#define	ASDxxCR0	FCap ClockPhase ASign ACap[5]
+
+x,84h	ASD11CR0	ASDxxCR0
+
+if ANALOG_2 || ANALOG_4
+x,90h	ASD20CR0	ASDxxCR0
+endif
+
+if ANALOG_4
+x,8ch	ASD13CR0	ASDxxCR0
+x,98h	ASD22CR0	ASDxxCR0
+endif
+
+/* ----- ASD11CR1 ---------------------------------------------------------- */
+
+#define	ASDxxCR1(amux)	AMux[3] { amux } BCap[5]
+
+if ANALOG_1
+x,85h	ASD11CR1	ASDxxCR1(ACB01 _ _ ASC21 Vdd _ _)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,91h	ASD20CR1	ASDxxCR1(ACB10 P2_1 ASC21 ABUS0 RefHi ASD11 _ _)
+endif
+
+if ANALOG_2
+x,85h	ASD11CR1	ASDxxCR1(ACB01 P2_2 ASC10 ASC21 RefHi ACB00 _ _)
+endif
+
+if ANALOG_4
+x,85h	ASD11CR1	ASDxxCR1(ACB01 ASC12 ASC10 ASC21 RefHi ACB00 _ _)
+x,8dh	ASD13CR1	ASDxxCR1(ACB03 P2_2 ASC12 ASC23 RefHi ACB02 _ _)
+x,99h	ASD22CR1	ASDxxCR1(ASC12 ASC21 ASC23 ABUS2 RefHi ASD13 _ _)
+endif
+
+/* ----- ASDxxCR2 ---------------------------------------------------------- */
+
+#define	ASDxxCR2	AnalogBus CompBus AutoZero CCap[5]
+
+x,86h	ASD11CR2	ASDxxCR2
+
+if ANALOG_2 || ANALOG_4
+x,92h	ASD20CR2	ASDxxCR2
+endif
+
+if ANALOG_4
+x,8eh	ASD13CR2	ASDxxCR2
+x,9ah	ASD22CR2	ASDxxCR2
+endif
+
+/* ----- ASDxxCR3 ---------------------------------------------------------- */
+
+#define	ASDxxCR3(bmux)	ARefMux[2] { AGND RefHi RefLo CompRef } \
+			FSW1 FSW0 BSW BMuxSD { bmux } \
+			PWR[2] { Off Low Medium High }
+
+if ANALOG_1
+x,87h	ASD11CR3	ASDxxCR3(_ ACB01)
+endif
+
+if ANALOG_2 || ANALOG_4
+x,87h	ASD11CR3	ASDxxCR3(ACB00 ACB01)
+x,93h	ASD20CR3	ASDxxCR3(ASD11 ASC10)
+endif
+
+if ANALOG_4
+x,8fh	ASD13CR3	ASDxxCR3(ACB02 ACB03)
+x,9bh	ASD22CR3	ASDxxCR3(ASD13 ASD12)
+endif
+
+endif /* ANALOG_UNLIMITED */
+
+
+/* ===== The Two Column Limited Analog System ============================== */
+
+
+if ANALOG_2LIM
+
+0,62h	PWM_CR		_[2] HIGH[3] { NoPWM 1 2 4 8 16 }
+			LOW[2] { 0 1 2 3 } PWMEN
+
+0,68h	ADC0_CR		CMPST LOREN SHEN _ CBSRC AUTO _ ADCEN
+0,69h	ADC1_CR		CMPST LOREN SHEN _ CBSRC AUTO _ ADCEN
+
+x,72h	ACE00CR1	_ CompBus
+			NMux[3] { ACE01 VBG Switch5_7 MuxBus FB ASE10 ASE11
+			  PortInputs }
+			PMux[3] { _ PortInputs ACE01 VBG ASE10 ASE11
+			  Switch1_4 MuxBus }
+x,73h	ACE00CR2	_[6] FullRange PWR
+x,76h	ACE01CR1	_ CompBus
+			NMux[3] { ACE00 VBG Switch5_7 MuxBus FB ASE11 ASE10
+			  PortInputs }
+			PMux[3] { VTEMP PortInputs ACE00 VBG ASE11 ASE10
+			  Switch1_4 MuxBus }
+x,77h	ACE01CR2	_[6] FullRange PWR
+
+x,80h	ASE00CR0	FVal _[7]
+x,84h	ASE01CR0	FVal _[7]
+
+1,6bh	CLK_CR3		_ SYS1 DIVCLK1[2] { 1 2 4 8 }
+			_ SYS0 DIVCLK0[2] { 1 2 4 8 }
+
+1,e5h	ADC0_TR		CAPVAL[8]
+1,e6h	ADC1_TR		CAPVAL[8]
+
+endif /* ANALOG_2LIM */
+
+
+/* ===== MAC =============================================================== */
+
+
+if MAC0
+0,e8h	MUL0_X
+0,e9h	MUL0_Y
+0,eah	MUL0_DH
+0,ebh	MUL0_DL
+0,ech	MAC0_X
+0,ech	ACC0_DR1
+0,edh	MAC0_Y
+0,edh	ACC0_DR0
+0,eeh	MAC0_CL0
+0,eeh	ACC0_DR3
+0,efh	MAC0_CL1
+0,efh	ACC0_DR2
+endif
+
+if MAC1
+0,a8h	MUL1_X
+0,a9h	MUL1_Y
+0,aah	MUL1_DH
+0,abh	MUL1_DL
+0,ach	MAC1_X
+0,ach	ACC1_DR1
+0,adh	MAC1_Y
+0,adh	ACC1_DR0
+0,aeh	MAC1_CL0
+0,aeh	ACC1_DR3
+0,afh	MAC1_CL1
+0,afh	ACC1_DR2
+endif
+
+
+/* ===== Decimator ========================================================= */
+
+/*
+ * Note: the 2 column limited system uses part of the decimator registers for
+ * its ADC.
+ */
+
+/* ----- DEC_Dx ------------------------------------------------------------ */
+
+if DEC_T1 || DEC_T2
+0,e4h	DEC_DH
+0,e5h	DEC_DL
+endif
+
+/* ----- DEC_CR0 ----------------------------------------------------------- */
+
+if ANALOG_2LIM
+0,e6h	DEC_CR0		_[2] IGEN[2] { _ ACol0 ACol1 _ } ICLKS0 _[3]
+endif
+
+if !ANALOG_2LIM
+0,e6h	DEC_CR0		IGEN[4] { _ ACol0 ACol1 _ ACol2 _ _ _ ACol3 }
+			ICLKS0 DCOL[2] { ACol0 ACol1 ACol2 ACol3 } DCLKS0
+endif
+
+/* ----- DEC_CR1 ----------------------------------------------------------- */
+
+if ANALOG_4
+0,e7h	DEC_CR1		_ IDEC ICLKS3 ICLKS2 ICLKS1 DCLKS3 DCLKS2 DCLKS1
+endif
+
+if ANALOG_2
+0,e7h	DEC_CR1		ECNT IDEC ICLKS3 ICLKS2 ICLKS1 DCLKS3 DCLKS2 DCLKS1
+endif
+
+if ANALOG_2LIM
+0,e7h	DEC_CR1		_[3] ICLKS2 ICLKS1 _[3]
+endif
+
+/* ----- DEC_CR2 ----------------------------------------------------------- */
+
+if DEC_T2
+1,e7h	DEC_CR2		Mode[2] { Compatibility Incremental Full _ }
+			DataShiftOut[2] { 0 1 2 4 }
+			DataFormat { P_M Z_P }
+			DecimationRate[3] { Off 32 50 64 125 128 250 256 }
+endif
+
+
+/* ===== Analog Multiplexer ================================================ */
+
+
+/* ----- AMUX_CFG ---------------------------------------------------------- */
+
+if AMUX1
+0,61h	AMUX_CFG	_[2]
+			INTCAP[2] { Precharge P0_5 P0_7 Static }
+			MUXCLK[3] { Off VC1 VC2 Row0BC ACLK0 ACLK1 } EN
+endif
+
+if AMUX2
+0,61h	AMUX_CFG	BCol1Mux ACol0Mux
+			INTCAP[2] { Precharge P0_1 P0_3 Static }
+			MUXCLK[3] { Off VC1 VC2 Row0BC ACLK0 ACLK1 } EN
+endif
+
+/* ----- DAC_D ------------------------------------------------------------- */
+
+if AMUX1 || AMUX2
+0,fdh	DAC_D
+endif
+
+/* ----- AMUX_CLK ---------------------------------------------------------- */
+
+if AMUX2
+1,afh	AMUX_CLK	_[6] CLKSYNC[2] { Rise RiseDelay Fall FallEarly }
+endif
+
+/* ----- MUX_CRx ----------------------------------------------------------- */
+
+if AMUX1 || AMUX2
+1,d8h	MUX_CR0
+1,d9h	MUX_CR1
+1,dah	MUX_CR2
+1,dbh	MUX_CR3
+endif
+
+if AMUX2
+1,ech	MUX_CR4
+1,edh	MUX_CR5
+endif
+
+/* ----- DAC_CR ------------------------------------------------------------ */
+
+#define DAC_CR_4 \
+	IRANGE { Low High } \
+	OSCMODE[2] { NoReset GOO4 GOO5 GOO4_GOO5 } \
+	ENABLE
+
+if AMUX1
+1,fdh	DAC_CR		_[4] DAC_CR_4
+endif
+
+if AMUX2
+1,fdh	DAC_CR		SplitMux MuxClkGE { None GOO6 } _[2] DAC_CR_4
+endif
+
+
+/* ===== I2C =============================================================== */
+
+
+0,d6h	I2C_CFG		PSelect[2] { P1_5_P1_7 P1_0 P1_1 } BusErrorIE StopIE
+			ClockRate[2] { 100k 400k 50k _ }
+			EnableMaster EnableSlave
+0,d7h	I2C_SCR		BusError LostArb StopStatus ACK Address Transmit LRB
+			ByteComplete
+0,d8h	I2C_DR
+0,d9h	I2C_MSCR	_[4] BusBusy MasterMode RestartGen StartGen
+
+
+/* ===== USB =============================================================== */
+
+
+if USB
+
+#define PMA8(XIO,base,name) \
+  XIO,base##0h	PMA0_##name \
+  XIO,base##1h	PMA1_##name \
+  XIO,base##2h	PMA2_##name \
+  XIO,base##3h	PMA3_##name \
+  XIO,base##4h	PMA4_##name \
+  XIO,base##5h	PMA5_##name \
+  XIO,base##6h	PMA6_##name \
+  XIO,base##7h	PMA7_##name \
+
+PMA8(0,4,DR)
+PMA8(1,4,WA)
+PMA8(1,5,RA)
+
+0,48h	USB_SOF0
+0,49h	USB_SOF1
+0,4ah	USB_CR0		USB_Enable DeviceAddress[7]
+0,4bh	USBIO_CR0	TEN TSE0 TD { K J } _[4] RD { K J }
+0,4ch	USBIO_CR1	IOMode DriveMode DPI DMI PS2PUEN USBPUEN DP0 DM0
+
+#define EPx_CNT1	DataToggle DataInvalid _[5] CountMSb
+
+0,4eh	EP1_CNT1	EPx_CNT1
+0,50h	EP2_CNT1	EPx_CNT1
+0,52h	EP3_CNT1	EPx_CNT1
+0,54h	EP4_CNT1	EPx_CNT1
+
+0,4fh	EP1_CNT
+0,51h	EP2_CNT
+0,53h	EP3_CNT
+0,55h	EP4_CNT
+
+#define EPxCRx_Mode	Disable NAK_IN_OUT StatusOUT StatusIN_OUT \
+			ACK_OUT _ ACK_OUT_Status_IN NACK_IN \
+			ACK_IN _ ACK_IN_Status_OUT
+
+0,56h	EP0_CR		SetupReceived IN_Received OUT_Received ACKdTrans
+			Mode[4] { EPxCRx_Mode }
+0,57h	EP0_CNT		DataToggle DataInvalid _[2] ByteCount[4]
+0,58h	EP0_DR0
+0,59h	EP0_DR1
+0,5ah	EP0_DR2
+0,5bh	EP0_DR3
+0,5ch	EP0_DR4
+0,5dh	EP0_DR5
+0,5eh	EP0_DR6
+0,5fh	EP0_DR7
+
+1,c1h	USB_CR1		_[5] BusActivity EnableLock RegEnable { 3_3V 5V }
+
+#define	EPx_CR0		Stall _ NAK_IE ACKdTrans Mode[4] { EPxCRx_Mode }
+
+1,c4h	EP1_CR0		EPx_CR0
+1,c5h	EP2_CR0		EPx_CR0
+1,c6h	EP3_CR0		EPx_CR0
+1,c7h	EP4_CR0		EPx_CR0
+
+endif /* USB */

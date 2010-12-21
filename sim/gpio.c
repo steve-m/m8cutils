@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+#define CY8C21323	/* arbitrary non-USB chip */
 #include "m8c.h"
 #include "ice.h"
 #include "interact.h"

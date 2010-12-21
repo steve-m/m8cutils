@@ -15,6 +15,7 @@
  */
 
 
+#define CY8C21323	/* arbitrary "general" chip, to enable OSC_CR0 */
 #include "m8c.h"
 #include "ssc.h"
 

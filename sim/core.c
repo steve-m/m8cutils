@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define CY8C29866	/* chip with paged RAM */
 #include "m8c.h"
 #include "chips.h"
 #include "disasm.h"
@@ -689,7 +690,7 @@ uint32_t m8c_step(void)
 
 
 static uint8_t cpu_scr0 = CPU_SCR0_PORS;
-static uint8_t cpu_scr1;
+static uint8_t cpu_scr1 = 0;
 
 
 static uint8_t read_cpu_f(struct reg *reg)
@@ -769,6 +770,7 @@ void m8c_init(void)
     regs[CPU_SCR0].ops = &cpu_scr0_ops;
     regs[CPU_SCR0].user = &cpu_scr0;
     regs[CPU_SCR1].ops = &cpu_scr1_ops;
+    regs[CPU_SCR1].user = &cpu_scr1;
 }
 
 

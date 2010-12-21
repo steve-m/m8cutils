@@ -200,8 +200,8 @@ uint8_t tty_read_byte(int timeout)
 {
     uint8_t c;
 
-   tty_read(&c,1,timeout);
-   return c;
+    tty_read(&c,1,timeout);
+    return c;
 }
 
 

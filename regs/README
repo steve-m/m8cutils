@@ -1,0 +1,103 @@
+M8C register definitions
+========================
+
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+
+Register definition files
+-------------------------
+
+reg2hrds.pl converts the capability and register definitions in the files
+"m8c-registers" and "capabilities" to a number of header and library files:
+
+m8c.inc
+
+  Definitions for use with assembler language.
+
+  To enable the definitions for a specific chip, #define the chip name,
+  e.g., #define CY8C24423A. If different packages with the same chip have
+  different capabilities, the exact set can be selected by appending the
+  pin count, e.g., #define CY8C24423A_32. (If using the "generic" name,
+  the maximum feature set of all chips with that name will be enabled. If
+  a chip has only one package, or the packages have the same functionality,
+  either form of the name can be used.)
+
+  Definitions include registers, fields, and values. For a hypothetical
+  register FOO at address 0x42 with a field BAR in bits 3, 2, and 1
+  (counting from 0, LSB first), and values ALPHA = 1 and BETA = 2, the
+  following definitions would be emitted:
+
+  #define FOO		0x42
+  #define FOO_BAR	0x0e
+  #define FOO_BAR_ALPHA	0x01
+  #define FOO_BAR_BETA	0x02
+
+  The definition for the field gives the value of a mask where all bits
+  belonging to the field are set to one. The mask can be used to shift
+  values into place, as follows:
+
+  Assembler:
+
+    mov reg[FOO],FOO_BAR_ALPHA << >>FOO_BAR
+
+  C:
+
+    reg_FOO = FOO_BAR_ALPHA << (ffs(FOO_BAR)-1);
+
+  Note: the unary >> operator is an extension of m8cas.
+
+m8c.h
+
+  Definitions for use with C. This file is almost identical to m8c.inc,
+  but also defined the macro REGISTER_NAMES_INIT, which can be used to
+  set up a table to translate between register numbers and names.
+
+../regs/default.m8csim
+
+  Definitions for use with m8csim. Registers and fields use the m8csim
+  syntax for directly accessing them, e.g., for the example above, the
+  definitions would be as follows:
+
+  #define FOO		reg[0x42]
+  #define FOO_BAR	FOO[3:1]
+
+regdef.c
+
+  A set of data structures describing all registers. This is for use by
+  pretty-printers and similar. See regdef.h for a description of the
+  data structures, ../misc/reginfo.c for a usage example.
+
+
+Naming conventions
+------------------
+
+Register and field naming generally tries to follow the corresponding
+items in the TRM.
+
+If the name of an item consists of multiple words, they are concatenated
+directly if the adjacent letters differ in case. For example, "Bus Clock"
+would become "BusClock", because "s" is lower case and "C" is upper case.
+
+Otherwise, an underscore is inserted. E.g., "ECO EX" becomes "EXO_EX",
+because "O" and the "E" of "EX" are both upper case.
+
+The names of values are more difficult, because the descriptions given
+in the TRM are often unwieldly long. Therefore, most value names are
+abbreviations. If characters not allowed in an identifier have to be
+included, e.g., the dot in "3.3", an underscore is used instead.
+
+
+Naming anomalies
+----------------
+
+Sometimes, an object is known under slightly different names.
+A few examples:
+
+- The "Analog Bus" is sometimes called "AnalogBus", sometimes "ABUS".
+
+- The "Comparator Bus" is sometimes called "Comp Bus", sometimes just
+  "Comp", or even "COMP".

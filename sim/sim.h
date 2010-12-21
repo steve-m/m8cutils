@@ -19,6 +19,8 @@
 extern FILE *yyin;
 extern FILE *next_file;
 extern int interactive;
+extern int include_default;
+extern int saved_stdin;
 
 int yyparse(void);
 void yyrestart(FILE *file);

@@ -16,7 +16,7 @@
 #include "file.h"
 #include "cpp.h"
 
-#include "error.h"
+#include "error-as.h"
 #include "code.h"
 
 

@@ -6,14 +6,6 @@
  * Copyright 2006 Werner Almesberger
  */
 
-/*
- * "backslash" is from umlsim's script.l (http://umlsim.sourceforge.net/),
- * which is written 2002-2004 by Werner Almesberger
- * Copyright 2002,2003 California Institute of Technology
- * Copyright 2004 Koninklijke Philips Electronics NV
- * Copyright 2003,2004 Werner Almesberger
- */
-
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -25,64 +17,9 @@
 #include "util.h"
 #include "error.h"
 #include "id.h"
+#include "backslash.h"
 
 #include "y.tab.h"
-
-
-static void backslash(char *s)
-{
-    char *t;
-
-    for (t = s; *s; s++) {
-	if (*s != '\\') {
-	    *t++ = *s;
-	    continue;
-	}
-	switch (*++s) {
-	    case 'n':
-		*t++ = 10;
-		break;
-	    case 'r':
-		*t++ = 13;
-		break;
-	    case 't':
-		*t++ = 9;
-		break;
-	    case 'b':
-		*t++ = 8;
-		break;
-	    case '\'':
-		*t++ = '\'';
-		break;
-	    case '"':
-		*t++ = '"';
-		break;
-	    case '\\':
-		*t++ = '\\';
-		break;
-	    default:
-		if (*s >= '0' && *s <= '7') {
-		    int v = 0,n;
-
-		    for (n = 3; n; n--) {
-			if (*s < '0' || *s > '7')
-			    break;
-			v = v*8+*s++-'0';
-		    }
-		    s--;
-		    if (v <= 255) {
-			*t++ = v;
-			break;
-		    }
-		}
-		yyerrorf(*s > ' ' && *s <= '~' ?
-		  "unrecognized escape sequence \\%c" :
-		  "unrecognized escape sequence \\%03o",*s);
-	}
-    }
-    *t = 0;
-}
-
 
 %}
 
@@ -225,21 +162,3 @@ $[0-9A-Fa-f]+			{ char *end;
                                   current_loc.line = strtol(yytext+2,NULL,0); }
 
 .				return *yytext;
-
-%%
-
-
-void __attribute__((noreturn)) yyerrorf(const char *fmt,...)
-{
-    va_list ap;
-
-    va_start(ap,fmt);
-    vlerrorf(&current_loc,fmt,ap);
-    va_end(ap);
-}
-
-
-void __attribute__((noreturn)) yyerror(const char *s)
-{
-    lerrorf(&current_loc,"%s",s);
-}

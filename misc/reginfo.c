@@ -28,9 +28,13 @@ static void digit(int pos,int val,char sep)
 static void field(int pos,const char *buf,int bits)
 {
     int w = bits*BIT_WIDTH+bits-1;
+    int p;
 
-    w -= strlen(buf);
-    printf("%*s%s%*s%c",w/2,"",buf,(w+1)/2,"",pos-bits ? '|' : '\n');
+    p = w-strlen(buf);
+    if (p <= 0)
+	printf("%.*s%c",w,buf,pos-bits ? '|' : '\n');
+    else
+	printf("%*s%s%*s%c",p/2,"",buf,(p+1)/2,"",pos-bits ? '|' : '\n');
 }
 
 
@@ -48,7 +52,7 @@ static void line(void)
 
 static void usage(const char *name)
 {
-    fprintf(stderr,"usage: %s register [value]\n",name);
+    fprintf(stderr,"usage: %s [chip] register [value]\n",name);
     exit(1);
 }
 
@@ -58,32 +62,60 @@ int main(int argc,char *argv[])
     const struct psoc_regdef_register *reg;
     unsigned long value = NO_VALUE;
     char buf[20];
+    int chip = -1;
     int i;
 
     switch (argc) {
+	const char *arg;
 	char *end;
 	unsigned long addr;
 
+	case 4:
+	    chip = psoc_regdef_find_chip(argv[1]);
+	    if (chip == -1) {
+		fprintf(stderr,"unknown chip: \"%s\"\n",argv[1]);
+		break;
+	    }
+	    /* fall through */
 	case 3:
-	    value = strtoul(argv[2],&end,0);
-	    if (*end || value & ~0xff)
-		usage(*argv);
+	    if (chip == -1) {
+		chip = psoc_regdef_find_chip(argv[1]);
+		if (chip == -1) {
+		    value = strtoul(argv[2],&end,0);
+		    if (*end || value & ~0xff)
+			usage(*argv);
+		}
+	    }
+	    else {
+		value = strtoul(argv[3],&end,0);
+		if (*end || value & ~0xff)
+		    usage(*argv);
+	    }
 	    /* fall through */
 	case 2:
-	    addr = strtoul(argv[1],&end,0);
+	    arg = argv[1+(chip != -1)];
+	    addr = strtoul(arg,&end,0);
 	    if (*end) {
-		for (reg = psoc_regdef; reg->name; reg++)
-		    if (!strcasecmp(reg->name,argv[1]))
+		for (reg = psoc_regdef; reg->name; reg++) {
+		    if (!psoc_regdef_applicable(reg,chip))
+			continue;
+		    if (!strcasecmp(reg->name,arg))
 			goto found;
-		fprintf(stderr,"no register called \"%s\"\n",argv[1]);
+		}
+		fprintf(stderr,"no register called \"%s\"\n",arg);
 		exit(1);
 	    }
 	    else {
 		if (addr & ~0x1ff)
 		    usage(*argv);
-		for (reg = psoc_regdef; reg->name; reg++)
-		    if (reg->addr == addr)
+		for (reg = psoc_regdef; reg->name; reg++) {
+		    if (!psoc_regdef_applicable(reg,chip))
+			continue;
+		    if (reg->addr == addr ||
+		      ((reg->addr & PSOC_REG_ADDR_X) &&
+		      !((reg->addr ^ addr) & 0xff)))
 			goto found;
+		}
 		fprintf(stderr,"no register at 0x%lx\n",addr);
 		exit(1);
 	    }
@@ -94,7 +126,8 @@ int main(int argc,char *argv[])
 
 found:
     printf("%s: %c,%02Xh\n\n",reg->name,
-      reg->addr >> 8 ? '1' : '0',reg->addr & 0xff);
+      reg->addr & PSOC_REG_ADDR_X ? 'X' : reg->addr >> 8 ? '1' : '0',
+      reg->addr & 0xff);
     for (i = 7; i >= 0; i--)
 	digit(i,i,' ');
     line();

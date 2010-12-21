@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "error.h"
+#include "error-as.h"
 #include "id.h"
 #include "op.h"
 #include "code.h"

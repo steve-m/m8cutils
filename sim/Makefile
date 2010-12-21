@@ -57,8 +57,9 @@ y.tab.c y.tab.h: lang.y
 y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
 
-default.m8csim:	../shared/m8c-registers ../shared/reg2hdrs.pl
-		$(GEN) $(CPP) - <$< | perl ../shared/reg2hdrs.pl sim >$@ || \
+default.m8csim:	../regs/m8c-registers ../regs/capabilities ../regs/reg2hdrs.pl
+		$(GEN) $(CPP) - <../regs/m8c-registers -I../regs | \
+		  perl ../regs/reg2hdrs.pl sim >$@ || \
 		  { rm -f $@; exit 1; }
 
 # ----- Installation ----------------------------------------------------------

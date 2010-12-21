@@ -52,12 +52,12 @@ void chip_list(FILE *file,int width)
     int col = 0;
 
     for (c = chips; c->name; c++) {
-	if (strlen(c->name)+col+10 > width) {
+	if (strlen(c->name)+col+10 >= width) {
 	    putc('\n',file);
 	    col = 0;
 	}
-	fprintf(file,"%s (0x%04x)%s",c->name,c->id,c[1].name ? ", " : "");
-	col += strlen(c->name)+10;
+	col +=
+	  fprintf(file,"%s (0x%04x)%s",c->name,c->id,c[1].name ? ", " : "");
     }
     putc('\n',file);
 }
@@ -69,8 +69,8 @@ const struct chip *chip_by_name(const char *name)
 
     for (c = chips; c->name; c++)
 	if (!strcasecmp(c->name,name))
-	    break;
-    return c->name ? c : NULL;
+	    return c;
+    return NULL;
 }
 
 
@@ -80,6 +80,6 @@ const struct chip *chip_by_id(const uint16_t id)
 
     for (c = chips; c->name; c++)
 	if (c->id == id)
-	    break;
-    return c->name ? c : NULL;
+	    return c;
+    return NULL;
 }

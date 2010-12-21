@@ -14,7 +14,7 @@ CFLAGS_WARN=-Wall -Wshadow -Werror \
 SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations \
                   -Wno-strict-prototypes
 SLOPPY_LOCALS=-Wno-unused
-CFLAGS_COMMON=-g -I../shared -I../libfdr \
+CFLAGS_COMMON=-g -I../shared -I../regs -I../libfdr \
 	      -DVERSION=`cat ../VERSION` \
 	      -DINSTALL_PREFIX=\"$(INSTALL_PREFIX)\"
 CFLAGS=$(CFLAGS_WARN) $(CFLAGS_COMMON)

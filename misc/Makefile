@@ -13,6 +13,7 @@ FILES=README Makefile \
       reginfo.c
 #      tests/Common $(TESTS:%=tests/%)
 OBJS=reginfo.o
+LDLIBS += -L../regs -lregdef
 
 
 .PHONY:		all install uninstall clean spotless

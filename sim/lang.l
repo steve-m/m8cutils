@@ -27,6 +27,8 @@
 #include <readline/history.h>
 
 #include "util.h"
+#include "cpp.h"
+
 #include "lang.h"
 #include "sim.h"
 #include "id.h"
@@ -247,12 +249,14 @@ $[0-9A-Fa-f]+			{ char *end;
 ((;|"//")[^\n]*)?\n		{ lineno++;
 				  return TOK_NL; }
 
+^#\ [0-9]+\ \"[^"]*\"(\ [0-9]+)*\n
+
 .				return *yytext;
 
 %%
 
 
-int interactive;
+int interactive = 0;
 
 
 void exit_if_script(int status)
@@ -284,6 +288,14 @@ void __attribute__((noreturn)) yyerror(const char *s)
 
 int yywrap(void)
 {
+    if (include_default) {
+	reap_cpp();
+	include_default = 0;
+	if (dup2(saved_stdin,0) < 0) {
+	    perror("dup2");
+	    exit(1);
+	}
+    }
     if (!next_file)
 	return 1;
     yyin = next_file;
