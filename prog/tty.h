@@ -17,6 +17,14 @@
 #define DEFAULT_TTY "/dev/ttyS0"
 
 
+void tty_dtr(int on);
+void tty_rts(int on);
+void tty_td(int on);
+int tty_cts(void);
+int tty_dcd(void);
+int tty_dsr(void);
+int tty_ri(void);
+
 int tty_open_raw(const char *path,speed_t bps);
 void tty_write(const void *data,size_t size);
 void tty_read(void *data,size_t size,int timeout);

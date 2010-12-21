@@ -14,6 +14,8 @@
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
+
 
 #include "cy8c2prog.h"
 #include "tty.h"
@@ -21,6 +23,58 @@
 
 static struct termios termios;
 static int fd;
+
+
+static int modem_ioctl(int cmd,int arg)
+{
+    if (ioctl(fd,cmd,&arg) < 0) {
+        perror("ioctl");
+        exit(1);
+    }
+    return arg;
+}
+
+
+void tty_dtr(int on)
+{
+    modem_ioctl(on ? TIOCMBIS : TIOCMBIC,TIOCM_DTR);
+}
+
+
+void tty_rts(int on)
+{
+    modem_ioctl(on ? TIOCMBIS : TIOCMBIC,TIOCM_RTS);
+}
+
+
+void tty_td(int on)
+{
+    modem_ioctl(on ? TIOCSBRK : TIOCCBRK,0);
+}
+
+
+int tty_cts(void)
+{
+    return !!(modem_ioctl(TIOCMGET,0) & TIOCM_CTS);
+}
+
+
+int tty_dsr(void)
+{
+    return !!(modem_ioctl(TIOCMGET,0) & TIOCM_DSR);
+}
+
+
+int tty_dcd(void)
+{
+    return !!(modem_ioctl(TIOCMGET,0) & TIOCM_CD);
+}
+
+
+int tty_ri(void)
+{
+    return !!(modem_ioctl(TIOCMGET,0) & TIOCM_RI);
+}
 
 
 int tty_open_raw(const char *path,speed_t bps)

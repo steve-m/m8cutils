@@ -1,0 +1,23 @@
+#!/bin/sh
+. Common
+
+asm "Operators: &&" -e <<EOF
+	db	1 && 0,1 && 1
+EOF
+expect <<EOF
+00 01
+EOF
+
+asm "Operators: ||" -e <<EOF
+	db	1 || 0, 0 || 0
+EOF
+expect <<EOF
+01 00
+EOF
+
+asm "Operators: !" -e <<EOF
+	db	!0,!1
+EOF
+expect <<EOF
+01 00
+EOF

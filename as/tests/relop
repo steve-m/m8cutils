@@ -1,0 +1,44 @@
+#!/bin/sh
+. Common
+
+asm "Operators: <" -e <<EOF
+	db	1 < 2,2 < 1, 2 < 2
+EOF
+expect <<EOF
+01 00 00
+EOF
+
+asm "Operators: >" -e <<EOF
+	db	1 > 2,2 > 1, 2 > 2
+EOF
+expect <<EOF
+00 01 00
+EOF
+
+asm "Operators: <=" -e <<EOF
+	db	1 <= 2,2 <= 1, 2 <= 2
+EOF
+expect <<EOF
+01 00 01
+EOF
+
+asm "Operators: >=" -e <<EOF
+	db	1 >= 2,2 >= 1, 2 >= 2
+EOF
+expect <<EOF
+00 01 01
+EOF
+
+asm "Operators: ==" -e <<EOF
+	db	1 == 2,2 == 1, 2 == 2
+EOF
+expect <<EOF
+00 00 01
+EOF
+
+asm "Operators: !=" -e <<EOF
+	db	1 != 2,2 != 1, 2 != 2
+EOF
+expect <<EOF
+01 01 00
+EOF

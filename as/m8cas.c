@@ -112,7 +112,7 @@ int main(int argc,char **argv)
     resolve();
     id_cleanup();
     error_cleanup();
-    program_size = highest_pc;
+    program_size = highest_rom;
     write_file(output ? output : "-",binary,hex);
     return 0;
 }

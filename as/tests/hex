@@ -1,0 +1,30 @@
+#!/bin/sh
+. Common
+
+asm "Constant: 0x50" <<EOF
+	db	0x50
+EOF
+expect <<EOF
+50
+EOF
+
+asm "Constant: F7h" <<EOF
+	db	F7h
+EOF
+expect <<EOF
+F7
+EOF
+
+asm "Constant: e7H" <<EOF
+	db	e7H
+EOF
+expect <<EOF
+E7
+EOF
+
+asm 'Constant: $7c' <<EOF
+	db	\$7c
+EOF
+expect <<EOF
+7C
+EOF

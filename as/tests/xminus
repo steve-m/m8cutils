@@ -1,0 +1,16 @@
+#!/bin/sh
+. Common
+
+asm "[X-expr]" -e <<EOF
+	mov	a,[X-2]
+EOF
+expect <<EOF
+52 FE
+EOF
+
+asm "reg[X-expr]" -e <<EOF
+	mov	a,reg[x-7]
+EOF
+expect <<EOF
+5E F9
+EOF

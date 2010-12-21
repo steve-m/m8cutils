@@ -89,7 +89,12 @@ Assumptions
 - exporting a label more than once is valid and does not yield a warning
 - the argument of ORG, BLK, etc. must be constant at the time of evaluation
 - the argument of EQU and DB, etc. can be undefined at the time of evaluation
-
+- the attributes in an AREA directive are case-insensitive and can appear in
+  any order
+- the attributes in an AREA directive are not reserved words
+- the name of an area does not implicitly define a label, and is available for
+  use as a label, even if completely unrelated to the area
+- it is an error to try to store data in a RAM area
 
 Missing features
 - - - - - - - -

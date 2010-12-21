@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "cy8c2prog.h"
@@ -17,11 +18,10 @@
 #include "prog.h"
 
 
-extern struct prog_ops waspic_ops;
-
+PROGRAMMERS_DECL
 
 struct prog_ops *programmers[] = {
-    &waspic_ops,
+    PROGRAMMERS_OPS
     NULL
 };
 
@@ -96,20 +96,24 @@ uint8_t prog_vector(uint32_t v)
 	    fprintf(stderr,"-> 0x%02x\n",value);
 	return value;
     }
-    if (IS_WRITE(v)) {
-	for (i = 18; i >= 0; i++)
+    if (!v) {
+	for (i = 0; i != 22; i++)
+	    prog->send_bit(0);
+    }
+    else if (IS_WRITE(v)) {
+	for (i = 18; i >= 0; i--)
 	    prog->send_bit((v >> i) & 1);
 	for (i = 0; i != 3; i++)
 	    prog->send_bit(1);
     }
     else {
-	for (i = 18; i >= 8; i++)
+	for (i = 18; i >= 8; i--)
 	    prog->send_bit((v >> i) & 1);
 	prog->send_z();
 	for (i = 0; i != 8; i++) {
 	    prog->send_z();
 	    if (prog->read_bit())
-		value |= 1 << (8-i);
+		value |= 1 << (7-i);
 	}
 	prog->send_z();
 	prog->send_bit(1);
@@ -117,7 +121,8 @@ uint8_t prog_vector(uint32_t v)
 	    fprintf(stderr,"-> 0x%02x\n",value);
     }
     if (IS_SSC(v)) {
-	// prog->send_z();
+	prog->send_z();
+	usleep(100);
 	while (prog->read_bit());
 	for (i = 0; i != 40; i++)
 	    prog->send_bit(0);

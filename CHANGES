@@ -1,3 +1,17 @@
+Version 3 (18-FEB-2006)
+--------
+
+- prog/tty.[ch]: added functions to access individual lines of the serial port
+- prog/: moved drivers to subdirectory prog/drv/
+- proc/Makefile: introduced central driver list
+- proc/cy8c2prog.c: option -d didn't take an argument, crashing cy8c2prog
+- proc/prog.c:prog_vector: was completely broken, now is less so
+- m8cas: added support for the AREA directive (with limitations)
+- as/tests/{blk,blkw}: updated to use AREA
+- m8cas: unary operators caused a segfault
+- m8cas: unary - was implemented as ~
+- m8cas: hexadecimal numbers in the XXh format were not handled properly
+
 Version 2 (17-FEB-2006)
 --------
 

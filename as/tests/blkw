@@ -3,11 +3,13 @@
 
 asm "BLKW" <<EOF
 	nop
+	area	ram(ram)
 	blkw	1
 foo:
 	blkw	3
 bar:
 	blkw	2
+	area	rom(rom)
 here:	mov	A,[foo]
 	mov	A,[bar]
 	db	here

@@ -1,0 +1,30 @@
+#!/bin/sh
+. Common
+
+asm_fail "AREA (RAM,ROM)" <<EOF
+	area	undecided(RAM,ROM)
+EOF
+expect <<EOF
+<stdin>:1: an area can't be both ROM and RAM
+EOF
+
+asm_fail "AREA (ABS)" <<EOF
+	area	nothingness(ABS)
+EOF
+expect <<EOF
+<stdin>:1: must specify RAM or ROM
+EOF
+
+asm_fail "AREA (RAM,ABS,REL)" <<EOF
+	area	relativity(RAM,ABS,REL)
+EOF
+expect <<EOF
+<stdin>:1: relocatable areas are not yet supported
+EOF
+
+asm_fail "AREA (RAM,CON,OVR)" <<EOF
+	area	uncertainty(RAM,CON,OVR)
+EOF
+expect <<EOF
+<stdin>:1: an area can't be both CON and OVR
+EOF

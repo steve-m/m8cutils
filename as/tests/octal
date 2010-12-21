@@ -1,0 +1,16 @@
+#!/bin/sh
+. Common
+
+asm "Constant: 0123" <<EOF
+	db	0123
+EOF
+expect <<EOF
+53
+EOF
+
+asm_fail "Constant: 028" <<EOF
+	db	028
+EOF
+expect <<EOF
+<stdin>:1: invalid digit in number
+EOF

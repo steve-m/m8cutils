@@ -151,7 +151,7 @@ uint32_t op_not(uint32_t a,uint32_t b)
 
 uint32_t op_minus(uint32_t a,uint32_t b)
 {
-    return ~a;
+    return -a;
 }
 
 
@@ -223,7 +223,7 @@ struct op *make_op(uint32_t (*fn)(uint32_t a,uint32_t b),
     struct op *op;
 
     if ((!a || a->fn == op_number) && (!b || b->fn == op_number)) {
-	a->u.value = fn(a->u.value,b->u.value);
+	a->u.value = fn(a->u.value,b ? b->u.value : 0);
 	if (b)
 	    free(b);
 	return a;

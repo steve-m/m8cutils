@@ -1,0 +1,9 @@
+#!/bin/sh
+. Common
+
+asm "Constant: 100" <<EOF
+	db	100
+EOF
+expect <<EOF
+64
+EOF

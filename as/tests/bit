@@ -1,0 +1,30 @@
+#!/bin/sh
+. Common
+
+asm "Operators: &" <<EOF
+	db	0x5A & 0x3c
+EOF
+expect <<EOF
+18
+EOF
+
+asm "Operators: |" <<EOF
+	db	0x5A | 0x3c
+EOF
+expect <<EOF
+7E
+EOF
+
+asm "Operators: ^" <<EOF
+	db	0x5A ^ 0x3c
+EOF
+expect <<EOF
+66
+EOF
+
+asm "Operators: ~" <<EOF
+	db	~0x4b
+EOF
+expect <<EOF
+B4
+EOF

@@ -3,10 +3,12 @@
 
 asm "BLK" <<EOF
 	nop
+	area	ram(ram)
 foo:
 	blk	1
 bar:
 	blk	2
+	area	rom(rom)
 here:	mov	A,[foo]
 	mov	A,[bar]
 	db	here
@@ -19,10 +21,12 @@ asm "BLK (backward-defined)" <<EOF
 	nop
 foo:
 	nop
+	area	ram(ram)
 bar:
 	blk	foo
 end:
 	blk	0
+	area	rom(rom)
 	db	end
 	nop
 EOF
@@ -30,23 +34,28 @@ expect <<EOF
 40 40 01 40
 EOF
 
-asm_fail "BLK (self-reference)" <<EOF
+asm "BLK (self-reference)" <<EOF
 	nop
+	area	ram(ram)
+	blk	2
 foo:
 	blk	foo
+	area	rom(rom)
 	db	foo
 	nop
 EOF
 expect <<EOF
-<stdin>:2: undefined identifier "foo"
+40 02 40
 EOF
 
 asm_fail "BLK (forward-defined)" <<EOF
 	nop
+	area	ram(ram)
 	blk	foo
+	area	rom(rom)
 foo:
 	nop
 EOF
 expect <<EOF
-<stdin>:2: undefined identifier "foo"
+<stdin>:3: undefined identifier "foo"
 EOF

@@ -14,8 +14,9 @@
 #include "code.h"
 
 
-int pc = 0;
-int highest_pc = 0;
+int *pc = &rom;
+int rom = 0,ram = 0;
+int highest_rom = 0;
 int next_pc = 0;
 
 
@@ -37,15 +38,23 @@ void advance_pc(int n)
 
 void next_statement(void)
 {
-    pc = next_pc;
-    if (pc > highest_pc)
-	highest_pc = pc;
+    *pc = next_pc;
+    if (rom > highest_rom)
+	highest_rom = rom;
+}
+
+
+void check_store(void)
+{
+    if (pc != &rom)
+	yyerror("assembler cannot store data in RAM");
 }
 
 
 void store_op(uint8_t op)
 {
-    program[pc] = op & 0x80 ? (program[pc] & 0xf) | op : op;
+    check_store();
+    program[*pc] = op & 0x80 ? (program[*pc] & 0xf) | op : op;
 }
 
 
@@ -86,7 +95,7 @@ void store_offset(const struct loc *loc,int pos,uint32_t data)
 
 void set_base(int offset)
 {
-    program[pc+1] = offset;
+    program[*pc+1] = offset;
 #if 0
     if (program[pc+1] < offset)
 	program[pc] = (program[pc] & 0xf0) | ((program[pc]-1) & 0xf);
@@ -100,15 +109,16 @@ void store(void (*fn)(const struct loc *loc,int pos,uint32_t data),
 {
     struct patch *patch;
 
+    check_store();
     if (op->fn == op_number) {
-	fn(&current_loc,pc+offset,op->u.value);
+	fn(&current_loc,*pc+offset,op->u.value);
 	put_op(op);
 	return;
     }
     patch = alloc_type(struct patch);
     patch->fn = fn;
     patch->loc = current_loc;
-    patch->pos = pc+offset;
+    patch->pos = *pc+offset;
     patch->op = op;
     patch->next = patches;
     patches = patch;

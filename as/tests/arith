@@ -1,0 +1,45 @@
+#!/bin/sh
+. Common
+
+asm "Operators: +" <<EOF
+	db	10+20
+EOF
+expect <<EOF
+1E
+EOF
+
+asm "Operators: binary -" <<EOF
+	db	20-10
+	db	10-20
+EOF
+expect <<EOF
+0A F6
+EOF
+
+asm "Operators: *" <<EOF
+	db	3*7
+EOF
+expect <<EOF
+15
+EOF
+
+asm "Operators: /" <<EOF
+	db	40/3
+EOF
+expect <<EOF
+0D
+EOF
+
+asm "Operators: %" <<EOF
+	db	40 % 7
+EOF
+expect <<EOF
+05
+EOF
+
+asm "Operators: unary -" -e <<EOF
+	db	-7
+EOF
+expect <<EOF
+F9
+EOF

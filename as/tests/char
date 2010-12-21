@@ -1,0 +1,23 @@
+#!/bin/sh
+. Common
+
+asm "Constant: 'A'" <<EOF
+	db	'A'
+EOF
+expect <<EOF
+41
+EOF
+
+asm "Constant: '\\''" <<EOF
+	db	'\\''
+EOF
+expect <<EOF
+27
+EOF
+
+asm "Constant: '\\\\'" <<EOF
+	db	'\\\\'
+EOF
+expect <<EOF
+5C
+EOF

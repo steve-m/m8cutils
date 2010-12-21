@@ -1,0 +1,16 @@
+#!/bin/sh
+. Common
+
+asm "Constant: 0b1011" <<EOF
+	db	0b1011
+EOF
+expect <<EOF
+0B
+EOF
+
+asm "Constant: %010101" <<EOF
+	db	%010101
+EOF
+expect <<EOF
+15
+EOF

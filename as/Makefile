@@ -14,8 +14,11 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       mvi \
       reuse_bf reuse_fb reuse_undef reuse_before reuse_after \
       reuse_global reuse_export \
-      asciz blk blkw db ds dw dwl equ export org \
-      comment
+      area asciz blk blkw db ds dw dwl equ export org \
+      comment \
+      arith bit shift logical relop \
+      char hex decimal octal binary \
+      xminus
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
       util.h error.h error.c id.h id.c op.h op.c code.h code.c \
@@ -41,7 +44,6 @@ lex.yy.o:	lex.yy.c y.tab.h
 		$(CC) -c $(CFLAGS) -w lex.yy.c
 
 y.tab.c y.tab.h: m8c.y
-		@echo "expect 4 shift/reduce conflicts" 1>&2
 		$(YACC) $(YYFLAGS) -d m8c.y
 
 y.tab.o:	y.tab.c

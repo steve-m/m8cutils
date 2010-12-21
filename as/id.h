@@ -12,11 +12,22 @@
 #include "error.h"
 
 
+/*
+ * With "defined" and "used", we have the following combinations:
+ *
+ * defined, !used:	use follows definition, we're before the use
+ * !defined, used:	definition follows use, we're before the definition
+ * defined, used:	we're path definition and first use
+ * !defined, !used:	this isn't a label, but a keyword or section name from
+ *			an AREA directive
+ */
+
 struct id {
     char *name;		/* jrb_insert_str doesn't want this to be "const" :-(*/
     struct op *value;
-    int defined;
-    int global;
+    int defined;	/* "value" contains the label's value */
+    int global;		/* label is global */
+    int used;		/* the label has actually been referenced */
     struct loc loc;	/* location of definition, or first reference if
 			   undefined */
 };

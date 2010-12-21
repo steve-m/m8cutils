@@ -7,7 +7,6 @@ cy8c2prog
 - support selection of reset vs. power-on mode
 - check bit-banging code
 - query terminal settings to determine terminal width (OUTPUT_WIDTH)
-- add terminal control helper functions to tty.c (for bit-banging)
 - add real-time support and deadline measurements (for bit-banging)
 - add support for the remaining current (and obsolete ?) chip models
 - generalize interface device support to USB, etc.
@@ -35,3 +34,10 @@ m8cdasm
 -------
 
 - regression tests need to check file input error handling
+
+m8cas
+-----
+
+- tests: output formats
+- tests: extensions
+- tests: escape characters in string

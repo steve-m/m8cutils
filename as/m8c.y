@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "error.h"
 #include "id.h"
@@ -20,7 +21,18 @@
   store_op(((n) < 7 ? (a) : (n) < 9 ? (b)-7 : (c)-9)+(n))
 
 
+enum area_attr {
+    ATTR_RAM = 1,
+    ATTR_ROM = 2,
+    ATTR_ABS = 4,
+    ATTR_REL = 8,
+    ATTR_CON = 16,
+    ATTR_OVR = 32,
+};
+
+
 static int ram = 0;
+
 %}
 
 
@@ -55,8 +67,9 @@ static int ram = 0;
 %token	<id>	LABEL LOCAL GLOBAL
 
 %type	<num>	arithmetic logic shift increment push
+%type	<num>	area_attributes area_attribute
 
-%type	<op>	index_expression label_directive blk
+%type	<op>	index_expression label_directive
 %type	<op>	expression logical_or_expression logical_and_expression
 %type	<op>	low_expression high_expression
 %type	<op>	inclusive_or_expression exclusive_or_expression and_expression
@@ -88,12 +101,12 @@ all:
 label:
     GLOBAL
 	{
-	    assign($1,number_op(pc));
+	    assign($1,number_op(*pc));
 	    $1->global = 1;
 	}
     | LOCAL
 	{
-	    assign($1,number_op(pc));
+	    assign($1,number_op(*pc));
 	}
     | GLOBAL label_directive
 	{
@@ -667,48 +680,55 @@ register_indexed:
 
 
 label_directive:
-    blk
-	{
-	    $$ = $1;
-	}
-    | TOK_EQU expression
+    TOK_EQU expression
 	{
 	    $$ = $2;
 	}
     ;
 
-blk:
-    TOK_BLK expression
-	{
-	    $$ = number_op(ram);
-	    ram += evaluate($2);
-	    put_op($2);
-	}
-    | TOK_BLKW expression
-	{
-	    $$ = number_op(ram);
-	    ram += 2*evaluate($2);
-	    put_op($2);
-	}
-    ;
-
 directive:
-    TOK_AREA
+    TOK_AREA LABEL '(' area_attributes ')'
 	{
-	    yyerror("not yet implemented");
+	    if (($4 & ATTR_RAM) && ($4 & ATTR_ROM))
+		yyerror("an area can't be both ROM and RAM");
+	    if ($4 & ATTR_RAM) {
+		pc = &ram;
+		next_pc = *pc;
+	    }
+	    else if ($4 & ATTR_ROM) {
+		pc = &rom;
+		next_pc = *pc;
+	    }
+	    else {
+		yyerror("must specify RAM or ROM");
+	    }
+	    if ($4 & ATTR_REL)
+		yyerror("relocatable areas are not yet supported");
+	    if (($4 & ATTR_CON) && ($4 & ATTR_OVR))
+		yyerror("an area can't be both CON and OVR");
 	}
     | TOK_ASCIZ STRING
 	{
 	    char *s = $2;
 
+	    check_store();
 	    do {
-		store_byte(&current_loc,pc+s-$2,*s);
+		store_byte(&current_loc,*pc+s-$2,*s);
 		advance_pc(1);
 	    }
 	    while (*s++);
 	    free($2);
 	}
-    | blk
+    | TOK_BLK expression
+	{
+	    advance_pc(evaluate($2));
+	    put_op($2);
+	}
+    | TOK_BLKW expression
+	{
+	    advance_pc(2*evaluate($2));
+	    put_op($2);
+	}
     | TOK_DB db
     | TOK_DW dw
     | TOK_DWL dwl
@@ -716,8 +736,9 @@ directive:
 	{
 	    char *s = $2;
 
+	    check_store();
 	    while (*s) {
-		store_byte(&current_loc,pc+s-$2,*s);
+		store_byte(&current_loc,*pc+s-$2,*s);
 		advance_pc(1);
 		s++;
 	    }
@@ -757,6 +778,36 @@ directive:
     | TOK_ENDSECTION
     ;
 
+area_attributes:
+    area_attribute
+	{
+	    $$ = $1;
+	}
+    | area_attributes ',' area_attribute
+	{
+	    $$ = $1 | $3;
+	}
+    ;
+
+area_attribute:
+    LABEL
+	{
+	    if (!strcasecmp($1->name,"ram"))
+		$$ = ATTR_RAM;
+	    else if (!strcasecmp($1->name,"rom"))
+		$$ = ATTR_ROM;
+	    else if (!strcasecmp($1->name,"abs"))
+		$$ = ATTR_ABS;
+	    else if (!strcasecmp($1->name,"rel"))
+		$$ = ATTR_REL;
+	    else if (!strcasecmp($1->name,"con"))
+		$$ = ATTR_CON;
+	    else if (!strcasecmp($1->name,"ovr"))
+		$$ = ATTR_OVR;
+	    else
+		yyerror("unrecognized area attribute");
+	}
+    ;
 
 db:
     db_expression
@@ -766,7 +817,7 @@ db:
 db_expression:
     expression
 	{
-	    store(store_byte,next_pc-pc,$1);
+	    store(store_byte,next_pc-*pc,$1);
 	    advance_pc(1);
 	}
     ;
@@ -779,7 +830,7 @@ dw:
 dw_expression:
     expression
 	{
-	    store(store_word,next_pc-pc,$1);
+	    store(store_word,next_pc-*pc,$1);
 	    advance_pc(2);
 	}
     ;
@@ -794,7 +845,7 @@ dwl:
 dwl_expression:
     expression
 	{
-	    store(store_word_le,next_pc-pc,$1);
+	    store(store_word_le,next_pc-*pc,$1);
 	    advance_pc(2);
 	}
     ;
@@ -1024,11 +1075,12 @@ primary_expression:
     | LABEL
 	{
 	    $$ = id_op($1);
+	    $1->used = 1;
 	}
     | '.'
 	{
 	    /* @@@ this changes when we add relocation */
-	    $$ = number_op(pc);
+	    $$ = number_op(*pc);
 	}
     | '(' expression ')'
 	{

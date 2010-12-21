@@ -36,7 +36,7 @@ struct id *make_id(char *name)
 	return jval_v(jrb_val(entry));
     id = alloc_type(struct id);
     id->name = stralloc(name);
-    id->defined = id->global = 0;
+    id->defined = id->used = id->global = 0;
     id->loc = current_loc;
     jrb_insert_str(tree,id->name,new_jval_v(id));
     return id;
@@ -51,7 +51,7 @@ static void scrap_reusable(void)
     jrb_traverse(entry,reusable) {
 	const struct id *id = jval_v(jrb_val(entry));
 
-	if (!id->defined)
+	if (!id->defined && id->used)
 	    lerrorf(&id->loc,"undefined identifier \"%s\"",id->name);
     }
 

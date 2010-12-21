@@ -158,6 +158,29 @@ static void backslash(char *s)
 \.[Ss][Ee][Cc][Tt][Ii][Oo][Nn]	return TOK_SECTION;
 \.[Ee][Nn][Dd][Ss][Ee][Cc][Tt][Ii][Oo][Nn] return TOK_ENDSECTION;
 
+0[Xx][0-9A-Fa-f]+|[0-9]+	{ char *end;
+				  yylval.num = strtoul(yytext,&end,0);
+				  if (*end)
+				    yyerror("invalid digit in number");
+				  return NUMBER; }
+[0-9A-Fa-f]+[Hh]		{ yylval.num = strtoul(yytext,NULL,16);
+				  return NUMBER; }
+$[0-9A-Fa-f]+			{ char *end;
+				  yylval.num = strtoul(yytext+1,&end,16);
+				  if (*end)
+				    yyerror("invalid digit in number");
+				  return NUMBER; }
+0b[0-1]+			{ char *end;
+				  yylval.num = strtoul(yytext+2,&end,2);
+				  if (*end)
+				    yyerror("invalid digit in number");
+				  return NUMBER; }
+%[0-1]+				{ char *end;
+				  yylval.num = strtoul(yytext+1,&end,2);
+				  if (*end)
+				    yyerror("invalid digit in number");
+				  return NUMBER; }
+
 \.?[a-zA-Z_][a-zA-Z_0-9]*	{ yylval.id = make_id(yytext);
 				  return LABEL; }
 \.?[a-zA-Z_][a-zA-Z_0-9]*:	{ *strchr(yytext,':') = 0;
@@ -191,33 +214,6 @@ static void backslash(char *s)
 				  backslash(s);
 				  yylval.str = s;
 				  return STRING; }
-
-
-0[Xx][0-9A-Fa-f]+|[0-9]+	{ char *end;
-				  yylval.num = strtoul(yytext,&end,0);
-				  if (*end)
-				    yyerror("invalid digit in number");
-				  return NUMBER; }
-[0-9A-Fa-f]+[Hh]		{ char *end;
-				  yylval.num = strtoul(yytext+1,&end,16);
-				  if (*end)
-				    yyerror("invalid digit in number");
-				  return NUMBER; }
-$[0-9A-Fa-f]+			{ char *end;
-				  yylval.num = strtoul(yytext+1,&end,16);
-				  if (*end)
-				    yyerror("invalid digit in number");
-				  return NUMBER; }
-0b[0-1]+			{ char *end;
-				  yylval.num = strtoul(yytext+2,&end,2);
-				  if (*end)
-				    yyerror("invalid digit in number");
-				  return NUMBER; }
-%[0-1]+				{ char *end;
-				  yylval.num = strtoul(yytext+1,&end,2);
-				  if (*end)
-				    yyerror("invalid digit in number");
-				  return NUMBER; }
 
 [\t ]*               
 \n				current_loc.line++;

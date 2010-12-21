@@ -1,0 +1,30 @@
+#!/bin/sh
+. Common
+
+asm "Operators: > (high)" <<EOF
+	db	>0x1234
+EOF
+expect <<EOF
+12
+EOF
+
+asm "Operators: < (low)" <<EOF
+	db	<0x1234
+EOF
+expect <<EOF
+34
+EOF
+
+asm "Operators: <<" -e <<EOF
+	db	0x45 << 1
+EOF
+expect <<EOF
+8A
+EOF
+
+asm "Operators: >>" -e <<EOF
+	db	0x45 >> 1
+EOF
+expect <<EOF
+22
+EOF

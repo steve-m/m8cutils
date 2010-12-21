@@ -348,7 +348,7 @@ int main(int argc,char **argv)
      * x  select XRES method even if power-on is available
      * o  pass option(s) to the driver
      */
-    while ((c = getopt(argc,argv,"35bcdeilp:qrwRvz")) != EOF)
+    while ((c = getopt(argc,argv,"35bcd:eilp:qrwRvz")) != EOF)
 	switch (c) {
 	    case '3':
 		if (voltage)
