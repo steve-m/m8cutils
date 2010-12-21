@@ -1,5 +1,5 @@
-connchk - Connection checker
-============================
+m8cbscan - Connection checker
+=============================
 
 Copyright 2006 Werner Almesberger
 
@@ -12,14 +12,14 @@ Overview
 --------
 
 The connection checker takes a description of the immediate environment
-of the chip, and then performs probes through ISSP to verify that the
-pins indeed behave as expected.
+of the chip, and then performs a boundary scan through ISSP to verify
+that the pins indeed behave as expected.
 
-The main purpose of connchk is to detect shorts between pins. connchk
+The main purpose of m8cbscan is to detect shorts between pins. m8cbscan
 can only test static properties of the system, i.e., properties that
 are not affected by past changes of the microcontroller's pins.
 
-m8csim can test dynamic properties, but it lacks connchk's capability to
+m8csim can test dynamic properties, but it lacks m8cbscan's capability to
 automatically generate tests based on a description of the system.
 
 Some usage examples can be found in the directory example/
@@ -28,26 +28,26 @@ Some usage examples can be found in the directory example/
 Usage
 -----
 
-connchk reads the environment description from the file specified on the
+m8cbscan reads the environment description from the file specified on the
 command line. If no file is specified or if a file's name is "-", it reads
 from standard input. The file is passed through CPP, and the CPP options
 -I, -D, and -U can be used with their usual semantics.
 
-connchk normally displays a progress indicator, which can be disabled with
-the option -q. Note that a short delay is inserted for each pin, so that
-the progress indication looks nicer.
+m8cbscan normally displays a progress indicator, which can be disabled
+with the option -q. Note that a short delay is inserted for each pin, so
+that the progress indication looks nicer.
 
-Besides that, connchk is normally silent if no problems are encountered.
+Besides that, m8cbscan is normally silent if no problems are encountered.
 Verbose operation, can be enabled with the option -v. The level of
 verbosity can be increased by repeating this option.
 
-connchk normally stops after finding the first inconsistency. If the
+m8cbscan normally stops after finding the first inconsistency. If the
 option -a is set, it proceeds, and reports as many problems as it finds.
 For a graphical overview, a set of maps showing the tests performed and
 their outcome can be produced with the option -m.
 
 There is also a special dry-run mode used for testing and debugging. In
-this mode, connchk does not communicate with the target (thus, no
+this mode, m8cbscan does not communicate with the target (thus, no
 programmer must be present), and prints the configurations it would set
 up and test instead.
 
@@ -55,7 +55,7 @@ up and test instead.
 Environment basics
 ------------------
 
-connchk needs the following information about the chip's environment:
+m8cbscan needs the following information about the chip's environment:
 
 - the signals the chip is allowed to output
 - the external circuits connected to the chip
@@ -102,7 +102,7 @@ described as follows:
 
 P0, P1 allow Z, 0R, 1R, 0, 1 external Z
 
-connchk automatically removes the pins used for ISSP (P1[0] and P1[1]),
+m8cbscan automatically removes the pins used for ISSP (P1[0] and P1[1]),
 and it also excludes configurations that produce no condition that can
 be tested, e.g.
 
@@ -115,7 +115,7 @@ Conflicts like "allow 1 external 0" yield a fatal error.
 Advanced environments
 ---------------------
 
-In general, connchk can do better testing if many settings are allowed,
+In general, m8cbscan can do better testing if many settings are allowed,
 but only few choices exist for what the external circuit can omit.
 
 Note that the description only needs to contain conditions that can occur
@@ -148,7 +148,7 @@ P0[1] allow 1 external Z, 0R, 1R, 1
 P0[3] allow Z, 0R, 1R, 1 external 1
 #endif
 
-But connchk can do even better than this: mutually exclusive
+But m8cbscan can do even better than this: mutually exclusive
 configurations ("alternatives") can be specified by putting them into
 curly braces and separating by vertical bars, i.e.:
 
@@ -160,13 +160,13 @@ curly braces and separating by vertical bars, i.e.:
     P0[3] allow Z, 0R, 1R, 1 external 1
 }
 
-connchk will now automatically iterate through all possible configurations,
-and perform the corresponding tests. There can be any number of such
-alternatives, each can contain any number of choices, and there can also be
-further alternatives inside a choice.
+m8cbscan will now automatically iterate through all possible
+configurations, and perform the corresponding tests. There can be any
+number of such alternatives, each can contain any number of choices, and
+there can also be further alternatives inside a choice.
 
 Note that the number of possible setups increases roughly exponentially
-with the number of alternatives. If connchk gets too slow, the
+with the number of alternatives. If m8cbscan gets too slow, the
 configuration should be split into parts that test only a part of the
 circuit each.
 
@@ -193,14 +193,14 @@ Example:
 Given the environment
 P0, P1 allow Z, 0R, 1R, 0, 1 external Z
 
-connchk would first set all pins to resistive "0", check that they indeed
+m8cbscan would first set all pins to resistive "0", check that they indeed
 read back as "0", then walk through them, setting one to strong "1", check
 that this pin reads back as "1" and all others read back as "0", etc.
 
 When done, it repeats the same procedure with all pins set to resistive
 "1", and walking though the pins with strong "0".
 
-Furthermore, connchk regularly verifies that it can still communicate with
+Furthermore, m8cbscan regularly verifies that it can still communicate with
 the target. This way, it can detect shorts affecting the ISSP pins.
 
 
@@ -232,8 +232,8 @@ The following lines show the nominal configuration of the ports, i.e.,
 P1[0] and P1[1] are in their reset state (Z), P0[7] is set to strong "1",
 and all other pins are set to resistive "0".
 
-Below is a description of the inconsistency connchk has detected. In this
-example, it was caused by a diode from P0[7] to P0[3].
+Below is a description of the inconsistency m8cbscan has detected. In
+this example, it was caused by a diode from P0[7] to P0[3].
 
 Finally, there is a dump of the actual register values obtained from the
 chip.
@@ -249,7 +249,7 @@ look like this:
   RRRRRRRR   R RRRR
   lost communication with the target
 
-When connchk exits, it tries to reset the chip, such that any conflicting
+When m8cbscan exits, it tries to reset the chip, such that any conflicting
 settings are cleared.
 
 

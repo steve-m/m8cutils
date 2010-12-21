@@ -321,7 +321,7 @@ static int iterate(int (*fn)(void))
 /* ----- Run the tests ----------------------------------------------------- */
 
 
-void do_tests(void)
+int do_tests(void)
 {
     if (!dry_run)
 	init_ports();
@@ -338,5 +338,5 @@ void do_tests(void)
 		}
     }
 
-    finish();
+    return finish();
 }

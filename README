@@ -60,8 +60,9 @@ This collection consists of the following parts:
   shared/
     Code shared among programs of this project
 
-  connchk/
-    Static ISSP-based connection checker (experimental)
+  bscan/
+    Static connection checker that performs a boundary scan through
+    ISSP (experimental)
 
   misc/
     Miscellaneous utilities and example programs

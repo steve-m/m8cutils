@@ -35,6 +35,7 @@ asm_fail "Re-definable label, defined forwards, no direction" -e <<EOF
 	db	.1
 .1:
 EOF
+edit s/parse/syntax/
 expect <<EOF
 <stdin>:1: syntax error
 EOF
@@ -43,6 +44,7 @@ asm_fail "Re-definable label, defined backwards, no direction" -e <<EOF
 .1:
 	db	.1
 EOF
+edit s/parse/syntax/
 expect <<EOF
 <stdin>:2: syntax error
 EOF

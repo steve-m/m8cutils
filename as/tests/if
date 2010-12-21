@@ -1,0 +1,52 @@
+#!/bin/sh
+. Common
+
+asm "IF true ... ENDIF" <<EOF
+	if	1
+	db	10
+	db	20
+	endif
+	db	30
+EOF
+expect <<EOF
+0A 14 1E
+EOF
+
+asm "IF false ... ENDIF" <<EOF
+	if	0
+	db	10
+	db	20
+	endif
+	db	30
+EOF
+expect <<EOF
+1E
+EOF
+
+asm "IF true ... ELSE ... ENDIF" <<EOF
+	if	1
+	db	10
+	db	20
+	else
+	db	40
+	db	50
+	endif
+	db	60
+EOF
+expect <<EOF
+0A 14 3C
+EOF
+
+asm "IF false ... ELSE ... ENDIF" <<EOF
+	if	0
+	db	10
+	db	20
+	else
+	db	40
+	db	50
+	endif
+	db	60
+EOF
+expect <<EOF
+28 32 3C
+EOF

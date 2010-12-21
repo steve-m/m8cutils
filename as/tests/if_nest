@@ -1,0 +1,102 @@
+#!/bin/sh
+. Common
+
+asm "IF true ... IF true ... ELSE ... ENDIF ... ELSE ... ENDIF" <<EOF
+	db 0
+	if 1
+	    db 1
+	    if 1
+		db 2
+	    else
+		db 3
+	    endif
+	    db 4
+	else
+	    db 5
+	endif
+	db 6
+
+EOF
+expect <<EOF
+00 01 02 04 06
+EOF
+
+asm "IF true ... IF false ... ELSE ... ENDIF ... ELSE ... ENDIF" <<EOF
+	db 0
+	if 1
+	    db 1
+	    if 0
+		db 2
+	    else
+		db 3
+	    endif
+	    db 4
+	else
+	    db 5
+	endif
+	db 6
+
+EOF
+expect <<EOF
+00 01 03 04 06
+EOF
+
+asm "IF false ... IF true ... ELSE ... ENDIF ... ELSE ... ENDIF" <<EOF
+	db 0
+	if 0
+	    db 1
+	    if 1
+		db 2
+	    else
+		db 3
+	    endif
+	    db 4
+	else
+	    db 5
+	endif
+	db 6
+
+EOF
+expect <<EOF
+00 05 06
+EOF
+
+asm "IF false ... ELSE ... IF true ... ELSE ... ENDIF ... ENDIF" <<EOF
+	db 0
+	if 0
+	    db 1
+	else
+	    db 2
+	    if 1
+		db 3
+	    else
+		db 4
+	    endif
+	    db 5
+	endif
+	db 6
+
+EOF
+expect <<EOF
+00 02 03 05 06
+EOF
+
+asm "IF false ... ELSE ... IF false ... ELSE ... ENDIF ... ENDIF" <<EOF
+	db 0
+	if 0
+	    db 1
+	else
+	    db 2
+	    if 0
+		db 3
+	    else
+		db 4
+	    endif
+	    db 5
+	endif
+	db 6
+
+EOF
+expect <<EOF
+00 02 04 05 06
+EOF

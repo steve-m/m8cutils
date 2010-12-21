@@ -292,7 +292,7 @@ void lost_comm(int current_bit,int current_value)
 /* ----- Final report ------------------------------------------------------ */
 
 
-void finish(void)
+int finish(void)
 {
     int i;
 
@@ -316,4 +316,6 @@ void finish(void)
     if (errors)
 	fprintf(stderr,"Found %d error%s.\n",
 	  errors,errors == 1 ? "" : "s");
+
+    return !!errors;
 }

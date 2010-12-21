@@ -10,15 +10,32 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "error-as.h"
 #include "id.h"
+#include "macro.h"
 #include "op.h"
 #include "code.h"
 
 
+/*
+ * Sigh, we could almost have done without an upper bound. Unfortunately, we
+ * need memory for catching duplicate ELSEs :-(
+ */
+
+#define MAX_IFS	100
+
+
+int if_false = 0; /* "false" ifs after last true */
+
+static int if_true = 0; /* "true" ifs before first false */
+static char if_had_else[MAX_IFS];
+
+
 #define STORE_OP_LOGIC(a,b,c,n) \
   store_op(((n) < 7 ? (a) : (n) < 9 ? (b)-7 : (c)-9)+(n))
+
 
 int yyparse(void);
 
@@ -47,7 +64,7 @@ static struct loc start_loc;
 %token		TOK_AREA TOK_ASCIZ TOK_ASSERT TOK_BLK TOK_BLKW
 %token		TOK_DB TOK_DS TOK_DSU TOK_DW TOK_DWL
 %token		TOK_ELSE TOK_ENDIF TOK_ENDM TOK_EQU TOK_EXPORT
-%token		TOK_IF TOK_INCLUDE TOK_LITERAL TOK_ENDLITERAL
+%token		TOK_IF TOK_IF_FALSE TOK_INCLUDE TOK_LITERAL TOK_ENDLITERAL
 %token		TOK_MACRO TOK_ORG TOK_SECTION TOK_ENDSECTION
 
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
@@ -78,6 +95,10 @@ all:
 	    start_loc = current_loc;
 	}
       item all
+	{
+	    if (if_true || if_false)
+		yyerror("IF without ENDIF");
+	}
     ;
 
 item:
@@ -755,9 +776,71 @@ directive:
 	    /* @@@ silently ignore multiple exports of the same label ? */
 	    export($2);
 	}
-    | TOK_IF
+    | TOK_IF expression
 	{
-	    yyerror("not yet implemented");
+	    assert(!if_false);
+	    if_had_else[if_true+if_false] = 0;
+	    if (evaluate($2))
+		if_true++;
+	    else {
+		/*
+		 * After parsing the expression, we have a pending readahead
+		 * token. We have to get rid of it, except if it's an IF, ELSE,
+		 * or ENDIF. ELSE and ENDIF are safe to pass on, but IF needs
+		 * to be treated without actually parsing it, because the
+		 * expression may not be valid.
+		 */
+		if_false++;
+		switch (yychar) {
+		    case YYEMPTY:
+			abort();
+		    case TOK_IF:
+			/* could also use scary YYBACKUP */
+			yyclearin;
+			if_had_else[if_true+if_false] = 0;
+			if_false++;
+			break;
+		    case TOK_ELSE:
+		    case TOK_ENDIF:
+			break;
+		    default:
+			yyclearin;
+		}
+	    }
+	}
+    | TOK_IF_FALSE
+	{
+	    assert(yychar == YYEMPTY);
+	    assert(if_false);
+	    if_false++;
+	}
+    | TOK_ELSE
+	{
+	    assert(yychar == YYEMPTY);
+	    if (!if_true && !if_false)
+		yyerror("ELSE without IF");
+	    if (if_had_else[if_true+if_false-1]++)
+		yyerror("duplicate ELSE");
+	    if (if_false) {
+		if (if_false == 1) {
+		    if_false = 0;
+		    if_true++;
+		}
+	    }
+	    else {
+		if_true--;
+		if_false++;
+	    }
+	}
+    | TOK_ENDIF
+	{
+	    assert(yychar == YYEMPTY);
+	    if (!if_true && !if_false)
+		yyerror("ENDIF without IF");
+	    if (if_false)
+		if_false--;
+	    else
+		if_true--;
 	}
     | TOK_INCLUDE
 	{
@@ -765,9 +848,18 @@ directive:
 	}
     | TOK_LITERAL
     | TOK_ENDLITERAL
-    | TOK_MACRO
+    | TOK_MACRO LABEL
 	{
-	    yyerror("not yet implemented");
+	    begin_macro($2);
+	}
+    | TOK_ENDM
+	{
+	    end_macro();
+	}
+    | LABEL
+	{
+	    assert(yychar == YYEMPTY);
+	    expand_macro($1);
 	}
     | TOK_ORG expression
 	{

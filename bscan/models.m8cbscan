@@ -1,0 +1,141 @@
+/*
+ * default.m8cbscan - Default macros for boundary scans
+ *
+ * Written 2006 by Werner Almesberger
+ * Copyright 2006 Werner Almesberger
+ */
+
+
+/* ----- NOT - Bit negation ------------------------------------------------ */
+
+
+#define __NOT_0	1
+#define __NOT_1	0
+#define NOT(b)	__NOT_##b
+
+
+/* ----- ANY - Any value --------------------------------------------------- */
+
+
+#define ANY	0, 0R, Z, 1R, 1
+
+
+/* ----- COMPATIBLE - Set of values compatible with drive ------------------ */
+
+
+#define __COMPATIBLE_0	0, 0R, Z, 1R
+#define __COMPATIBLE_0R	ANY
+#define __COMPATIBLE_Z	ANY
+#define __COMPATIBLE_1R	ANY
+#define __COMPATIBLE_1	0R, Z, 1R, 1
+#define COMPATIBLE(d)	__COMPATIBLE_##d
+
+
+/* ----- Component helper macros ------------------------------------------- */
+
+
+#define __EFFECT(a,b,a_v,b_v) \
+    a allow a_v external COMPATIBLE(a_v) \
+    b allow COMPATIBLE(b_v) external b_v
+
+
+/* ----- GND - Direct connection to digital ground ------------------------- */
+
+
+#define GND(p) \
+    p allow 0, 0R, Z, 1R external 0
+
+
+/* ----- GND_R, PULL_DOWN - Resistor pulling down to digital ground -------- */
+
+
+#define GND_R(p) \
+    p allow ANY external 0R
+
+#define PULL_DOWN(p) GND_R(p)
+
+
+/* ----- VDD - Direct connection to positive supply rail ------------------- */
+
+
+#define VDD(p) \
+    p allow 0R, Z, 1R, 1 external 1
+
+
+/* ----- VDD_R, PULL_UP - Resistor pulling up to positive supply rail ------ */
+
+
+#define VDD_R(p) \
+    p allow ANY external 1R
+
+#define PULL_UP(p) VDD_R(p)
+
+
+/* ----- WIRE - 0 Ohm bridge ----------------------------------------------- */
+
+
+#define __WIRE_DIRECTED(a,b) \
+    { __EFFECT(a,b,0,0) | \
+      __EFFECT(a,b,0R,0R) | \
+      __EFFECT(a,b,Z,Z) | \
+      __EFFECT(a,b,1R,1R) | \
+      __EFFECT(a,b,1,1) }
+
+#define WIRE(a,b) \
+    { __WIRE_DIRECTED(a,b) | __WIRE_DIRECTED(b,a) }
+
+
+/* ----- RESISTOR - ~1-100 kOhm bridge ------------------------------------- */
+
+
+#define __R_DIRECTED(a,b) \
+    { __EFFECT(a,b,0,0R) | \
+      __EFFECT(a,b,0R,0R) | \
+      __EFFECT(a,b,Z,Z) | \
+      __EFFECT(a,b,1R,1R) | \
+      __EFFECT(a,b,1,1R) }
+
+#define RESISTOR(a,b) \
+    { __R_DIRECTED(a,b) | __R_DIRECTED(b,a) }
+
+
+/* ----- DIODE - General diode --------------------------------------------- */
+
+
+#define __DIODE_ANODE(a,c) \
+    { __EFFECT(a,c,0,Z) | \
+      __EFFECT(a,c,0R,Z) | \
+      __EFFECT(a,c,Z,Z) | \
+      __EFFECT(a,c,1R,1R) | \
+      __EFFECT(a,c,1,1) }
+
+#define __DIODE_CATHODE(c,a) \
+   { __EFFECT(c,a,0,0) | \
+     __EFFECT(c,a,0R,0R) | \
+     __EFFECT(c,a,Z,Z) | \
+     __EFFECT(c,a,1R,Z) | \
+     __EFFECT(c,a,1,Z) }
+
+#define DIODE(a,c) \
+    { __DIODE_ANODE(a,c) | __DIODE_CATHODE(c,a) }
+
+
+/* ----- DIODE_R - Diode with series resistor ------------------------------ */
+
+
+#define __DIODE_R_ANODE(a,c) \
+    { __EFFECT(a,c,0,Z) | \
+      __EFFECT(a,c,0R,Z) | \
+      __EFFECT(a,c,Z,Z) | \
+      __EFFECT(a,c,1R,1R) | \
+      __EFFECT(a,c,1,1R) }
+
+#define __DIODE_R_CATHODE(c,a) \
+   { __EFFECT(c,a,0,0R) | \
+     __EFFECT(c,a,0R,0R) | \
+     __EFFECT(c,a,Z,Z) | \
+     __EFFECT(c,a,1R,Z) | \
+     __EFFECT(c,a,1,Z) }
+
+#define DIODE_R(a,c) \
+    { __DIODE_R_ANODE(a,c) | __DIODE_R_CATHODE(c,a) }

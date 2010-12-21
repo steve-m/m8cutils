@@ -1,6 +1,6 @@
 %{
 /*
- * lang.y - Connection checker configuration language
+ * lang.y - Boundary scanner configuration language
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger

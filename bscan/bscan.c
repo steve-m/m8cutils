@@ -1,5 +1,5 @@
 /*
- * connchk.c - Connection checker
+ * bscan.c - Boundary scanner
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -95,7 +95,7 @@ int main(int argc,char **argv)
 		add_cpp_arg(optarg);
 		break;
 	    case 'V':
-		printf("connchk from m8cutils version %s\n",VERSION);
+		printf("m8cbscan from m8cutils version %s\n",VERSION);
 		exit(0);
 	    default:
 		if (!prog_option(c,optarg))
@@ -123,7 +123,5 @@ int main(int argc,char **argv)
 	atexit(close_cli);
     }
 
-    do_tests();
-
-    return 0;
+    return do_tests();
 }

@@ -1,0 +1,66 @@
+#!/bin/sh
+. Common
+
+asm_fail "ENDIF without IF" <<EOF
+	endif
+EOF
+expect <<EOF
+<stdin>:1: ENDIF without IF
+EOF
+
+asm_fail "ELSE without IF" <<EOF
+	else
+EOF
+expect <<EOF
+<stdin>:1: ELSE without IF
+EOF
+
+asm_fail "IF true without ENDIF" <<EOF
+	if 1
+EOF
+expect <<EOF
+<stdin>:2: IF without ENDIF
+EOF
+
+asm_fail "IF false without ENDIF" <<EOF
+	if 0
+EOF
+expect <<EOF
+<stdin>:2: IF without ENDIF
+EOF
+
+asm_fail "IF true ELSE without ENDIF" <<EOF
+	if 1
+	else
+EOF
+expect <<EOF
+<stdin>:3: IF without ENDIF
+EOF
+
+asm_fail "IF false ELSE without ENDIF" <<EOF
+	if 0
+	else
+EOF
+expect <<EOF
+<stdin>:3: IF without ENDIF
+EOF
+
+asm_fail "IF true ELSE ELSE ENDIF" <<EOF
+	if 1
+	else
+	else
+	endif
+EOF
+expect <<EOF
+<stdin>:3: duplicate ELSE
+EOF
+
+asm_fail "IF false ELSE ELSE ENDIF" <<EOF
+	if 0
+	else
+	else
+	endif
+EOF
+expect <<EOF
+<stdin>:3: duplicate ELSE
+EOF

@@ -26,6 +26,8 @@ void set_file(char *name)
 {
     JRB entry;
 
+    if (!*name)
+	name = "<stdin>";
     entry = jrb_find_str(file_names,name);
     if (entry)
 	name = jval_v(jrb_val(entry));

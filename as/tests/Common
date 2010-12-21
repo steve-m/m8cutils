@@ -106,6 +106,13 @@ security()
 }
 
 
+edit()
+{
+    sed "$1" <_out >_tmp
+    mv _tmp _out
+}
+
+
 expect()
 {
     diff -u - "$@" _out >_diff || {

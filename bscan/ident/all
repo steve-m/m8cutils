@@ -1,0 +1,18 @@
+#!/bin/sh
+C()
+{
+    if ../m8cbscan -q -d wadsp "$@" 2>/dev/null; then
+	printf "%-40s: %s\\n" "$*" YES
+    else
+	printf "%-40s: %s\\n" "$*" NO
+    fi
+}
+C bare.env
+C -DSINGLE=GND single.env
+C -DSINGLE=VDD single.env
+C -DSINGLE=PULL_UP single.env
+C -DSINGLE=PULL_DOWN single.env
+C -DDUAL=WIRE dual.env
+C -DDUAL=RESISTOR dual.env
+C -DDUAL=DIODE dual.env
+C -DDUAL=DIODE_R dual.env

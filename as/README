@@ -123,10 +123,8 @@ Missing features
 - - - - - - - -
 
 - DSU: not yet implemented
-- IF, ELSE, ENDIF: not yet implemented - use CPP's conditional compilation
 - INCLUDE: not yet implemented - use CPP's file inclusion
 - .LITERAL, .ENDLITERAL, .SECTION, .ENDSECTION: ignored
-- MACRO, ENDM: not yet implemented - use CPP's macros
 
 
 Extensions

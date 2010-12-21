@@ -10,12 +10,14 @@ include ../Common.make
 
 TESTS=
 FILES=README Makefile \
-      connchk.c lang.l lang.y port.h port.c value.h value.c out.h out.c \
+      bscan.c lang.l lang.y port.h port.c value.h value.c out.h out.c \
+      models.m8cbscan \
       example/README example/bare.env example/short.env example/short2.env \
       example/resistor.env example/diode.env \
+      ident/README ident/all ident/bare.env ident/single.env ident/dual.env \
       test.h test.c \
       tests/Common $(TESTS:%=tests/%)
-OBJS=lex.yy.o y.tab.o connchk.o port.o value.o out.o test.o
+OBJS=lex.yy.o y.tab.o bscan.o port.o value.o out.o test.o
 
 CFLAGS += -I../prog
 # don't use += because libprog may need symbols from libm8cutils, so we
@@ -27,9 +29,9 @@ LIBDEP += ../prog/libprog.a
 .PHONY:		all install uninstall clean spotless
 
 
-all:		connchk
+all:		m8cbscan
 
-connchk:	$(OBJS) $(LIBDEP)
+m8cbscan:	$(OBJS) $(LIBDEP)
 		$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 lex.yy.c:	lang.l y.tab.h
@@ -47,10 +49,10 @@ y.tab.o:	y.tab.c
 # ----- Installation ----------------------------------------------------------
 
 install:	all
-#		$(INSTALL) connchk $(INSTALL_PREFIX)/bin/connchk
+		$(INSTALL) m8cbscan $(INSTALL_PREFIX)/bin/m8cbscan
 
 uninstall:
-#		$(UNINSTALL) $(INSTALL_PREFIX)/bin/connchk
+		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cbscan
 
 # ----- Cleanup ---------------------------------------------------------------
 
@@ -59,4 +61,4 @@ clean:
 		rm -f $(OBJS) .depend tests/_*
 
 spotless:	clean
-		rm -f connchk connchk.exe
+		rm -f m8cbscan m8cbscan.exe

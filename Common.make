@@ -30,6 +30,8 @@ CFLAGS_YACC=$(CFLAGS_WARN) $(SLOPPY_PROTOTYPES) $(SLOPPY_LOCALS) \
 LDLIBS := -L../shared -lm8cutils -L../libfdr -lfdr
 LIBDEP=../shared/libm8cutils.a ../libfdr/libfdr.a
 
+# POSIX YACC doesn't have "YYEMPTY", so we have to use bison instead.
+YACC=bison -y
 LEX=flex
 YYFLAGS=-v
 

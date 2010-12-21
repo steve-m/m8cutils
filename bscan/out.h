@@ -21,6 +21,6 @@ void status(void);
 void print_dry_run(uint64_t set);
 int expect(int bit,int want,int got,int current_bit,int current_value);
 void lost_comm(int current_bit,int current_value);
-void finish(void);
+int finish(void);
 
 #endif /* OUT_H */

@@ -1,0 +1,93 @@
+#!/bin/sh
+. Common
+
+#
+# IF reconfigures the lexer while there is a pending lookahead token from
+# parsing the expression, which is then treated in a special way.
+#
+# Just in case something goes horribly wrong in the grammar, and also ELSE and
+# ENDIF do a lookahead, we also test that ELSE-ENDIF and such work.
+#
+
+asm "IF false ENDIF" <<EOF
+	db	1
+	if	0
+	endif
+	db	2
+EOF
+expect <<EOF
+01 02
+EOF
+
+asm "IF false ELSE ... ENDIF" <<EOF
+	db	1
+	if	0
+	else
+	db	2
+	endif
+	db	3
+EOF
+expect <<EOF
+01 02 03
+EOF
+
+asm "IF false ELSE ENDIF" <<EOF
+	db	1
+	if	0
+	else
+	endif
+	db	3
+EOF
+expect <<EOF
+01 03
+EOF
+
+asm "IF false IF true ... ENDIF ... ELSE ... ENDIF" <<EOF
+	db 0
+	if 0
+	    if 1
+		db 1
+	    endif
+	    db 2
+	else
+	    db 3
+	endif
+	db 4
+
+EOF
+expect <<EOF
+00 03 04
+EOF
+
+asm "IF false ... IF true ... ENDIF ... ELSE ENDIF" <<EOF
+	db 0
+	if 0
+	    db 1
+	    if 1
+		db 2
+	    endif
+	    db 3
+	else
+	endif
+	db 4
+
+EOF
+expect <<EOF
+00 04
+EOF
+
+asm "IF false ... IF true ... ENDIF ELSE ... ENDIF" <<EOF
+	db 0
+	if 0
+	    db 1
+	    if 1
+		db 2
+	    endif
+	else
+	    db 3
+	endif
+	db 4
+EOF
+expect <<EOF
+00 03 04
+EOF

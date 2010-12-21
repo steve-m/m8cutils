@@ -1,10 +1,13 @@
 Connection checker usage examples
 =================================
 
-The examples in this directory show how connchk detects various external
+The examples in this directory show how m8cbscan detects various external
 components. The basis configuration is a chip with two ports, e.g., a
 CY8C24223A. We connect the components between P0[5] and P0[7], which are
 conveniently located in the upper left edge of the example chip.
+
+Note that the models used in these examples are somewhat simplistic. More
+comprehensive models can be found in models.m8cbscan.
 
 
 The bare chip
@@ -13,7 +16,7 @@ The bare chip
 First, we test the bare chip. Let's assume we use a "wadsp" programmer
 to talk ISSP with the chip:
 
-  % connchk -d wadsp bare.env
+  % m8cbscan -d wadsp bare.env
   bare.env:8: warning: removing P1[0] and P1[1]
 
 The warning just informs us that P1[0] and P1[1] are reserved for ISSP,
@@ -21,10 +24,10 @@ and have been excluded from testing. To get rid of this warning, one
 could change the "P1" in bare.env to "P1[7:2]".
 
 A progress indicator appears briefly, and there is no other output.
-This means that connchk has not found any problems. If you prefer
+This means that m8cbscan has not found any problems. If you prefer
 slightly more verbose output, add the option -v:
 
-  % connchk -d wadsp -v bare.env 
+  % m8cbscan -d wadsp -v bare.env 
   example/bare.env:8: warning: removing undriven Z
   example/bare.env:8: warning: removing P1[0] and P1[1]
   chip identified as CY8C24223 (0x0013), revision (AX) 0x1112
@@ -34,9 +37,9 @@ slightly more verbose output, add the option -v:
 The first warning informs us that a case where the allowed drive and
 the external configuration were both "Z" (yielding unknown behaviour)
 has been removed. It's usually convenient to just leave such things
-in the configuration, and connchk will take care of them anyway.
+in the configuration, and m8cbscan will take care of them anyway.
 
-Finally, we are informed that connchk has tested 14 pins, that it has
+Finally, we are informed that m8cbscan has tested 14 pins, that it has
 tried 58 different configurations, and that it has made 812 single-bit
 verifications.
 
@@ -47,7 +50,7 @@ P0[5] and P0[7] shorted
 Now let's try something more interesting. We short P0[5] and P0[7].
 Running the same test again, we get
 
-  % connchk -d wadsp bare.env
+  % m8cbscan -d wadsp bare.env
   -----v-- ..------  P0[5]
   P[0]     P[1]     
   01234567 01234567 
@@ -62,18 +65,18 @@ Running the same test again, we get
   0       00000000 11111011 11111011 11111111
   1       11000000 11111111 00111111 00111111
 
-This tells us that, while exercising P0[5], connchk noticed a problem.
-The upper part of the report shows what connchk has set up, while the
+This tells us that, while exercising P0[5], m8cbscan noticed a problem.
+The upper part of the report shows what m8cbscan has set up, while the
 lower part shows a register dump obtained from the chip. It's normally
 not necessary to wade through this, but it can be useful to clear some
 doubts.
 
 Now we know that P0[5] has a problem, but we don't quite know with
-whom. The option -a lets connchk proceed after detecting the first
+whom. The option -a lets m8cbscan proceed after detecting the first
 problem, and we eventually see a report that looks like this:
 
   
-  % connchk -d wadsp -a bare.env
+  % m8cbscan -d wadsp -a bare.env
 ...
   -------^ ..------  P0[7]
   P[0]     P[1]     
@@ -105,15 +108,15 @@ something like
 
   P0[5,7] allow Z, 0R, 1R external Z, 0R, 1R
 
-doesn't have the desired effect, because it doesn't tell connchk
+doesn't have the desired effect, because it doesn't tell m8cbscan
 under what circumstances the pin is driven with the respective
-signal. Therefore, connchk can only conclude that there is now to
+signal. Therefore, m8cbscan can only conclude that there is now to
 tell what reading these pins may yields, and thus excludes them
 from testing.
 
 The correct solution is a bit more complex, as shown in short.env.
 For thorough testing, we have to list all possible combinations of
-input/output and high/low. Since connchk processes its input with
+input/output and high/low. Since m8cbscan processes its input with
 CPP, we can also use macros to express the structure more clearly
 (and to avoid typos), as shown in examples/short2.env
 
@@ -129,17 +132,15 @@ shall be the anode, P0[5] the cathode. Neither bare.env nor short.env
 are pleased with the diode, which is of course precisely what is
 supposed to happen. They also detect the diode if it is reversed.
 
-diode.env shows how the diode can be modeled. This configuration is
-a bit simpler than the one for the short, because we only have to
-consider the direction P0[7] to P5[0].
+diode.env shows how the diode can be modeled.
 
 We can see that diode.env detects an absent, shorted, or reversed
 diode.
 
-connchk can produce a graphical overview of the results of its testing.
+m8cbscan can produce a graphical overview of the results of its testing.
 This is done with the option -m, e.g., if we insert the diode, we get
 
-  % connchk -d wadsp -m bare.env
+  % m8cbscan -d wadsp -m bare.env
 ...
   Foreground = 0, background = 1:
   FG/BG  P0[0]    P1[0]
@@ -195,9 +196,7 @@ Finally, we move to a slightly trickier component, the resistor.
 Resistors can be hard to detect, because, during testing, they work
 against some internal pull-up or pull-down, and the resulting
 voltage may or may not clear the respective detection threshold.
-
-For example, a 1 kOhm resistor acts much like a short. Worse yet,
-a 10 kOhm resistor even confuses diode.env.
+For example, a 1 kOhm resistor acts much like a short.
 
 resistor.env shows an environment that accepts both 1 kOhm and
 10 kOhm resistors. It still detects a short, a diode, and, if we're

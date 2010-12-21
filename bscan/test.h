@@ -1,5 +1,5 @@
 /*
- * test.h - Port setup and testing
+ * test.h - Generate and perform the tests
  *
  * Written 2006 by Werner Almesberger
  * Copyright 2006 Werner Almesberger
@@ -40,6 +40,6 @@ extern int all; /* don't stop after the first inconsistency */
 extern int do_map; /* produce a map (implies "all", but with less output) */
 extern int dry_run; /* don't do any tests, just print the configurations */
 
-void do_tests(void);
+int do_tests(void);
 
 #endif /* TEST_H */

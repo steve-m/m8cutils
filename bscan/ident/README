@@ -1,0 +1,33 @@
+This directory contains a number of environments that are used, in
+conjunction with ../models.m8cbscan, to try to identify various
+components attached to a test target.
+
+The script "all" executes all these models, and reports whether
+they are congruous with the measured behaviour or not.
+
+
+				bare  PULL_DOWN   RESISTOR
+				| GND | PULL_UP   | DIODE
+				| | VDD |       WIRE| DIODE_R
+				| | | | |       | | | |
+Nothing (bare chip)		Y . . . .	. . . .
+P0[7] shorted to GND		. Y . . .	. . . .
+P0[7] shorted to VDD		. . Y . .	. . . .
+P0[7] 1k Ohm pull-down to GND   . Y . Y .	. . . .
+P0[7] 10k Ohm pull-down to GND	. Y . Y .	. . . .
+P0[7] 1 kOhm pull-up to VDD	. . Y . Y	. . . .
+P0[7] 10 kOhm pull-up to VDD	. . Y . Y	. . . .
+Wire between P0[5] and P0[7]   	. . . . .	Y . . .
+1 kOhm between P0[5] and P0[7]	. . . . .	Y Y . .
+10 kOhm between P0[5] and P0[7]	. . . . .	. Y . .
+Diode from P0[7] to P0[5]	. . . . .	. . Y Y
+Diode from P0[5] to P0[7]	. . . . .	. . . .
+Diode and 330 Ohm, forward	. . . . .	. . . Y
+Diode and 330 Ohm, reversed	. . . . .	. Y . .
+
+
+Note that some of the false positives could be avoided by forcing
+m8cbscan to also try configurations where strong drives are expected
+to collide (e.g., "1" into GND). Also note that such collisions can
+happen during regular testing, if the model and the actual circuit
+differ.

@@ -1,8 +1,17 @@
 Version 21 (xx-DEC-2006)
 ----------
 
-- connchk/: new static connection checker, based on ISSP
+- m8cbscan/: new static connection checker that performs a boundary scan
+  through ISSP
 - Common.make: VERSION is now a string, not a number
+- as/: added support for IF ... ELSE ... ENDIF (as/tests/if, as/tests/if_nest,
+  as/tests/if_la, as/tests/if_err)
+- as/: added support for MACRO ... ENDM
+(as/tests/macro, as/tests/sep_macro; updated as/tests/sep_cpp)
+- as/tests/Common: added function "edit" to run sed on _out
+- Common.make: set YACC to "bison -y" to gain access to extension "YYEMPTY"
+  (updated as/tests/redef_undef)
+- shared/error.c:set_file: convert empty file names to "<stdin>"
 
 Version 20 (5-DEC-2006)
 ----------
