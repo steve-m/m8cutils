@@ -33,6 +33,10 @@ static int reset, dummy;
 static AT91PS_PIO pio;
 static void *base;
 
+
+/* ----- PIO --------------------------------------------------------------- */
+
+
 static void pio_out (int mask, int val)
 {
 	if(mask == SDATA){
@@ -91,21 +95,7 @@ static int pio_map(void)
 }
 
 
-static int ecb_at91_open(const char *dev,int voltage,int power_on)
-{
-	if (power_on)
-		return -1;
-	if (!pio_map ())
-		return -1;
-	pio_setup();
-
-	pio_out(XRES,1);
-	pio_out(SCLK,0);
-	dummy = pio_in();
-	reset = 1;
-	return voltage;
-
-}
+/* ----- Bit --------------------------------------------------------------- */
 
 
 static void ecb_at91_send_bit(int bit)
@@ -134,6 +124,35 @@ static int ecb_at91_read_bit(void)
 }
 
 
+struct prog_bit ecb_at91_bit = {
+    .send_bit = ecb_at91_send_bit,
+    .send_z = ecb_at91_send_z,
+    .read_bit = ecb_at91_read_bit,
+};
+
+
+/* ----- Common ------------------------------------------------------------ */
+
+
+static int ecb_at91_open(const char *dev,int voltage,int power_on,
+  const char *args[])
+{
+	prog_init(NULL,NULL,NULL,&ecb_at91_bit);
+	if (power_on)
+		return -1;
+	if (!pio_map ())
+		return -1;
+	pio_setup();
+
+	pio_out(XRES,1);
+	pio_out(SCLK,0);
+	dummy = pio_in();
+	reset = 1;
+	return voltage;
+
+}
+
+
 static void ecb_at91_close(void)
 {
 	pio_out(XRES,1);
@@ -146,11 +165,8 @@ static void ecb_at91_close(void)
 }
 
 
-struct prog_ops ecb_at91_ops = {
+struct prog_common ecb_at91 = {
     .name = "ecb_at91",
     .open = ecb_at91_open,
-    .send_bit = ecb_at91_send_bit,
-    .send_z = ecb_at91_send_z,
-    .read_bit = ecb_at91_read_bit,
     .close = ecb_at91_close,
 };

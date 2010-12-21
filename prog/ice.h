@@ -11,8 +11,6 @@
 
 #include <stdint.h>
 
-#include "chips.h"
-
 
 void ice_init(void);
 void ice_write(int reg,uint8_t value);

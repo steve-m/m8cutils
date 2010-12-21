@@ -24,8 +24,7 @@
 #include "chips.h"
 #include "cpp.h"
 
-#include "ops.h"
-#include "prog.h"
+#include "prog_ops.h"
 #include "cli.h"
 #include "ice.h"
 

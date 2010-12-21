@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash from file in ROM format (explicit)"
+random_flash _flash
+echo 01 02 03 04 05 | prog -w -5 -
+prog -r | uniq >_out
+expect <<EOF
+01 02 03 04 05 00 00 00
+00 00 00 00 00 00 00 00
+EOF

@@ -16,8 +16,9 @@
 
 #include "interact.h"
 #include "vectors.h"
-#include "prog.h"
-#include "ops.h"
+#include "prog_vector.h"
+#include "prog_ops.h"
+#include "cli.h"
 
 
 #define ROUND_UP(n,m) (((n)+(m)-1)/(m)*(m))
@@ -58,6 +59,28 @@ static void now(struct timeval *t)
 }
 
 
+#undef OUTPUT_VECTOR
+#define OUTPUT_VECTOR(v) (v)
+
+
+void prog_read_block(uint8_t *data)
+{
+    int i;
+
+    for (i = 0; i != BLOCK_SIZE; i++)
+	data[i] = prog_vector(READ_BYTE(i));
+}
+
+
+void prog_write_block(const uint8_t *data)
+{
+    int i;
+
+    for (i = 0; i != BLOCK_SIZE; i++)
+	prog_vector(WRITE_BYTE(i,data[i]));
+}
+
+
 static void check_block(int pass)
 {
     unsigned char tmp[BUFFER_SIZE];
@@ -81,10 +104,6 @@ static void check_block(int pass)
 	    fprintf(stderr," (%d more)\n",errors-1);
     }
 }
-
-
-#undef OUTPUT_VECTOR
-#define OUTPUT_VECTOR(v) (v)
 
 
 static void do_cycle(void)

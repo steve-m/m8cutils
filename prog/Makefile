@@ -8,26 +8,34 @@
 include ../Common.make
 
 
-DRIVERS=waspic watsp watpp ecb_at91
-TESTS=
+DRIVERS=waspic watsp watpp ecb_at91 dummy
+TESTS=rd errd ercmok ercmf wrrd wrcmok wrcmf wrlkcmok wrlkcmf wrlkrdf wrlkrdz \
+      secu secf secr secw secfsrw secfsur secfsfw \
+      secfspu secfspf secfspr secfspw secmir inrom inhex outrom outhex \
+      inimbin inimrom inimhex
 FILES=README Makefile \
       m8cprog.c vectors.h \
-      tty.h tty.c pp.h pp.c rt.h rt.c prog.h prog.c ops.h ops.c ice.h ice.c \
-      cli.h cli.c \
+      tty.h tty.c pp.h pp.c rt.h rt.c \
+      prog_common.h prog_common.c prog_bit.h prog_bit.c \
+      prog_vector.h prog_vector.c prog_prim.h prog_prim.c \
+      prog_ops.h prog_ops.c prog.h prog.c \
+      ice.h ice.c cli.h cli.c \
       torture.c \
       ref/README ref/Makefile ref/main.c \
       ref/vectorconv.pl ref/vdecode.pl ref/mapconv.pl \
       ref/an2026a.txt ref/an2026a.map ref/an2026b.txt ref/an2026b.map \
-      $(DRIVERS:%=drv/%.c) drv/ecb_at91.h
+      $(DRIVERS:%=drv/%.c) drv/ecb_at91.h \
+      tests/Common $(TESTS:%=tests/%)
 OBJS=m8cprog.o
-LIBPROG_OBJS=tty.o pp.o rt.o prog.o ops.o ice.o cli.o $(DRIVERS:%=drv/%.o)
+LIBPROG_OBJS=tty.o pp.o rt.o prog_common.o prog_bit.o prog_vector.o \
+  prog_prim.o prog_ops.o prog.o ice.o cli.o $(DRIVERS:%=drv/%.o)
 LIBDEP += libprog.a
 # don't use += because libprog may need symbols from libm8cutils
 LDLIBS := -L. -lprog $(LDLIBS)
 
 CFLAGS += -I$(shell pwd) \
-          -DPROGRAMMERS_DECL="$(DRIVERS:%=extern struct prog_ops %_ops;)" \
-          -DPROGRAMMERS_OPS="$(DRIVERS:%=&%_ops,)"
+          -DPROGRAMMERS_DECL="$(DRIVERS:%=extern struct prog_common %;)" \
+          -DPROGRAMMERS_OPS="$(DRIVERS:%=&%,)"
 
 
 .PHONY:		all install uninstall clean spotless

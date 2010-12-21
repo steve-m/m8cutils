@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, then read"
+random_flash _flash
+random_file _old
+prog -w -b -5 _old
+prog -r -b _new
+comp _old _new

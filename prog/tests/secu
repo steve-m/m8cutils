@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Set protection all-U, retrieve"
+random_file _file
+prog -w -b -5 -F U _file
+prog -s >_out
+expect <<EOF
+Flash protection (64 blocks):
+UUUUUUUU UUUUUUUU UUUUUUUU UUUUUUUU UUUUUUUU UUUUUUUU UUUUUUUU UUUUUUUU
+EOF

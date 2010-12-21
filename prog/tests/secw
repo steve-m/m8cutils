@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Set protection all-W, retrieve"
+random_file _file
+prog -w -b -5 -F W _file 2>_out
+prog -s >>_out
+expect <<EOF
+Flash protection (64 blocks):
+WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW
+EOF

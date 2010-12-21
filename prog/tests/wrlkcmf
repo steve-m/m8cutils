@@ -1,0 +1,13 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, lock (W), then compare (fail)"
+random_flash _flash
+y_file _file
+prog -w -b -5 -F W _file
+zero_file _file
+prog_fail -c -b -s _file
+expect <<EOF
+checksum error: got 0x1800, expected 0x0000
+EOF

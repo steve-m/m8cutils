@@ -1,3 +1,44 @@
+Version 19 (30-OCT-2006)
+----------
+
+- shared/security.[ch]: sanity checks for protection bits
+- as/: added support for reading protection bits from flashsecurity.txt
+  (as/tests/prot_all, as/tests/prot_hole, as/tests/prot_short,
+  as/tests/prot_comment)
+- m8cas: new option "-f protection_file" to select Flash protection file
+- prog/m8cprog.c:main: added sanity checking for protection bits
+- m8cprog: new option "-f protection_file" to set/override Flash protection
+- m8cprog: new option "-F mode" to set chip-wide protection mode
+- shared/file.c:write_hex: did not write the Extended Linear Address record for
+  security data
+- prog/ops.c:prog_write_security: always write all protection bits
+- prog/ops.c:prog_write_security: pad with 0xAA (R), not 0, and pad all banks
+- prog/vector.h:VECTOR_VALUE: limit address and data to 8 bits
+- prog/vector.h: removed 8 bit masking from various vectors
+- prog/ops.c:prog_write_program: use KEY1 and KEY2 instead of numeric constants
+- prog/ops.c:prog_compare_program: if any blocks have been skipped, also
+  verify the checksum
+- prog/ops.c:prog_read_security: corrected various errors in the handling of
+  multiple banks
+- m8cprog: -s -s now prints the full block of security data, including normally
+  unused bytes
+- prog/drv/watpp.c: added calls to "delay_hook" (weak) to allow for external
+  speed adjustments
+- prog/ice.h: removed unused #include "chips.h"
+- prog/prog.[ch]: split into prog_bit.[ch], prog_common.[ch], and
+  prog_vector.[ch]
+- prog/ops.[ch]: renamed to prog_ops.[ch]
+- prog/: streamlined programmer function stack, and added new layers "ops" and
+  "prim"
+- m8cprog: new option "-O option" to pass options to the driver's "open"
+  function
+- prog/drv/: updated all drivers for new stack
+- prog/drv/dummy.c: dummy driver that simulates Flash through a file
+- prog/torture.c: updated and made compile again
+- prog/tests/: regression tests for m8cprog and support libraries
+- sim/Makefile: removed -t from invocation of yacc, which caused code with a
+  warning to be generated
+
 Version 18 (9-OCT-2006)
 ----------
 
@@ -7,7 +48,7 @@ Version 18 (9-OCT-2006)
 - sim/tests/Common: pass chip name to m8cas, capitalized chip name
 - sim/lang.y: removed duplicate definition of TOK_REG
 - sim/lang.y: didn't check if there is an ICE when using the "ice" prefix
-  (tests/noice)
+  (sim/tests/noice)
 - prog/drv/watpp.c:watpp_open: COMMIT was done after waiting, not before it,
   thereby violating timings
 - as/Makefile: LIBDEP was mis-spelled as LIBDEPS

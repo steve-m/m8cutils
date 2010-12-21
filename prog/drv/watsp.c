@@ -42,20 +42,7 @@ static int fd;
 static int reset;
 
 
-static int watsp_open(const char *dev,int voltage,int power_on)
-{
-    if (power_on)
-	return -1;
-    if (voltage == 3)
-	fprintf(stderr,
-	  "warning: 3V operation is not reliable. Trying anyway ...\n");
-    fd = tty_open_raw(dev,B19200);
-    XRES(1);
-    SCLK(0);
-    Z();
-    reset = 1;
-    return voltage;
-}
+/* ----- Bit --------------------------------------------------------------- */
 
 
 static void watsp_send_bit(int bit)
@@ -84,6 +71,34 @@ static int watsp_read_bit(void)
 }
 
 
+struct prog_bit watsp_bit = {
+    .send_bit = watsp_send_bit,
+    .send_z = watsp_send_z,
+    .read_bit = watsp_read_bit,
+};
+
+
+/* ----- Common ------------------------------------------------------------ */
+
+
+static int watsp_open(const char *dev,int voltage,int power_on,
+  const char *args[])
+{
+    prog_init(NULL,NULL,NULL,&watsp_bit);
+    if (power_on)
+	return -1;
+    if (voltage == 3)
+	fprintf(stderr,
+	  "warning: 3V operation is not reliable. Trying anyway ...\n");
+    fd = tty_open_raw(dev,B19200);
+    XRES(1);
+    SCLK(0);
+    Z();
+    reset = 1;
+    return voltage;
+}
+
+
 static void watsp_close(void)
 {
     XRES(1);
@@ -93,11 +108,8 @@ static void watsp_close(void)
 }
 
 
-struct prog_ops watsp_ops = {
+struct prog_common watsp = {
     .name = "watsp",
     .open = watsp_open,
-    .send_bit = watsp_send_bit,
-    .send_z = watsp_send_z,
-    .read_bit = watsp_read_bit,
     .close = watsp_close,
 };

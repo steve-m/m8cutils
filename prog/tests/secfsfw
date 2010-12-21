@@ -1,0 +1,16 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Set protection partially to F and W, retrieve"
+random_file _file
+prog -w -b -5 -f - _file 2>_out <<EOF
+WWWWWWWW WWWWWWWF WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW
+EOF
+prog -s >>_out
+expect <<EOF
+warning: protection mode F does not protect
+warning: modes U and F compromise read protection of R and W
+Flash protection (64 blocks):
+WWWWWWWW WWWWWWWF WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW WWWWWWWW
+EOF

@@ -1,0 +1,13 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, then read output in ROM format"
+random_flash _flash
+echo hello, world | prog -w -b -5 -
+prog -r | uniq >_out
+expect <<EOF
+68 65 6C 6C 6F 2C 20 77
+6F 72 6C 64 0A 00 00 00
+00 00 00 00 00 00 00 00
+EOF

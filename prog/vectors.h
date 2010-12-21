@@ -49,7 +49,7 @@
 #endif
 
 #define VECTOR_VALUE(c,a,d) \
-  (((c) << 16) | ((a) << 8) | (d))
+  (((c) << 16) | (((a) & 0xff) << 8) | ((d) & 0xff))
 #define VECTOR(c,a,d)	OUTPUT_VECTOR(VECTOR_VALUE(c,a,d))
 
 #define READ_REG(a)	VECTOR(PROG_OP_READ_REG,a,0)
@@ -131,7 +131,7 @@
   WRITE_REG(CPU_PCH,0) \
   WRITE_REG(CPU_SP,8) \
   WRITE_REG(CPU_CODE0,OP_MOV_A_DD_REG) \
-  WRITE_REG(CPU_CODE1,(addr) & 0xff) \
+  WRITE_REG(CPU_CODE1,(addr)) \
   WRITE_REG(CPU_CODE2,OP_HALT) \
   WRITE_REG(CPU_F,CPU_F_XIO) \
   EXEC_VECTOR \
@@ -148,7 +148,7 @@
 
 #define SET_BANK_NUM(n) \
   WRITE_REG(CPU_F,CPU_F_XIO) \
-  WRITE_REG((FLS_PR1) & 0xff,n) \
+  WRITE_REG(FLS_PR1,n) \
   WRITE_REG(CPU_F,0)
 
 #define SET_BLOCK_NUM(n) \
@@ -161,7 +161,7 @@
 
 #define CHECKSUM_SETUP(blocks) \
   VECTOR_PTROP_PREAMBLE(blocks == 128 ? 0 : 0x80) \
-  WRITE_MEM(BLOCKID,(blocks) & 0xff) \
+  WRITE_MEM(BLOCKID,blocks) \
   VECTOR_SSC(SSC_Checksum)
 
 #define VERIFY_SETUP \
@@ -195,7 +195,7 @@
 
 #define ID_SETUP \
   WRITE_REG(CPU_F,CPU_F_XIO) \
-  WRITE_REG(OSC_CR0 & 0xff,2) \
+  WRITE_REG(OSC_CR0,2) \
   ID_SETUP_3MHz
 
 #define SECURE(clock,delay) \

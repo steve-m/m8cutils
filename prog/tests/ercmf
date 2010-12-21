@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Erase Flash, then compare (fail)"
+random_flash _flash
+y_file _file
+prog_fail -e -c -b -5 _file
+expect <<EOF
+comparison failed: block 0, byte 0: got 0x00, expected 0x79
+EOF

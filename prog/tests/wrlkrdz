@@ -1,0 +1,11 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, lock (W), then read (zero)"
+random_flash _flash
+random_file _old
+prog -w -b -5 -F W _old
+zero_file _old
+prog -r -b -z _new
+comp _old _new

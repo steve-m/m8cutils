@@ -1,0 +1,9 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, lock (W), then compare (okay)"
+random_flash _flash
+random_file _file
+prog -w -b -5 -F W _file
+prog -c -b -s _file

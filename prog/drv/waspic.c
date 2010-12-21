@@ -28,15 +28,8 @@ static int fd;
 #define BYE_STRING "\x01\x01\x01"
 
 
-static int waspic_open(const char *dev,int voltage,int power_on)
-{
-    if (power_on)
-	return -1;
-    fd = tty_open_raw(dev,B19200);
-    tty_write(HELLO_STRING,5);
-    while (tty_read_byte(1) != '+');
-    return voltage;
-}
+
+/* ----- Vector ------------------------------------------------------------ */
 
 
 static uint8_t waspic_vector(uint32_t v)
@@ -81,6 +74,28 @@ static uint8_t waspic_vector(uint32_t v)
 }
 
 
+struct prog_vector waspic_vec = {
+    .acquire_reset = waspic_vector,
+    .vector = waspic_vector,
+};
+
+
+/* ----- Common ------------------------------------------------------------ */
+
+
+static int waspic_open(const char *dev,int voltage,int power_on,
+  const char *args[])
+{
+    prog_init(NULL,NULL,&waspic_vec,NULL);
+    if (power_on)
+	return -1;
+    fd = tty_open_raw(dev,B19200);
+    tty_write(HELLO_STRING,5);
+    while (tty_read_byte(1) != '+');
+    return voltage;
+}
+
+
 static void waspic_close(void)
 {
     tty_write(BYE_STRING,3);
@@ -88,10 +103,8 @@ static void waspic_close(void)
 }
 
 
-struct prog_ops waspic_ops = {
+struct prog_common waspic = {
     .name = "waspic",
     .open = waspic_open,
-    .acquire_reset = waspic_vector,
-    .vector = waspic_vector,
     .close = waspic_close,
 };

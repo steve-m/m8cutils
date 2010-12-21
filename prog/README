@@ -40,7 +40,13 @@ The programmer can perform the following operations:
 
 - erase the entire Flash (-e). This is implied when writing.
 - write from a file to Flash and verify the checksum (-w). If using
-  an Intel HEX file, also the security data can be written.
+  an Intel HEX file, also the security data can be written. Security
+  data can also be supplied in the form of a flashsecurity.txt file
+  (option -f filename) or chip-wide with the option -F mode. Allowed
+  modes are U, R, and W. m8cprog also accepts mode F, but warns
+  about its limitations. Modes can be in upper or lower case.
+  Command-line settings override any security data in the Intel HEX
+  file.
 - read from Flash to a file (-r)
 - compare file content with Flash content (-c). This can be combined
   with all other operations. If combined with reading, the
@@ -49,7 +55,8 @@ The programmer can perform the following operations:
   comparison.
 - retrieve the per-block Flash protection ("security") bits (-s).
   This is an undocumented operation and is only done if explicitly
-  requested.
+  requested. -s -s also retrieves and prints protection bits that
+  are not normally used, but may be settable.
 
 As a precaution against accidently overwriting the input file,
 reading cannot be combined with writing. Reading and comparing fail
@@ -77,6 +84,10 @@ parallel port device drivers (CONFIG_PPDEV) to use programmers
 attached to the parallel port. Programmers requiring advanced
 parallel port capabilities, such as EPP, may also need these
 capabilities in the BIOS setup.
+
+Additional options can be passed to the driver with "-O option".
+The use of these options is specific to the driver. Most drivers
+simply ignore them.
 
 If the driver has to perform timing-critical operations, such as
 sending an initial vector within a deadline, on the host CPU,
@@ -138,6 +149,8 @@ Lists the supported programmers (drivers) and chips.
 
 Writing a driver
 ----------------
+
+*** THIS SECTION NEEDS UPDATING ***
 
 Drivers are either vector-based or bit-banging. A vector-based
 driver processes a 22 bit vector at a time, while a bit-banging

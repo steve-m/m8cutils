@@ -13,8 +13,9 @@ FILES=README Makefile \
       ssc.inc \
       file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
       interact.h interact.c symmap.h symmap.c util.h error.h error.c \
-      backslash.h backslash.c
-OBJS=file.o disasm.o chips.o cpp.o interact.o symmap.o error.o backslash.o
+      backslash.h backslash.c security.h security.c
+OBJS=file.o disasm.o chips.o cpp.o interact.o symmap.o error.o backslash.o \
+     security.o
 
 
 .PHONY:		all install uninstall clean spotless

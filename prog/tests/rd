@@ -1,0 +1,8 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Read Flash"
+random_flash _flash
+prog -r -b _out
+comp _flash _out

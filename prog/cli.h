@@ -16,8 +16,9 @@ extern int real_time; /* try to obtain real-time priority for acquisition */
 extern int prog_power_on;
 
 
-#define PROG_OPTIONS	"35d:Dlp:PRv"
-#define PROG_SYNOPSIS	"[-3|-5] [-d driver] [-D] [-p port] [-P] [-R] [-v ...]"
+#define PROG_OPTIONS	"35d:Dlp:O:PRv"
+#define PROG_SYNOPSIS	\
+  "[-3|-5] [-d driver] [-D] [-p port] [-O option] [-P] [-R] [-v ...]"
 
 
 /*

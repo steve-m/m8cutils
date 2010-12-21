@@ -57,6 +57,14 @@ option. Each line of the symbol map contains the following fields:
 Fields are separated by one or more spaces. The symbol file is sorted
 alphabetically by the full symbol names.
 
+The assembler can generate Flash protection data. By default, it looks
+for a file called "flashsecurity.txt" in the current directory, and
+uses the information contained therein. If no such file exists, no
+protection data is generated. A different file name can be specified
+with the option -f. If the protection is different from allowing all
+types of access, the output file must be in Intel HEX format, since
+this is the only format that can convey this information.
+
 
 Compatibility
 -------------

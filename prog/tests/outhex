@@ -1,0 +1,14 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash, then read and output in Intel HEX format"
+random_flash _flash
+echo hello, world | prog -w -b -5 -
+prog -r -i | sed '/0\{128\}/d' >_out
+expect <<EOF
+:4000000068656C6C6F2C20776F726C640A0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002E
+:020000040020DA
+:02000000049268
+:00000001FF
+EOF

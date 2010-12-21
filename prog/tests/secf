@@ -1,0 +1,13 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Set protection all-F, retrieve"
+random_file _file
+prog -w -b -5 -F F _file 2>_out
+prog -s >>_out
+expect <<EOF
+warning: protection mode F does not protect
+Flash protection (64 blocks):
+FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+EOF

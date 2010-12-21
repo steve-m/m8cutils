@@ -51,8 +51,62 @@ static uint8_t data;
 static int fd;
 
 
-static int watpp_open(const char *dev,int voltage,int power_on)
+/* Experimental */
+
+void delay_hook(int rising);
+
+void __attribute__((weak)) delay_hook(int rising)
 {
+}
+
+
+/* ----- Bit --------------------------------------------------------------- */
+
+
+static void watpp_send_bit(int bit)
+{
+    SDATA(bit);
+    SCLK(1);
+    COMMIT();
+    delay_hook(1);
+    SCLK(0);
+    COMMIT();
+    delay_hook(0);
+}
+
+
+static void watpp_send_z(void)
+{
+    Z();
+    SCLK(1);
+    COMMIT();
+    delay_hook(1);
+    SCLK(0);
+    COMMIT();
+    delay_hook(0);
+}
+
+
+static int watpp_read_bit(void)
+{
+    return SDATA_IN();
+}
+
+
+struct prog_bit watpp_bit = {
+    .send_bit = watpp_send_bit,
+    .send_z = watpp_send_z,
+    .read_bit = watpp_read_bit,
+};
+
+
+/* ----- Common ------------------------------------------------------------ */
+
+
+static int watpp_open(const char *dev,int voltage,int power_on,
+  const char *args[])
+{
+    prog_init(NULL,NULL,NULL,&watpp_bit);
     if (power_on && voltage != 5)
 	return -1;
     fd = pp_open(dev,0);
@@ -100,32 +154,6 @@ static void watpp_initialize(int power_on)
 }
 
 
-static void watpp_send_bit(int bit)
-{
-    SDATA(bit);
-    SCLK(1);
-    COMMIT();
-    SCLK(0);
-    COMMIT();
-}
-
-
-static void watpp_send_z(void)
-{
-    Z();
-    SCLK(1);
-    COMMIT();
-    SCLK(0);
-    COMMIT();
-}
-
-
-static int watpp_read_bit(void)
-{
-    return SDATA_IN();
-}
-
-
 static void watpp_close(void)
 {
     XRES(1);
@@ -151,13 +179,10 @@ static void watpp_detach(void)
 }
 
 
-struct prog_ops watpp_ops = {
+struct prog_common watpp = {
     .name = "watpp",
     .open = watpp_open,
     .initialize = watpp_initialize,
-    .send_bit = watpp_send_bit,
-    .send_z = watpp_send_z,
-    .read_bit = watpp_read_bit,
     .close = watpp_close,
     .detach = watpp_detach,
 };

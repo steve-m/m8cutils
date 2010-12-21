@@ -1,0 +1,15 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash from file in Intel HEX format (implicit)"
+random_flash _flash
+{
+    echo :05000000AB12FF0288B5
+    echo :00000001FF
+} | prog -w -5 -
+prog -r | uniq >_out
+expect <<EOF
+AB 12 FF 02 88 00 00 00
+00 00 00 00 00 00 00 00
+EOF

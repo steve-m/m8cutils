@@ -1,0 +1,8 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Erase Flash, then compare (okay)"
+random_flash _flash
+zero_file _file
+prog -e -c -b -5 _file

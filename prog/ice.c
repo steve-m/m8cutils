@@ -14,8 +14,7 @@
 
 #include "vectors.h"
 #include "chips.h"
-#include "prog.h"
-#include "ops.h"
+#include "prog_vector.h"
 #include "ice.h"
 
 

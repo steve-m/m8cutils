@@ -1,0 +1,119 @@
+#!/bin/sh
+#
+# Common - Elements shared by all regression tests for m8cprog
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+
+if [ -z "$AGAIN" ]; then
+    export AGAIN
+    AGAIN=yes
+    if [ -z "$SCRIPT" ]; then
+	name=$0
+	LEAVE=exit
+    else
+	name=./$SCRIPT
+	LEAVE=return
+    fi
+    if [ ! -x $name ]; then
+	name=./`basename $name`
+    fi
+    if $name; then
+	echo PASSED 1>&2
+	passed=`expr ${passed:-0} + 1`
+    else
+	echo FAILED "($SCRIPT)" 1>&2
+	[ -r _diff ] && cat _diff
+	exit 1
+    fi
+    AGAIN=
+    $LEAVE
+fi
+
+
+set -e
+trap finish 0
+LEAVE=:
+
+
+title()
+{
+    echo -n "$1: " 1>&2
+}
+
+
+random_flash()
+{
+    {
+	dd if=/dev/urandom bs=4k count=1
+	dd if=/dev/zero bs=64 count=1
+    } >$1 2>/dev/null
+}
+
+
+zero_flash()
+{
+    {
+	dd if=/dev/zero bs=4k count=1
+	dd if=/dev/zero bs=64 count=1
+    } >$1 2>/dev/null
+}
+
+
+random_file()
+{
+    dd if=/dev/urandom bs=4k count=1 of=$1 2>/dev/null
+}
+
+
+y_file()
+{
+    yes | dd bs=4k count=1 of=$1 2>/dev/null
+}
+
+
+zero_file()
+{
+    dd if=/dev/zero bs=4k count=1 of=$1 2>/dev/null
+}
+
+
+finish()
+{
+    ret=$?
+    rm -f _out _flash _file _old _new
+    if [ "$ret" = 0 ]; then
+	rm -f _diff
+    fi
+    exit $ret
+}
+
+
+prog()
+{
+    $VALGRIND ../m8cprog -d dummy -q -O _flash "$@"
+}
+
+
+prog_fail()
+{
+    if prog "$@" 2>_out; then
+	return 1
+    else
+	return 0
+    fi
+}
+
+
+comp()
+{
+    dd if=$1 bs=4k count=1 2>/dev/null | cmp - $2
+}
+
+
+expect()
+{
+    diff -u - "$@" _out >_diff
+}

@@ -1,0 +1,9 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Erase Flash, then read"
+random_flash _flash
+prog -e -r -b -5 _file
+zero_flash _flash
+comp _flash _file

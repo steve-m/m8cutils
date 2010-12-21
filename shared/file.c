@@ -316,7 +316,7 @@ static void write_hex_record(FILE *file,uint16_t addr,const uint8_t *data,
     int sum;
 
     sum = size+(addr >> 8)+addr;
-    if (fprintf(file,":%02X%04X00",size,addr) < 0)
+    if (fprintf(file,":%02X%04X00",(unsigned) size,addr) < 0)
 	goto error;
     while (data != end) {
 	if (fprintf(file,"%02X",*data) < 0)
@@ -342,9 +342,13 @@ static void write_hex(FILE *file)
     for (i = 0; i < program_size; i += BLOCK_SIZE)
 	write_hex_record(file,i,program+i,
 	  program_size-i > BLOCK_SIZE ? BLOCK_SIZE : program_size-i);
-    for (i = 0; i < security_size; i += BLOCK_SIZE)
-	write_hex_record(file,i,security+i,
-	  security_size-i > BLOCK_SIZE ? BLOCK_SIZE : security_size-i);
+    if (security_size) {
+	if (fprintf(file,":020000040010EA\n") < 0)
+	    goto error;
+	for (i = 0; i < security_size; i += BLOCK_SIZE)
+	    write_hex_record(file,i,security+i,
+	      security_size-i > BLOCK_SIZE ? BLOCK_SIZE : security_size-i);
+    }
     sum = do_checksum();
     if (fprintf(file,":020000040020DA\n:02000000%02X%02X%02X\n",
       (sum >> 8) & 0xff,sum & 0xff,-(2+(sum >> 8)+sum) & 0xff) < 0)

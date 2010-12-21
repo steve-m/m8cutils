@@ -1,0 +1,12 @@
+#!/bin/sh
+. Common
+$LEAVE
+
+title "Write Flash from file in binary format (implicit)"
+random_flash _flash
+echo Hello | prog -w -5 -
+prog -r | uniq >_out
+expect <<EOF
+48 65 6C 6C 6F 0A 00 00
+00 00 00 00 00 00 00 00
+EOF

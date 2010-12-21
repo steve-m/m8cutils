@@ -22,7 +22,8 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       evalconst \
       sym_local sym_global sym_reuse redefine \
       sep_local sep_global sep_undef sep_mix sep_export \
-      dundef
+      dundef \
+      prot_all prot_hole prot_short prot_comment
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
       error-as.h error-as.c id.h id.c op.h op.c code.h code.c \

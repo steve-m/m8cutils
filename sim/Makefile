@@ -53,7 +53,7 @@ lex.yy.o:	lex.yy.c y.tab.h
 		$(CC) -c $(CFLAGS_LEX) lex.yy.c
 
 y.tab.c y.tab.h: lang.y
-		$(YACC) $(YYFLAGS) -d -t lang.y
+		$(YACC) $(YYFLAGS) -d lang.y
 
 y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
