@@ -13,9 +13,9 @@ FILES=README Makefile \
       ssc.inc \
       file.h file.c disasm.h disasm.c chips.h chips.c cpp.h cpp.c \
       interact.h interact.c symmap.h symmap.c util.h error.h error.c \
-      backslash.h backslash.c security.h security.c
+      backslash.h backslash.c security.h security.c dm.h dm.c
 OBJS=file.o disasm.o chips.o cpp.o interact.o symmap.o error.o backslash.o \
-     security.o
+     security.o dm.o
 CFLAGS += -DCPP='"$(CPP_COMMAND)"'
 
 
@@ -24,7 +24,7 @@ CFLAGS += -DCPP='"$(CPP_COMMAND)"'
 
 all:		libm8cutils.a ssc.h
 
-libm8cutils.a: $(OBJS)
+libm8cutils.a:	$(OBJS)
 		$(AR) cr$(AR_v) $@ $^
 
 ssc.h:		ssc.inc

@@ -136,3 +136,52 @@ EOF
 expect <<EOF
 40 04 02
 EOF
+
+asm "MACRO: comma in character macro argument" <<EOF
+	macro	foo
+	db	@0,@1
+	nop
+	endm
+
+	foo	',',42
+EOF
+expect <<EOF
+2C 2A 40
+EOF
+
+asm "MACRO: comma in string macro argument" <<EOF
+	macro	foo
+	ds	@0
+	db	@1
+	nop
+	endm
+
+	foo	"A,B",42
+EOF
+expect <<EOF
+41 2C 42 2A 40
+EOF
+
+asm "MACRO: label with colon as macro argument" <<EOF
+	macro	foo
+@0
+	jmp	@1
+	endm
+
+	foo	bar:,bar
+EOF
+expect <<EOF
+8F FF
+EOF
+
+asm "MACRO: label without colon as macro argument" <<EOF
+	macro	foo
+@0:
+	jmp	@0
+	endm
+
+	foo	bar
+EOF
+expect <<EOF
+8F FF
+EOF

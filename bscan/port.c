@@ -13,6 +13,7 @@
 #include "prog.h"
 #include "interact.h"
 #include "vectors.h"
+#include "dm.h"
 
 #include "value.h"
 #include "out.h"
@@ -62,21 +63,11 @@ uint8_t read_reg(int addr)
 
 int decode_value(int bit)
 {
-    static const uint8_t value[] = {
-	VALUE_0R, VALUE_1,
-	VALUE_0,  VALUE_1,
-	VALUE_Z,  VALUE_Z,
-	VALUE_0,  VALUE_1R,
-	VALUE_Z,  VALUE_1,
-	VALUE_0,  VALUE_1,
-	VALUE_Z,  VALUE_Z,
-	VALUE_0,  VALUE_Z,
-    };
-
-    return value[(((dm2 >> bit) & 1) << 3) |
-      (((dm1 >> bit) & 1) << 2) |
-      (((dm0 >> bit) & 1) << 1) |
-      ((dr >> bit) & 1)];
+    return decode_dm_value(
+      (dm2 >> bit) & 1,
+      (dm1 >> bit) & 1,
+      (dm0 >> bit) & 1,
+      (dr >> bit) & 1);
 }
 
 
@@ -197,8 +188,6 @@ void commit(int current_bit,int current_value)
     cached_dm2 = dm2;
 
     check_target(current_bit,current_value);
-
-
 }
 
 

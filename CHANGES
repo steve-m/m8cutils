@@ -1,4 +1,4 @@
-Version 21 (xx-DEC-2006)
+Version 21 (18-DEC-2006)
 ----------
 
 - m8cbscan/: new static connection checker that performs a boundary scan
@@ -16,6 +16,7 @@ Version 21 (xx-DEC-2006)
   as/tests/macro_sep, as/tests/macro_if, as/tests/macro_err; updated
   as/tests/sep_cpp)
 - as/: added support for INCLUDE (as/tests/include)
+- sim/tests/dm: new regression test for GPIO drive mode changes
 
 Version 20 (5-DEC-2006)
 ----------

@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Common - Elements shared by all regression tests for the boundary scanner
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+begin()
+{
+   echo -n "$1: " 1>&2
+}
+
+pass()
+{
+    echo PASSED 1>&2
+    passed=`expr ${passed:-0} + 1`
+
+}
+
+fail()
+{
+    echo FAILED "($SCRIPT)" 1>&2
+    exit 1
+}

@@ -8,7 +8,7 @@
 include ../Common.make
 
 
-TESTS=
+TESTS=dm
 FILES=README Makefile \
       bscan.c lang.l lang.y port.h port.c value.h value.c out.h out.c \
       test.h test.c \

@@ -253,22 +253,3 @@ int expected(int bit)
     }
     return -1;
 }
-
-
-const char *value_name(uint8_t value)
-{
-    switch (value) {
-	case VALUE_Z:
-	    return "Z";
-	case VALUE_0R:
-	    return "0R";
-	case VALUE_0:
-	    return "0";
-	case VALUE_1R:
-	    return "1R";
-	case VALUE_1:
-	    return "1";
-	default:
-	    abort();
-    }
-}

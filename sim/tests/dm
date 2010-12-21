@@ -1,0 +1,180 @@
+#!/bin/sh
+#
+# dm - Drive mode change test
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+. Common
+
+#
+# This regression test is a little heavy. We build a test harness that allows
+# us to check in which direction drive mode changes go. If they're not
+# monotonous, i.e., if they change direction, the test fails.
+#
+# Note that this test currently doesn't consider the effect going through
+# analog Hi-Z has on edge-triggered inputs.
+#
+
+build()
+{
+    echo -n "Drive mode $2 ($1): " 1>&2
+    cat >_test.c <<EOF
+/* MACHINE-GENERATED. DO NOT EDIT ! */
+
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "../../shared/dm.h"
+
+
+static struct gpio {
+     int dr,dm0,dm1,dm2;
+} gpios[1];
+
+
+
+static int verbose = 0;
+static int dir,start,rail;
+
+
+static void fail(const char *reg,int value)
+{
+    fprintf(stderr,"$1: %s = %d: %d%d%d%d -> %d%d%d%d (%d)\n",reg,value,
+      (start >> 3) & 1,(start >> 2) & 1,(start >> 1) & 1,start & 1,
+      gpios[0].dm2,gpios[0].dm1,gpios[0].dm0,gpios[0].dr,rail);
+    exit(1);
+}
+
+
+static uint8_t decode_value(void)
+{
+    return decode_dm_value(gpios[0].dm2,gpios[0].dm1,gpios[0].dm0,gpios[0].dr);
+}
+
+
+static void __gpio_may_change(const char *reg,int *bit,int value)
+{
+    int v,n;
+
+    v = decode_value();
+    *bit = value;
+    n = decode_value();
+    if (v == n)
+	return;
+    if (v < n) {
+	if (dir == -1)
+	    fail(reg,value);
+	dir = 1;
+    }
+    else {
+	if (dir == 1)
+	    fail(reg,value);
+	dir = -1;
+    }
+}
+
+
+#define gpio_may_change(port,reg,bit,mask,value) \
+    do { \
+	(void) (port); \
+	__gpio_may_change(#reg,bit,value); \
+    } while (0)
+
+EOF
+    sed '/^[a-z].* '$1'(.*) *$/,/^}/p;d' <../gpio.c >>_test.c
+    cat >>_test.c <<EOF
+
+
+#define gpio_set_z(port,mask,value) \
+    gpio_set_z(port,mask)
+#define gpio_set_analog(port,mask,value) \
+    gpio_set_analog(port,mask)
+
+
+static void try(int n)
+{
+    if (n > 15)
+	abort();
+    start = n;
+    if (verbose)
+	fprintf(stderr,"$1: %d(%d)\n",n,$3);
+    dir = 0;
+    rail = $3;
+    gpios[0].dm2 = (n >> 3) & 1;
+    gpios[0].dm1 = (n >> 2) & 1;
+    gpios[0].dm0 = (n >> 1) & 1;
+    gpios[0].dr = n & 1;
+    $1(0,1,$3);
+    if (decode_value() != $2) {
+	fprintf(stderr,"%d%d%d%d != $2\n",
+	  gpios[0].dm2,gpios[0].dm1,gpios[0].dm0,gpios[0].dr);
+	exit(1);
+    }
+}
+
+
+int main(int argc,char **argv)
+{
+    int i;
+
+    if (argc > 1 && !strcmp(argv[1],"-v")) {
+	verbose = 1;
+	argc--;
+	argv++;
+    }
+    if (argc == 1)
+	for (i = 0; i != 16; i++)
+	    try(i);
+    else {
+	char *end;
+
+	for (i = 1; i != argc; i++) {
+	    try(strtoul(argv[i],&end,2));
+	    if (!*end)
+		abort();
+	}
+    }
+    return 0;
+}
+EOF
+    gcc -g -Wall -Werror -o _test _test.c -L../../shared -lm8cutils || {
+	echo FAILED "($SCRIPT)" 1>&2
+	# don't delete _test.c, since we'll need it for debugging
+	exit 1
+    }
+    rm -f _test.c
+}
+
+
+run()
+{
+    if ./_test "$@"; then
+	# use "expect" to get the standard "test passed" handling
+	>_out
+	expect </dev/null
+	rm -f _test
+    else
+	echo FAILED "($SCRIPT)" 1>&2
+	exit 1
+    fi
+}
+
+
+doit()
+{
+    build "$@"
+    run
+}
+
+
+doit gpio_set VALUE_0 0
+doit gpio_set VALUE_1 1
+doit gpio_set_r VALUE_0R 0
+doit gpio_set_r VALUE_1R 1
+doit gpio_set_z VALUE_Z 0
+doit gpio_set_analog VALUE_Z 0

@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+# dm - Drive mode change test
+#
+# Written 2006 by Werner Almesberger
+# Copyright 2006 Werner Almesberger
+#
+
+. Common
+
+
+build()
+{
+    cat >_test.c <<EOF
+/* MACHINE-GENERATED. DO NOT EDIT ! */
+
+
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "../../shared/dm.h"
+
+
+#define PRTxDMy(p,b) ((b)+1)
+#define PRTxDR(p) 0
+
+
+static const int defined = 1;
+
+static int verbose = 0;
+static int from,to,regs;
+static int dm2,dm1,dm0,dr,cached_dm2,cached_dm1,cached_dm0,cached_dr;
+
+
+static void change(int port,int reg,int cached,int new)
+{
+    int v;
+
+    if (port)
+	return;
+    if (verbose)
+	fprintf(stderr,"change(reg %d,cached %d,new %d)\n",
+	  reg,cached,new);
+    if (((regs >> reg) & 1) != cached) {
+	fprintf(stderr,"cached %d, regs %d, reg %d\n",cached,regs,reg);
+	exit(1);
+    }
+    regs = (regs & ~(1 << reg)) | (new << reg);
+    v = dm_value[regs];
+    if (v == VALUE_0 || v == VALUE_1)
+	if (v != dm_value[from] && v != dm_value[to]) {
+	    fprintf(stderr,"from %d, to %d, regs %d\n",from,to,regs);
+	    exit(1);
+	}
+}
+
+
+#define check_target(a,b)
+
+
+EOF
+
+    sed '/^void commit(/,/^}/p;d' <../port.c >>_test.c
+
+    cat >>_test.c <<EOF
+
+
+int main(int argc,char **argv)
+{
+    verbose = argc > 1;
+    for (from = 0; from != 16; from++)
+	for (to = 0; to != 16; to++) {
+	    cached_dm2 = (from >> 3) & 1;
+	    cached_dm1 = (from >> 2) & 1;
+	    cached_dm0 = (from >> 1) & 1;
+	    cached_dr = from & 1;
+	    dm2 = (to >> 3) & 1;
+	    dm1 = (to >> 2) & 1;
+	    dm0 = (to >> 1) & 1;
+	    dr = to & 1;
+	    if (verbose)
+		fprintf(stderr,"%d -> %d\n",from,to);
+	    regs = from;
+	    commit(0,0);
+	    if (regs != to) {
+		fprintf(stderr,"regs %d, to %d\n",regs,to);
+		exit(1);
+	    }
+	}
+    return 0;
+}
+EOF
+
+    gcc -g -Wall -Werror -o _test _test.c -L../../shared -lm8cutils || exit
+    rm -f _test.c
+}
+
+
+run()
+{
+    ./_test "$@" || exit
+    rm -f _test
+}
+
+
+begin "Drive mode transitions"
+build
+run || fail
+rm -f _test
+pass

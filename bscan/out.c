@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "interact.h"
+#include "dm.h"
 
 #include "port.h"
 #include "test.h"
@@ -135,7 +136,7 @@ void print_dry_run(uint64_t set)
 	if (!first)
 	    printf(", ");
 	want = expected(i);
-	printf("P%d[%d] = %s (%c)",i/8,i & 7,value_name(decode_value(i)),
+	printf("P%d[%d] = %s (%c)",i/8,i & 7,dm_value_name(decode_value(i)),
 	  want == -1 ? 'X' : want ? '1' : '0');
 	first = 0;
     }

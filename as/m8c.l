@@ -380,27 +380,37 @@ $[0-9A-Fa-f]+			{ DO({
 				  yylval.id = make_id(yytext);
 				  return LABEL; })}
 \.?[a-zA-Z_][a-zA-Z_0-9]*:	{ DO({
-				  *strchr(yytext,':') = 0;
-				  yylval.id = make_id(yytext);
+				  if (!arguments) {
+				    *strchr(yytext,':') = 0;
+				    yylval.id = make_id(yytext);
+				  }
 				  return LOCAL; })}
 \.[a-zA-Z_][a-zA-Z_0-9]*::	{ DO(
 				  yyerror("a reusable label cannot be global");
 				  )}
 [a-zA-Z_][a-zA-Z_0-9]*::	{ DO({
-				  *strchr(yytext,':') = 0;
-				  yylval.id = make_id(yytext);
+				  if (!arguments) {
+				    *strchr(yytext,':') = 0;
+				    yylval.id = make_id(yytext);
+				  }
 				  return GLOBAL; })}
 \.[0-9][a-zA-Z_0-9]*[bB]	{ DO({
-				  yytext[strlen(yytext)-1] = 0;
-				  yylval.id = make_id(yytext);
+				  if (!arguments) {
+				    yytext[strlen(yytext)-1] = 0;
+				    yylval.id = make_id(yytext);
+				  }
 				  return BACKWARDS; })}
 \.[0-9][a-zA-Z_0-9]*[fF]	{ DO({
-				  yytext[strlen(yytext)-1] = 0;
-				  yylval.id = make_id(yytext);
+				  if (!arguments) {
+				    yytext[strlen(yytext)-1] = 0;
+				    yylval.id = make_id(yytext);
+				  }
 				  return FORWARDS; })}
 \.[0-9][a-zA-Z_0-9]*:		{ DO({
-				  *strrchr(yytext,':') = 0;
-				  yylval.id = make_id(yytext);
+				  if (!arguments) {
+				    *strrchr(yytext,':') = 0;
+				    yylval.id = make_id(yytext);
+				  }
 				  return REDEFINABLE; })}
 
 "||"				DO(return TOK_LOGICAL_OR);
@@ -423,11 +433,13 @@ $[0-9A-Fa-f]+			{ DO({
 '\\\\'				{ yylval.num = '\\';
 				  DO(return NUMBER); }
 \"(\\[^\n\t]|[^\\"\n\t])*\"	{ DO({
-				  char *s;          
-				  *strrchr(yytext,'"') = 0;
-				  s = stralloc(yytext+1);
-				  backslash(s);
-				  yylval.str = s;
+				  if (!arguments) {
+				    char *s;
+				    *strrchr(yytext,'"') = 0;
+				    s = stralloc(yytext+1);
+				    backslash(s);
+				    yylval.str = s;
+				  }
 				  return STRING; })}
 
 [\t ]*               		{ if (recording)
