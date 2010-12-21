@@ -1,0 +1,10 @@
+#!/bin/sh
+. Common
+
+asm_fail "Two undefined labels, report first" <<EOF
+	jmp	foo
+	jmp	bar
+EOF
+expect <<EOF
+<stdin>:1: undefined label "foo"
+EOF

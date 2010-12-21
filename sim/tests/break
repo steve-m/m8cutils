@@ -1,0 +1,130 @@
+#!/bin/sh
+. Common
+
+asm "Set a breakpoint" <<EOF
+	inc	a
+	inc	a
+	halt
+EOF
+sim <<EOF
+a = 0
+break 1
+run
+a
+EOF
+expect <<EOF
+Breakpoint
+0x1 1
+EOF
+
+asm "Run from a breakpoint" <<EOF
+	inc	a
+here:
+	inc	a
+	halt
+EOF
+sim <<EOF
+a = 0
+break here
+run
+run
+a
+EOF
+expect <<EOF
+Breakpoint
+HALT
+0x2 2
+EOF
+
+asm "Set breakpoint twice" <<EOF
+	inc	a
+	inc	a
+	halt
+EOF
+sim <<EOF
+a = 0
+break 1
+break 1
+run
+a
+EOF
+expect <<EOF
+breakpoint is already set at 0x0001
+Breakpoint
+0x1 1
+EOF
+
+asm "Set breakpoint at PC" <<EOF
+loop:
+	inc	a
+	inc	a
+	jmp	loop
+EOF
+sim <<EOF
+a = 0
+run 4
+a
+break
+run
+a
+EOF
+expect <<EOF
+0x1 1
+Breakpoint
+0x3 3
+EOF
+
+asm "Breakpoint inside instruction is generally ignored" <<EOF
+	mov	a,10
+	halt
+EOF
+sim <<EOF
+break 1
+run
+a
+EOF
+expect <<EOF
+HALT
+0xa 10
+EOF
+
+asm "Breakpoint inside instruction is effective if reaching it" <<EOF
+	mov	a,10
+	jmp	1
+EOF
+sim <<EOF
+break 1
+run
+a
+EOF
+expect <<EOF
+Breakpoint
+0xa 10
+EOF
+
+asm "Show breakpoints" <<EOF
+	nop
+here:
+EOF
+sim <<EOF
+a = 0
+break here
+break 2
+break *
+EOF
+expect <<EOF
+0x0001  here:
+0x0002
+EOF
+
+asm "Breakpoints win over CPU cycle limits" <<EOF
+	nop
+stop:
+EOF
+sim <<EOF
+break stop
+run 4
+EOF
+expect <<EOF
+Breakpoint
+EOF

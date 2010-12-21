@@ -1,5 +1,5 @@
 #
-# Common.make - Common settings used by all Makefiles
+# Common.make - Common settings used by all Makefiles (except the top-level)
 #
 # Written 2002-2004, 2006 by Werner Almesberger
 # Copyright 2002,2003 California Institute of Technology
@@ -7,7 +7,7 @@
 # Copyright 2003, 2004, 2006 Werner Almesberger
 #
 
-INSTALL_PREFIX=/usr
+include ../Config.make
 
 CFLAGS_WARN=-Wall -Wshadow -Werror \
 	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
@@ -90,3 +90,38 @@ endif
 # everything. Oddly enough, variables other than CC don't seem to be affected.
 #
 unexport CC
+
+
+# ===== Targets common to all parts ===========================================
+
+
+.PHONY:	_all dep depend testlist tests filelist
+
+_all:		all
+
+
+# ----- Dependencies ----------------------------------------------------------
+
+$(OBJS):	.depend
+
+dep depend .depend:
+		$(DEPEND)
+
+ifeq (.depend,$(wildcard .depend))
+include .depend
+endif
+
+# ----- Tests -----------------------------------------------------------------
+
+testlist:
+		@echo $(TESTS)
+
+tests:		all
+		passed=0 && cd tests && for n in $(TESTS); do \
+		  SCRIPT=$$n . ./$$n; done; \
+		  echo "Passed all $$passed tests" 2>&1
+
+# ----- Distribution ----------------------------------------------------------
+
+filelist:
+		@echo $(FILES)

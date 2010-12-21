@@ -183,7 +183,7 @@ static void write_lvalue(const struct lvalue *lv,uint32_t rvalue)
 %token		TOK_LOGICAL_OR TOK_LOGICAL_AND TOK_SHL TOK_SHR
 %token		TOK_EQ TOK_NE TOK_LE TOK_GE
 
-%token		TOK_RUN TOK_STEP
+%token		TOK_RUN TOK_STEP TOK_BREAK TOK_UNBREAK
 %token		TOK_CONNECT TOK_DISCONNECT TOK_DRIVE TOK_SET
 %token		TOK_DEFINE
 %token		TOK_QUIT TOK_NL TOK_PRINTF TOK_SLEEP
@@ -260,6 +260,8 @@ command:
     | define
     | printf
     | sleep
+    | break
+    | unbreak
     | TOK_QUIT
 	{
 	    exit(0);
@@ -410,6 +412,37 @@ sleep:
 	    sleep($2);
 	}
     ;
+
+break:
+    TOK_BREAK
+	{
+	    m8c_break(pc);
+	}
+    | TOK_BREAK expression
+	{
+	    m8c_break($2);
+	}
+    | TOK_BREAK '*'
+	{
+	    m8c_break_show();
+	}
+    ;
+
+unbreak:
+    TOK_UNBREAK
+	{
+	    m8c_unbreak(pc);
+	}
+    | TOK_UNBREAK expression
+	{
+	    m8c_unbreak($2);
+	}
+    | TOK_UNBREAK '*'
+	{
+	    m8c_unbreak_all();
+	}
+    ;
+
 register_or_id:
     register
 	{

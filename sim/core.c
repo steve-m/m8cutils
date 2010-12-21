@@ -18,6 +18,7 @@
 #include "m8c.h"
 #include "chips.h"
 #include "disasm.h"
+#include "symmap.h"
 #include "file.h"
 
 #include "util.h"
@@ -119,6 +120,7 @@ static void pp_write(struct reg *reg,uint8_t value)
     if (value > chip->pages)
 	exception("%s: select page %d of %d",reg->name,value,chip->pages);
     *(uint8_t *) reg->user = value;
+    update_pages();
 }
 
 
@@ -139,6 +141,7 @@ static void pp_reg(int num,uint8_t *var)
 
 
 uint8_t rom[0x10000];
+static char breakpoint[0x10000];
 
 
 /* ----- PC, X, SP --------------------------------------------------------- */
@@ -655,6 +658,11 @@ uint32_t m8c_run(uint32_t cycles)
 	done += tmp;
 	if (m8c_one())
 	    break;
+	if (breakpoint[pc]) {
+	    fflush(stdout);
+	    fprintf(stderr,"Breakpoint\n");
+	    break;
+	}
     }
     running = 0;
     return done;
@@ -761,4 +769,52 @@ void m8c_init(void)
     regs[CPU_SCR0].ops = &cpu_scr0_ops;
     regs[CPU_SCR0].user = &cpu_scr0;
     regs[CPU_SCR1].ops = &cpu_scr1_ops;
+}
+
+
+/* ----- Breakpoints ------------------------------------------------------- */
+
+
+void m8c_break(uint16_t addr)
+{
+    if (breakpoint[addr]) {
+	fflush(stdout);
+	fprintf(stderr,"breakpoint is already set at 0x%04x\n",addr);
+    }
+    breakpoint[addr] = 1;
+}
+
+
+void m8c_break_show(void)
+{
+    int i;
+
+    for (i = 0; i != 0x10000; i++)
+	if (breakpoint[i]) {
+	    const char *sym;
+	    int attr;
+
+	    sym = sym_by_value(i,SYM_ATTR_ROM,&attr);
+	    if (sym)
+		printf("0x%04x  %s:%s\n",i,sym,
+		  attr & SYM_ATTR_GLOBAL ? ":" : "");
+	    else
+		printf("0x%04x\n",i);
+	}
+}
+
+
+void m8c_unbreak(uint16_t addr)
+{
+    if (!breakpoint[addr]) {
+	fflush(stdout);
+	fprintf(stderr,"no breakpoint at 0x%04x\n",addr);
+    }
+    breakpoint[addr] = 0;
+}
+
+
+void m8c_unbreak_all(void)
+{
+    memset(breakpoint,0,sizeof(breakpoint));
 }

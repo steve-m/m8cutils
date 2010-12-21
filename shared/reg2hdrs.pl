@@ -21,11 +21,13 @@ sub process
     $line =~ s/#.*//;
     return if $line =~ /^\s*$/;
     die "syntax error "
-      unless $line =~ /^0x([0-9a-fA-F]+)\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
-    $name = $2;
+      unless $line =~
+	/^([01xX]),([0-9a-fA-F]{2})[Hh]\s+([A-Za-z_][A-Z-a-z0-9_]*)\s*/;
+    $name = $3;
+    $addr = $1 eq "x" || $1 eq "X" ? hex $2 : hex "$1$2";
     die "duplicate definition of $name"
-      if defined $reg{$name} && $reg{$name} != hex $1;
-    $reg{$name} = hex $1;
+      if defined $reg{$name} && $reg{$name} != $addr;
+    $reg{$name} = $addr;
     return unless length $';
     $bits = 8;
     @f = ();
@@ -37,12 +39,26 @@ sub process
 	$size = defined $2 ? $3 : 1;
 	die "$name: exceeding byte" if $size > $bits;
 	$bits -= $size;
-	next if $1 eq "_";
+	if ($1 eq "_") {
+	    if ($mode eq "c") {
+		push(@f,"\n\t{ NULL, $size, NULL },");
+	    }
+	    next;
+	}
 	@fv = ();
 	$values = $5;
 	if ($mode eq "sim") {
 	    push(@fv,"define\t".&pad("  ".$name."_".$1,3).
 	      sprintf("%s[%d:%d]\n",$name,$bits+$size-1,$bits));
+	}
+	elsif ($mode eq "c") {
+	    push(@f,"\n\t{ \"$1\", $size, ");
+	    if (defined $values) {
+		push(@f,"(const struct psoc_regdef_value []) {");
+	    }
+	    else {
+		push(@f,"NULL");
+	    }
 	}
 	else {
 	    push(@fv,"#define\t".&pad("  ".$name."_".$1,3).
@@ -57,12 +73,21 @@ sub process
 		    push(@fv,"define\t".&pad("    ".$name."_".$1."_".$_,4).
 		      sprintf("0x%x\n",$n));
 		}
+		elsif ($mode eq "c") {
+		    push(@f,"\n\t    { \"$_\", ".sprintf("0x%x",$n)." },");
+		}
 		else {
 		    push(@fv,"#define\t".&pad("  ".$name."_".$1."_".$_,4).
 		      sprintf("0x%x\n",$n << $bits));
 		}
 	    }
 	    $n++;
+	}
+	if ($mode eq "c") {
+	    if (defined $values) {
+		push(@f,"\n\t    { NULL } }");
+	    }
+	    push(@f," },");
 	}
 	unshift(@f,@fv);
     }
@@ -94,10 +119,18 @@ elsif ($mode eq "asm") {
     print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
     print "#ifndef $name\n#define $name\n\n" || die "print: $!";
 }
-elsif ($mode eq "c") {
+elsif ($mode eq "h") {
     $name = "M8C_H";
     print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
     print "#ifndef $name\n#define $name\n\n" || die "print: $!";
+}
+elsif ($mode eq "c") {
+    $name = undef;
+    print "/* MACHINE-GENERATED. DO NOT EDIT ! */\n\n" || die "print: $!";
+    print "#include <stddef.h>\n\n#include \"regdef.h\"\n\n\n" ||
+      die "print: $!";
+    print "const struct psoc_regdef_register psoc_regdef[] = {" ||
+      die "print: $!";
 }
 else {
     die "unknown mode \"$mode\"";
@@ -107,19 +140,35 @@ for (sort keys %reg) {
 	print "define\t".&pad($_,3).sprintf("reg[0x%03x]\n",$reg{$_}) ||
 	  die "print: $!";
     }
+    elsif ($mode eq "c") {
+	print "\n    { \"$_\", ".sprintf("0x%03x",$reg{$_}).", " ||
+	  die "print: $!";
+	if (defined $fields{$_}) {
+	    print "(const struct psoc_regdef_field []) { $fields{$_} }" ||
+	      die "print: $!";
+	}
+	else {
+	    print "NULL" || die "print: $!";
+	}
+	print " }," || die "print: $!";
+    }
     else {
 	print "#define\t".&pad($_,3).sprintf("0x%03x\n",$reg{$_}) ||
 	  die "print: $!";
     }
-    print $fields{$_} || die "print: $!" if defined $fields{$_};
+    print $fields{$_} || die "print: $!" if
+      defined $fields{$_} && $mode ne "c";
 }
-if ($mode eq "c") {
+if ($mode eq "h") {
     print "\n#define\tREGISTER_NAMES_INIT \\\n";
     for (sort { $reg{$a} <=> $reg{$b} } keys %reg) {
 	print sprintf("    [0x%03x] = \"$_\", \\\n",$reg{$_}) ||
 	  die "print: $!";
     }
 }
-if ($mode ne "sim") {
+if ($mode eq "c") {
+    print "\n    { NULL }\n};\n";
+}
+elsif ($mode ne "sim") {
     print "\n#endif /* !$name */\n" || die "print: $!";
 }

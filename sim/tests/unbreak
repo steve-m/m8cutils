@@ -1,0 +1,81 @@
+#!/bin/sh
+. Common
+
+asm "Remove a breakpoint" <<EOF
+	inc	a
+here:
+	inc	a
+	halt
+EOF
+sim <<EOF
+a = 0
+break here
+unbreak here
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+EOF
+
+asm "Remove breakpoint at PC" <<EOF
+loop:
+	inc	a
+here:
+	inc	a
+	jmp	loop
+EOF
+sim <<EOF
+a = 0
+break here
+run
+a
+unbreak
+run @+13
+a
+EOF
+expect <<EOF
+Breakpoint
+0x1 1
+0x3 3
+EOF
+
+asm "Remove breakpoint twice" <<EOF
+	nop
+EOF
+sim <<EOF
+break 0
+unbreak 0
+unbreak 0
+EOF
+expect <<EOF
+no breakpoint at 0x0000
+EOF
+
+asm "Remove unset breakpoint" <<EOF
+	nop
+EOF
+sim <<EOF
+unbreak 10
+EOF
+expect <<EOF
+no breakpoint at 0x000a
+EOF
+
+asm "Remove all breakpoints" <<EOF
+	inc	a
+	inc	a
+	halt
+EOF
+sim <<EOF
+break 1
+break 2
+unbreak *
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+EOF

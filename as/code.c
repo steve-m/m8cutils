@@ -23,7 +23,7 @@ static struct patch {
     struct op *op;
     struct loc loc;
     struct patch *next;   
-} *patches = NULL;
+} *patches = NULL,**last_patch = &patches;
 
 
 int *pc; /* must call set_area before doing anything else */
@@ -126,8 +126,9 @@ void store(void (*fn)(const struct loc *loc,int pos,uint32_t data),
     patch->loc = current_loc;
     patch->pos = *pc+offset;
     patch->op = op;
-    patch->next = patches;
-    patches = patch;
+    patch->next = NULL;
+    *last_patch = patch;
+    last_patch = &patch->next;
 }
 
 

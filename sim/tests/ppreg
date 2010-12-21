@@ -1,0 +1,140 @@
+#!/bin/sh
+. Common
+
+M8CSIM_CHIP=cy8c29466
+
+asm "Set PgMode, then CUR_PP" <<EOF
+	mov	a,[1]
+	halt
+EOF
+sim <<EOF
+CPU_F_PgMode = 2
+CUR_PP = 3
+[0x301] = 7
+run
+a
+EOF
+expect <<EOF
+HALT
+0x7 7
+EOF
+
+asm "Set CUR_PP, then Pgmode" <<EOF
+	mov	a,[1]
+	halt
+EOF
+sim <<EOF
+CUR_PP = 3
+CPU_F_PgMode = 2
+[0x301] = 7
+run
+a
+EOF
+expect <<EOF
+HALT
+0x7 7
+EOF
+
+asm "PgMode 0, direct and indexed" <<EOF
+	mov	a,[1]
+	halt
+	mov	x,2
+	mov	a,[x+3]
+	halt
+EOF
+sim <<EOF
+CUR_PP = 3
+IDX_PP = 4
+STK_PP = 5
+CPU_F_PgMode = 0
+[1] = 2
+[5] = 4
+run
+a
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+HALT
+0x4 4
+EOF
+
+asm "PgMode 1, direct and indexed" <<EOF
+	mov	a,[1]
+	halt
+	mov	x,2
+	mov	a,[x+3]
+	halt
+EOF
+sim <<EOF
+CUR_PP = 3
+IDX_PP = 4
+STK_PP = 5
+CPU_F_PgMode = 1
+[1] = 2
+[0x505] = 4
+run
+a
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+HALT
+0x4 4
+EOF
+
+asm "PgMode 2, direct and indexed" <<EOF
+	mov	a,[1]
+	halt
+	mov	x,2
+	mov	a,[x+3]
+	halt
+EOF
+sim <<EOF
+CUR_PP = 3
+IDX_PP = 4
+STK_PP = 5
+CPU_F_PgMode = 2
+[0x301] = 2
+[0x405] = 4
+run
+a
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+HALT
+0x4 4
+EOF
+
+asm "PgMode 3, direct and indexed" <<EOF
+	mov	a,[1]
+	halt
+	mov	x,2
+	mov	a,[x+3]
+	halt
+EOF
+sim <<EOF
+CUR_PP = 3
+IDX_PP = 4
+STK_PP = 5
+CPU_F_PgMode = 3
+[0x301] = 2
+[0x505] = 4
+run
+a
+run
+a
+EOF
+expect <<EOF
+HALT
+0x2 2
+HALT
+0x4 4
+EOF

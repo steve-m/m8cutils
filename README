@@ -62,6 +62,9 @@ This collection consists of the following parts:
   shared/
     Code shared among programs of this project
 
+  misc/
+    Miscellaneous utilities and example programs
+
 The home page of this package is at 
 http://m8cutils.sourceforge.net/
 
@@ -75,7 +78,7 @@ Installation
 ------------
 
 If you wish to install the utilities in a location different from
-/usr, edit INSTALL_PREFIX in Common.make.
+/usr, edit INSTALL_PREFIX in Config.make.
 
 Then just type "make". If your version of gcc doesn't agree with
 the CFLAGS, edit them in Common.make.

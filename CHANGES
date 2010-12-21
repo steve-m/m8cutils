@@ -1,3 +1,27 @@
+Version 16 (2-AUG-2006)
+----------
+
+- shared/chips.[ch]: added the CY8C24423A with ID 0x34, not 0x14 as AN2026A
+  claims
+- shared/m8c-registers: added more registers and organized them by function,
+  not address
+- shared/m8c-registers, shared/reg2hdrs.pl: register numbers are now in the
+  M,Nh format, including x,Nh
+- shared/reg2hdrs.pl: renamed "c" mode to "h"
+- as/code.c: report first undefined label, not last (as/tests/dundef)
+- sim/core.c: setting a page register didn't update the page pointers
+  (sim/tests/ppreg)
+- sim/tests/ppreg: added tests for direct and indirect access for all page
+  modes
+- sim/util.h: moved to shared/, and removed as/util.h
+- */Makefile: moved dependencies, tests, and the "filelist" target into
+  Common.make
+- Config.make: moved definition of INSTALL_PREFIX from Common.make
+- Makefile: include Config.make instead of Common.make
+- misc/reginfo.c: utility to pretty-print register structure and content
+- as/README: incorrectly called unary >> "log2", while it's ffs()-1
+- sim/: added support for breakpoints (sim/tests/break, sim/tests/unbreak)
+
 Version 15 (5-JUL-2006)
 ----------
 

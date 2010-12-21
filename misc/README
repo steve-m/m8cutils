@@ -1,0 +1,25 @@
+Miscellaneous programs
+======================
+
+Copyright 2006 Werner Almesberger
+
+The files in this directory are distributed under the terms of the
+GNU General Public License (GPL), version 2. This license is
+included in the file ../COPYING.GPLv2.
+
+
+reginfo
+-------
+
+Usage: reginfo register [value]
+
+"reginfo" pretty-prints the fields of the specified register. If a value
+is given, it also prints the corresponding field contents. The name can
+be given in numeric or symbolic form. Values are printed in symbolic
+form, if available. If a field has named values, but the specified value
+does not match any of them, it is printed as a number in parentheses.
+
+Example: ./reginfo DEC_CR0 0x50
+
+reginfo is mainly intended as a demonstration for the use of the
+register definitions database.

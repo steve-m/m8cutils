@@ -9,14 +9,14 @@
 
 include ../Common.make
 
+TESTS=
 FILES=README LICENSE Makefile \
   jrb.c jrb.h jval.c jval.h
 OBJS=jrb.o jval.o
 
 CFLAGS=-g -O $(CFLAGS_WARN)
 
-.PHONY:		all dep depend testlist tests install uninstall filelist
-.PHONY:		clean spotless
+.PHONY:		all install uninstall clean spotless
 
 
 all:		libfdr.a
@@ -24,33 +24,11 @@ all:		libfdr.a
 libfdr.a:	$(OBJS)
 		$(AR) cr$(AR_v) $@ $^
 
-# ----- Dependencies ----------------------------------------------------------
-
-$(OBJS):	.depend
-
-dep depend .depend:
-		$(DEPEND)
-
-ifeq (.depend,$(wildcard .depend))
-include .depend
-endif
-
-# ----- Tests -----------------------------------------------------------------
-
-testlist:
-
-tests:
-
 # ----- Installation ----------------------------------------------------------
 
 install:	all
 
 uninstall:
-
-# ----- Distribution ----------------------------------------------------------
-
-filelist:
-		@echo $(FILES)
 
 # ----- Cleanup ---------------------------------------------------------------
 

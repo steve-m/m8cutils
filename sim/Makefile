@@ -20,12 +20,12 @@ TESTS=adc_nc adc_c_in adc_c_out adc_nz adc_z adc_nc_z adc_c_z \
       set_0 set_1 set_0r set_1r set_long_r set_z set_analog \
       intsw inttake intret \
       gpioint gpiointcfg \
-      addrop printf sleep \
+      addrop printf sleep break unbreak \
       bugs7 bugs8 \
-      symbols symexpr symquot regreg
+      symbols symexpr symquot regreg ppreg
 FILES=README Makefile \
       lang.l lang.y lang.h id.h id.c \
-      util.h reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
+      reg.h reg.c core.h core.c sim.h sim.c gpio.h gpio.c \
       int.h int.c printf.h printf.c \
       example/README example/blink.asm example/switch.asm \
       tests/Common $(TESTS:%=tests/%)
@@ -37,8 +37,7 @@ CFLAGS += -I../prog
 LDLIBS := -lfl -L../prog -lprog $(LDLIBS) -lreadline -lcurses
 LIBDEP += ../prog/libprog.a
 
-.PHONY:		all dep depend testlist tests install uninstall filelist
-.PHONY:		clean spotless
+.PHONY:		all install uninstall clean spotless
 
 
 all:		m8csim default.m8csim
@@ -62,27 +61,6 @@ default.m8csim:	../shared/m8c-registers ../shared/reg2hdrs.pl
 		$(GEN) $(CPP) - <$< | perl ../shared/reg2hdrs.pl sim >$@ || \
 		  { rm -f $@; exit 1; }
 
-# ----- Dependencies ----------------------------------------------------------
-
-$(OBJS):	.depend
-
-dep depend .depend:
-		$(DEPEND)
-
-ifeq (.depend,$(wildcard .depend))
-include .depend               
-endif
-
-# ----- Tests -----------------------------------------------------------------
-
-testlist:
-		@echo $(TESTS)
-
-tests:		all
-		passed=0 && cd tests && for n in $(TESTS); do \
-		  SCRIPT=$$n . ./$$n; done; \
-		  echo "Passed all $$passed tests" 2>&1
-
 # ----- Installation ----------------------------------------------------------
 
 install:	all
@@ -94,11 +72,6 @@ uninstall:
 		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8csim
 		$(UNINSTALL) \
 		  $(INSTALL_PREFIX)/share/m8cutils/include/default.m8csim
-
-# ----- Distribution ----------------------------------------------------------
-
-filelist:
-		@echo $(FILES)
 
 # ----- Cleanup ---------------------------------------------------------------
 

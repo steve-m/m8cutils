@@ -21,18 +21,18 @@ TESTS=reas_0 reas_1 reas_2 reas_3 reas_4 reas_5 reas_6 reas_7 \
       xminus \
       evalconst \
       sym_local sym_global sym_reuse redefine \
-      sep_local sep_global sep_undef sep_mix sep_export
+      sep_local sep_global sep_undef sep_mix sep_export \
+      dundef
 FILES=README Makefile \
       m8cas.c m8c.l m8c.y \
-      util.h error.h error.c id.h id.c op.h op.c code.h code.c \
+      error.h error.c id.h id.c op.h op.c code.h code.c \
       tests/Common $(TESTS:%=tests/%)
 OBJS=lex.yy.o y.tab.o m8cas.o error.o id.o op.o code.o
 
 LDLIBS += -lfl
 
 
-.PHONY:		all dep depend testlist tests install uninstall filelist
-.PHONY:		clean spotless
+.PHONY:		all install uninstall clean spotless
 
 
 all:		m8cas
@@ -52,27 +52,6 @@ y.tab.c y.tab.h: m8c.y
 y.tab.o:	y.tab.c
 		$(CC) -c $(CFLAGS_YACC) y.tab.c
 
-# ----- Dependencies ----------------------------------------------------------
-
-$(OBJS):	.depend
-
-dep depend .depend:
-		$(DEPEND)
-
-ifeq (.depend,$(wildcard .depend))
-include .depend               
-endif
-
-# ----- Tests -----------------------------------------------------------------
-
-testlist:
-		@echo $(TESTS)
-
-tests:		all
-		passed=0 && cd tests && for n in $(TESTS); do \
-		  SCRIPT=$$n . ./$$n; done; \
-		  echo "Passed all $$passed tests" 2>&1
-
 # ----- Installation ----------------------------------------------------------
 
 install:	all
@@ -80,11 +59,6 @@ install:	all
 
 uninstall:
 		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cas
-
-# ----- Distribution ----------------------------------------------------------
-
-filelist:
-		@echo $(FILES)
 
 # ----- Cleanup ---------------------------------------------------------------
 

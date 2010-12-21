@@ -5,11 +5,11 @@
 # Copyright 2006 Werner Almesberger
 #
 
-include Common.make
+include Config.make
 
 
 NAME=m8cutils
-DIRS=shared libfdr das as prog sim
+DIRS=shared libfdr das as prog sim misc
 NONBUILD_DIRS=
 
 SF_ACCOUNT=almesber@m8cutils.sourceforge.net
@@ -22,18 +22,18 @@ DISTFILE=$(NAME)-$(VERSION).tar.gz
 
 ALL_DIRS=$(DIRS) $(NONBUILD_DIRS)
 FILES=VERSION README CHANGES TODO COPYING.GPLv2 \
-  Makefile Common.make \
+  Makefile Config.make Common.make \
   $(shell for n in $(ALL_DIRS); do $(MAKE) -s -C $$n filelist | \
     sed 's/^\| / '$$n'\//g'; done)
 TESTS=\
   $(shell for n in $(DIRS); do $(MAKE) -s -C $$n testlist | \
-    sed 's/^\| / '$$n'\/tests\//g'; done)
+    sed '/^$$/d;s/^\| / '$$n'\/tests\//g'; done)
 
 .PHONY:	all clean spotless dep depend tests install uninstall dist upload
 
 
 all:
-		for n in $(DIRS); do $(MAKE) -C $$n || exit 1; done
+		for n in $(DIRS); do $(MAKE) -C $$n all || exit 1; done
 
 clean:
 		for n in $(ALL_DIRS); do $(MAKE) -C $$n clean || exit 1; done

@@ -171,6 +171,8 @@ define				return TOK_DEFINE;
 quit				return TOK_QUIT;
 printf				return TOK_PRINTF;
 sleep				return TOK_SLEEP;
+break				return TOK_BREAK;
+unbreak				return TOK_UNBREAK;
 
 [pP][012345678]			{ yylval.num = yytext[1]-'0';
 				  return PORT; }

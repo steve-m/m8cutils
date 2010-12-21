@@ -164,6 +164,39 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
   To interrupt a running program, press Ctrl-C.
 
+- A breakpoint can be set at any address in the program with the "break"
+  command:
+
+  break
+  break ADDRESS
+
+  The address can be any expression, including a label. If the address is
+  omitted, the breakpoint is set at the current PC.
+
+  There can be only one breakpoint at a given address. Trying to set multiple
+  breakpoints at the same address yields an error. Breakpoints are only
+  effective at the first byte of an instruction. A breakpoint on any other byte
+  of a multi-byte instruction is ignored, unless program execution steps or
+  jumps "into" that instruction.
+
+  A breakpoint is only taken when the PC reaches its location. In particular,
+  the first instruction executed by "run" may not trigger a breakpoint. If
+  program execution would stop at the same location due to a breakpoint and a
+  cycle limit specificied in the "run" command, the breakpoint "wins".
+
+  Breakpoints are listed in address order with:
+
+  break *
+
+  Breakpoints are removed with "unbreak":
+
+  unbreak
+  unbreak ADDRESS
+  unbreak *
+
+  If the address is omitted, the breakpoint at the current PC is removed. The
+  last form removes all breakpoints in the program.
+
 - Connect I/O pins to an ICE, by port, pin, or pin range, e.g.,
 
   connect P2
@@ -261,14 +294,6 @@ There are certainly many more.
 - should the name of the PC be "PC" (it's a register) or "." (like in the
   assembler) ?
   Or both ? For now it's ".".
-
-- no access to symbols:
-  Of course, since our assembler doesn't output them, we can't use them.
-
-- no breakpoints:
-  Use HALT. Then figure out what to do with multiple breakpoints. Just report,
-  dump data (not needed if we have an infinite trace buffer with full
-  playback), and proceed ?
 
 - weak scripting language:
   No loops, no variables, no functions. Should I just drag over the whole

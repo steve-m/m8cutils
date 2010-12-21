@@ -9,6 +9,7 @@ include ../Common.make
 
 
 DRIVERS=waspic watsp watpp ecb_at91
+TESTS=
 FILES=README Makefile \
       m8cprog.c vectors.h \
       tty.h tty.c pp.h pp.c rt.h rt.c prog.h prog.c ops.h ops.c ice.h ice.c \
@@ -29,8 +30,7 @@ CFLAGS += -I$(shell pwd) \
           -DPROGRAMMERS_OPS="$(DRIVERS:%=&%_ops,)"
 
 
-.PHONY:		all dep depend testlist tests install uninstall filelist
-.PHONY:		clean spotless
+.PHONY:		all install uninstall clean spotless
 
 
 all:		m8cprog
@@ -44,26 +44,11 @@ torture:	torture.o $(LIBDEP)
 libprog.a:	$(LIBPROG_OBJS)
 		$(AR) cr$(AR_v) $@ $^
 
-# ----- Dependencies ----------------------------------------------------------
-
-$(OBJS):	.depend
+# ----- Extra dependencies ----------------------------------------------------
 
 prog.o:		$(DRIVERS:%=drv/%.c)
 
 DEPEND_EXTRA_CFLAGS = -Wno-error
-
-dep depend .depend:
-		$(DEPEND) 
-
-ifeq (.depend,$(wildcard .depend))
-include .depend
-endif
-
-# ----- Tests -----------------------------------------------------------------
-
-testlist:
-
-tests:
 
 # ----- Installation ----------------------------------------------------------
 
@@ -72,11 +57,6 @@ install:        all
 
 uninstall:
 		$(UNINSTALL) $(INSTALL_PREFIX)/bin/m8cprog
-
-# ----- Distribution ----------------------------------------------------------
-
-filelist:
-		@echo $(FILES)
 
 # ----- Cleanup ---------------------------------------------------------------
 

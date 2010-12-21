@@ -53,4 +53,9 @@ uint32_t m8c_run(uint32_t cycles);
 uint32_t m8c_step(void);
 void m8c_init(void);
 
+void m8c_break(uint16_t addr);
+void m8c_break_show(void);
+void m8c_unbreak(uint16_t addr);
+void m8c_unbreak_all(void);
+
 #endif /* !CORE_H */

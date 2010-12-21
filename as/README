@@ -1,7 +1,6 @@
 m8cas - Single-pass assembler for the M8C assembly language
 ===========================================================
 
-With the exceptions noted below, all files in this directory are
 Copyright 2006 Werner Almesberger
 
 The files in this directory are distributed under the terms of the
@@ -15,7 +14,7 @@ Overview
 This is a single-pass assembler for the M8C assembly language. It can
 currently only generate absolute code and thus does not require a
 linker. Instead of implementing its own preprocessor, it uses CPP.
-(For compatibility, CPP is only enabled if 
+(For compatibility, CPP is only enabled if the option -e is set.)
 
 
 Usage
@@ -137,8 +136,11 @@ assembler:
   on the same line, and a single instruction or directive can span multiple
   lines
 - ORG, EQU, etc. accept any valid expression
-- added a unary log2 operator, >>expression. Note that its precedence is like
-  that of all other unary C operators, and not like unary < or >.
+- added a unary ffs()-1 operator, >>expression. Note that its precedence is
+  like that of all other unary C operators, and not like unary < or >. A bit
+  mask covering a field in a register or similar can be used to shift a value
+  into position with the >> operator, e.g.:
+  mov reg[CPU_F],2 << >>CPU_F_PgMode
 
 
 Errata
