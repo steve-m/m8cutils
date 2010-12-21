@@ -1,0 +1,15 @@
+#!/bin/sh
+. Common
+
+asm "Evaluation does not affect its input" <<EOF
+foo:
+	mov	[foo],1
+	mov	[foo+1],2
+	mov	[foo+2],3
+	mov	[foo+4],4
+
+EOF
+expect <<EOF
+55 00 01 55 01 02 55 02
+03 55 04 04
+EOF

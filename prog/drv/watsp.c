@@ -31,9 +31,9 @@
  * Note: XRES and SDATA_IN are inverted by the circuit, hence the nots.
  */
 
-#define XRES(on)	tty_dtr(!on)
-#define SDATA(on)	tty_rts(!on)
-#define SCLK(on)	tty_td(!on)
+#define XRES(on)	tty_dtr(!(on))
+#define SDATA(on)	tty_rts(!(on))
+#define SCLK(on)	tty_td(!(on))
 #define	SDATA_IN()	(!tty_cts())
 #define Z()		SDATA(0)
 

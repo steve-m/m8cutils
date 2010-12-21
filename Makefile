@@ -11,7 +11,7 @@ include Common.make
 DIR=m8c
 NAME=m8cutils
 DIRS=shared libfdr das as prog sim
-NONBUILD_DIRS=waspic watsp
+NONBUILD_DIRS=waspic watsp watpp
 
 SF_ACCOUNT=almesber@m8cutils.sourceforge.net
 SF_DIR=/home/groups/m/m8/m8cutils/htdocs

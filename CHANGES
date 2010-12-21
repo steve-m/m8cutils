@@ -1,3 +1,17 @@
+Version 11 (7-JUN-2006)
+----------
+
+- prog/drv/watsp.c: added parentheses to macro arguments
+- prog/prog.c: moved WAIT-AND-POLL to separate function, for clarity
+- prog/cli.[ch]: common parts of command line handling
+- prog/m8cprog.c, prog/torture.c, sim/sim.c: now use the common CLI functions
+- prog/ops.c:prog_initialize: "exit" if the voltage is not known, don't "abort"
+- watpp/: new simple bit-banging programmer for the parallel port
+- as/m8c.l: use "[01]" instead of the somewhat pompous "[0-1]"
+- as/op.c:make_op: fixed idiot "optimization", which caused evaluation to
+  clobber its input (as/tests/evalconst)
+- shared/m8c-registers: added VLT_CR and VLT_CMP
+
 Version 10 (7-MAR-2006)
 ----------
 
@@ -23,7 +37,7 @@ Version 10 (7-MAR-2006)
 - sim/core.c:TST: unexplicably, did a comparison instead of a bit test
   (sim/tests/tst_ram, sim/tests/tst_reg)
 - sim/tests/: ASR didn't preserve the MSB (tests/asr)
-- sim/tests/: various files were missing the #!/bin/sh
+- sim/tests/: various files were lacking the #!/bin/sh
 - sim/tests/: new test cases asl, asr, cmp, cpl, dec, inc, rlc, rrc, swap,
   tst_ram, and tst_reg
 - */tests/Common: use 0 if "passed" is not defined, to avoid complaints from
@@ -41,7 +55,6 @@ Version 10 (7-MAR-2006)
   without m8cprog trying to enforce correct timing
 - prog/prog.c:prog_vector: reduced wait for SDATA to go H before WAIT-AND-POLL
   from 100 us to 10 us
-
 
 Version 9 (2-MAR-2006)
 ---------

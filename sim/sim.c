@@ -24,6 +24,7 @@
 
 #include "ops.h"
 #include "prog.h"
+#include "cli.h"
 
 #include "reg.h"
 #include "core.h"
@@ -147,17 +148,14 @@ static void usage(const char *name)
 "  -l                list supported chips\n"
 "  -n                do not include default.m8csim\n"
 "  -q                quiet operation, only output the bare minimum\n"
-"  programmer_option optional settings for the programmer used as ICE:\n"
-"    -p port         port to programmer, overrides M8CPROG_PORT\n"
-"    -d driver       name of programmer driver, overrides M8CPROG_DRIVER\n"
-"    -3              if the programmer powers the board, supply 3V\n"
-"    -5              if the programmer powers the board, supply 5V\n"
-"    -v ...          verbose operation\n"
 "  -V                only print the version number and exit\n"
+"programmer_option:\n"
+  ,name,name,name);
+    prog_usage();
+    fprintf(stderr,
 "  chip              chip name, e.g., CY8C21323\n"
 "  program           binary or hex file containing ROM data, \"-\" for stdin\n"
-"                    (default: stdin)\n"
-  ,name,name,name);
+"                    (default: stdin)\n");
     exit(1);
 }
 
@@ -166,8 +164,6 @@ int main(int argc,char **argv)
 {
     const char *script = NULL;
     const char *program_file = NULL;
-    const char *driver = NULL;
-    const char *port = NULL;
     const char *include_dir = NULL;
     int binary = 0,include_default = 1,voltage = 0;
     int c;
@@ -180,25 +176,12 @@ int main(int argc,char **argv)
      *
      * Available: acghjkmoruwxyz
      */
-    while ((c = getopt(argc,argv,"35bd:e:f:iI:lnp:qvV")) != EOF)
+    while ((c = getopt(argc,argv,"be:f:iI:nqV" PROG_OPTIONS)) != EOF)
 	switch (c) {
 	    char *end;
 
-	    case '3':
-		if (voltage)
-		    usage(*argv);
-		voltage = 3;
-		break;
-	    case '5':
-		if (voltage)
-		    usage(*argv);
-		voltage = 5;
-		break;
 	    case 'b':
 		binary = 1;
-		break;
-	    case 'd':
-		driver = optarg;
 		break;
 	    case 'e':
 		interrupt_poll_interval = strtoul(optarg,&end,0);
@@ -214,27 +197,18 @@ int main(int argc,char **argv)
 	    case 'I':
 		include_dir = optarg;
 		break;
-	    case 'l':
-		chip_list(stdout,79);
-		return 0;
 	    case 'n':
 		include_default = 0;
 		break;
-	    case 'p':
-		port = optarg;
-		break;
 	    case 'q':
 		quiet = 1;
-		break;
-	    case 'v':
-		verbose++;
 		break;
 	    case 'V':
 		printf("m8csim from m8cutils version %d\n",VERSION);
 		exit(0);
 	    default:
-		usage(*argv);
-
+		if (!prog_option(c,optarg))
+		    usage(*argv);
 	}
 
     switch (argc-optind) {
@@ -260,7 +234,7 @@ int main(int argc,char **argv)
     set_program(program,program_size);
 
     if (ice) {
-	voltage = prog_open(port,driver,voltage);
+	voltage = prog_open_cli();
 	prog_initialize(0,voltage);
 	chip = prog_identify(chip);
 	atexit(prog_close);

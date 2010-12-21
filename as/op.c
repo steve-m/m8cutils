@@ -230,10 +230,11 @@ struct op *make_op(uint32_t (*fn)(uint32_t a,uint32_t b),
     struct op *op;
 
     if ((!a || a->fn == op_number) && (!b || b->fn == op_number)) {
-	a->u.value = fn(a->u.value,b ? b->u.value : 0);
+	op = number_op(fn(a->u.value,b ? b->u.value : 0));
+	put_op(a);
 	if (b)
-	    free(b);
-	return a;
+	    put_op(b);
+	return op;
     }
     op = new_op(fn);
     op->u.a = a;

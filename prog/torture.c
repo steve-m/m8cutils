@@ -106,7 +106,8 @@ static void do_cycle(void)
 
 static void usage(const char *name)
 {
-    fprintf(stderr,"usage: %s [-p port] [-d driver] [-3|-5]\n",name);
+    fprintf(stderr,"usage: %s %s\n",name,PROG_SYNOPSIS);
+    prog_usage();
     exit(1);
 }
 
@@ -120,27 +121,10 @@ int main(int argc,char **argv)
     struct timeval ta;
     int c;
 
-    while ((c = getopt(argc,argv,"35d:p:v")) != EOF)
-	switch (c) {
-	    case '3':
-		voltage = 3;
-		break;
-	    case '5':
-		voltage = 5;
-		break;
-	    case 'd':
-		driver = optarg;
-		break;
-	    case 'p':
-		port = optarg;
-		break;
-	    case 'v':
-		verbose++;
-		break;
-	    default:
+    while ((c = getopt(argc,argv,PROG_OPTIONS)) != EOF)
+	if (!prog_option(c,optarg))
 		usage(*argv);
-	}
-    voltage = prog_open(port,driver,voltage);
+    voltage = prog_open_cli();
     prog_initialize(0,voltage);
     chip = prog_identify(NULL);
     get_time(&t0);

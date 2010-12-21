@@ -63,6 +63,10 @@ This collection consists of the following parts:
     An even simpler bit-banging programmer that connects to the
     RS-232C port
 
+  watpp/
+    An also very simple bit-banging programmer that connects to
+    the parallel (printer) port
+
   shared/
     Code shared among programs of this project
 

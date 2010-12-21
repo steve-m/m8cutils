@@ -142,7 +142,7 @@ language are the usual forms known from C, and the semicolon from m8cas.
 
   Writes to these pins are now propagated to the ICE, and reads of the pins use
   data obtained from the ICE. This applies to accesses from the program being
-  simulated and for register accesss from the script.
+  simulated and for register accesses from the script.
 
   The pins used to communicate with the ICE, usually P1[0] and P1[1], cannot be
   connected. Port names are case-insensitive, so P1 is equal to p1.

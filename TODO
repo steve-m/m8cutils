@@ -16,6 +16,7 @@ waspic
 - check the checksum in communication with the host
 - add a voltage reference and measure VDD
 - add possibility to provide power to the target
+- does not recover from communication errors (in torture testing)
 
 watsp
 -----

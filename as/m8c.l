@@ -167,12 +167,12 @@ $[0-9A-Fa-f]+			{ char *end;
 				  if (*end)
 				    yyerror("invalid digit in number");
 				  return NUMBER; }
-0b[0-1]+			{ char *end;
+0b[01]+				{ char *end;
 				  yylval.num = strtoul(yytext+2,&end,2);
 				  if (*end)
 				    yyerror("invalid digit in number");
 				  return NUMBER; }
-%[0-1]+				{ char *end;
+%[01]+				{ char *end;
 				  yylval.num = strtoul(yytext+1,&end,2);
 				  if (*end)
 				    yyerror("invalid digit in number");

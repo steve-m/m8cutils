@@ -71,9 +71,6 @@ extern struct prog_ops *programmers[];
 #define END_OF_VECTORS 0xffffffff
 
 
-extern int real_time; /* try to obtain real-time priority for acquisition */
-
-
 void start_time(void);
 int32_t delta_time_us(void);
 

@@ -17,6 +17,7 @@
 #include "tty.h"
 #include "prog.h"
 #include "ops.h"
+#include "cli.h"
 
 
 static void decode_security(FILE *file)
@@ -36,79 +37,55 @@ static void decode_security(FILE *file)
 static void usage(const char *name)
 {
     fprintf(stderr,
-"usage: %s [-p port] [-d driver] [-v [-v]] [-q] [-3|-5] [-R] [-b|-i]\n"
+"usage: %s %s [-q] [-b|-i]\n"
 "                 [-c] [-e] [-r|-w] [-z] [-s] [chip] [file]\n"
 "       %s -l\n"
 "       %s -V\n\n"
-"  -3        set up 3V operation\n"
-"  -5        set up 5V operation\n"
 "  -b        use binary format (overrides auto-detection on input)\n"
 "  -c        compare Flash with file, can be combined with all other\n"
 "            operations\n"
 "  -e        erase the Flash (this is implied by -w)\n"
-"  -d driver name of programmer driver (overrides M8CPROG_DRIVER, default:\n"
-"            %s)\n"
 "  -i        write Intel HEX format (ignored for input; default: \"ROM\"\n"
 "            format)\n"
-"  -l        list supported programmers and chips\n"
-"  -p port   port to programmer (overrides M8CPROG_PORT, default for tty:\n"
-"            %s)\n"
 "  -q        quiet operation, don't show progress bars\n"
 "  -r        read Flash content from chip to file\n"
 "  -s        read protection data from chip (with -c or -r: use to skip over\n"
 "            inaccessible blocks and include in HEX file; with -e and -w:\n"
 "            check; alone: decode and print)\n"
-"  -R        run timing-critical parts at real-time priority (requires root)\n"
-"  -v        verbose operation, report major events\n"
-"  -v -v     more verbose operation, report vectors\n"
-"  -v -v -v  very verbose operation, report communication details\n"
 "  -V        only print the version number and exit\n"
 "  -w        write Flash and security data from file to chip\n"
-"  -z        zero read-protected blocks when reading or comparing\n"
+"  -z        zero read-protected blocks when reading or comparing\n",
+  name,PROG_SYNOPSIS,name,name);
+    prog_usage();
+    fprintf(stderr,
 "  chip      chip name, e.g., CY8C21323 (default: auto-detect)\n"
 "  file      binary or hex file to program/verify, \"-\" for stdin/stdout\n"
-"            (default: stdin/stdout)\n",
-  name,name,name,programmers[0]->name,DEFAULT_TTY);
+"            (default: stdin/stdout)\n");
     exit(1);
 }
 
 
 int main(int argc,char **argv)
 {
-    const char *port = NULL;
-    const char *driver = NULL;
     const char *file_name = "-";
     const char *chip_name = NULL;
     const struct chip *chip = NULL;
-    int binary = 0,hex = 0,voltage = 0,zero = 0;
+    int binary = 0,hex = 0,zero = 0,voltage;
     int op_erase = 0,op_compare = 0,op_read = 0,op_write = 0,op_security = 0;
-    int c,width;
+    int c;
 
     /*
      * Reserved option letters:
      * x  select XRES method even if power-on is available
      * o  pass option(s) to the driver
      */
-    while ((c = getopt(argc,argv,"35bcd:eilp:qrswRvVz")) != EOF)
+    while ((c = getopt(argc,argv,"bceiqrswVz" PROG_OPTIONS)) != EOF)
 	switch (c) {
-	    case '3':
-		if (voltage)
-		    usage(*argv);
-		voltage = 3;
-		break;
-	    case '5':
-		if (voltage)
-		    usage(*argv);
-		voltage = 5;
-		break;
 	    case 'b':
 		binary = 1;
 		break;
 	    case 'c':
 		op_compare = 1;
-		break;
-	    case 'd':
-		driver = optarg;
 		break;
 	    case 'e':
 		op_erase = 1;
@@ -116,33 +93,17 @@ int main(int argc,char **argv)
 	    case 'i':
 		hex = 1;
 		break;
-	    case 'l':
-		printf("supported programmers:\n");
-		prog_list(stdout);
-		printf("\nsupported chips:\n");
-		width = get_output_width(stdout);
-		chip_list(stdout,width ? width : DEFAULT_OUTPUT_WIDTH);
-		exit(0);
-	    case 'p':
-		port = optarg;
-		break;
 	    case 'q':
 		quiet = 1;
 		break;
 	    case 'r':
 		op_read = 1;
 		break;
-	    case 'R':
-		real_time = 1;
-		break;
 	    case 's':
 		op_security = 1;
 		break;
 	    case 'w':
 		op_write = 1;
-		break;
-	    case 'v':
-		verbose++;
 		break;
 	    case 'V':
 		printf("m8cprog from m8cutils version %d\n",VERSION);
@@ -151,7 +112,8 @@ int main(int argc,char **argv)
 		zero++;
 		break;
 	    default:
-		usage(*argv);
+		if (!prog_option(c,optarg))
+		    usage(*argv);
 	}
 
     if (binary && hex)
@@ -185,7 +147,7 @@ int main(int argc,char **argv)
     if (op_write || (op_compare && !op_read))
 	read_file(file_name ? file_name : "-",binary);
 
-    voltage = prog_open(port,driver,voltage);
+    voltage = prog_open_cli();
     if (verbose)
 	fprintf(stderr,"selected %dV operation\n",voltage);
     prog_initialize(op_erase || op_write,voltage);
