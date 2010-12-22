@@ -14,7 +14,7 @@
 
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE	64
+#define BLOCK_SIZE	128
 #endif /*! BLOCK_SIZE */
 
 #define PROGRAM_SIZE	32768

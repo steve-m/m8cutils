@@ -70,9 +70,16 @@ static void wait_and_poll(void)
 
     prog_bit_z();
     start_time(&t0);
-    while (!prog_bit_read())
-	if (delta_time_us(&t0) > 10) /* 10 us */
-	    goto ready;
+    /* loops as long as the DATA line is low */
+    while (!prog_bit_read()) {
+	if (delta_time_us(&t0) > 10) { /* 10 us */
+	    prog_bit_send(0);
+	    for (i = 0; i != 32; i++)
+		prog_bit_send(0);
+	    if (!prog_bit_read())
+		goto ready;
+	}
+}
     /*
      * Don't try to "simplify" this loop. The way it's done makes sure that
      * we don't race between timeout and external event. If we were to take
@@ -86,7 +93,9 @@ static void wait_and_poll(void)
      * here.)
      */
     while (1) {
-	int timeout = delta_time_us(&t0) > 100000; /* 100 ms */
+	/* timeout changed from 100 to 200ms, since calculating the checksum
+	 * of all 256 blocks takes 135ms on the CY7 */
+	int timeout = delta_time_us(&t0) > 200000; /* 200 ms */
 
 	if (!prog_bit_read())
 	    break;
@@ -96,7 +105,7 @@ static void wait_and_poll(void)
 	}
     }
 ready:
-    for (i = 0; i != 40; i++)
+    for (i = 0; i != 50; i++)
 	prog_bit_send(0);
 }
 

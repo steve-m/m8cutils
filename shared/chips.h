@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 
+#define ID_CY7C64316	0x00a1
 #define ID_CY8C27143	0x0009
 #define	ID_CY8C27243	0x000a
 #define	ID_CY8C27443	0x000b
