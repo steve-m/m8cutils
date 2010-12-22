@@ -9,7 +9,7 @@
 
 include ../Config.make
 
-CFLAGS_WARN=-Wall -Wshadow -Werror \
+CFLAGS_WARN=-Wall -Wshadow \
 	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
 SLOPPY_PROTOTYPES=-Wno-missing-prototypes -Wno-missing-declarations \
                   -Wno-strict-prototypes
